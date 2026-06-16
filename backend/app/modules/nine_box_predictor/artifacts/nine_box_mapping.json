@@ -1,0 +1,11 @@
+{
+    "2_2": "Star (High Performance / High Potential)",
+    "2_1": "High Performer (High Performance / Moderate Potential)",
+    "2_0": "Effective (High Performance / Low Potential)",
+    "1_2": "Growth Employee (Moderate Performance / High Potential)",
+    "1_1": "Core Employee (Moderate Performance / Moderate Potential)",
+    "1_0": "Effective with Issues (Moderate Performance / Low Potential)",
+    "0_2": "Enigma (Low Performance / High Potential)",
+    "0_1": "Dilemma (Low Performance / Moderate Potential)",
+    "0_0": "Risk (Low Performance / Low Potential)"
+}

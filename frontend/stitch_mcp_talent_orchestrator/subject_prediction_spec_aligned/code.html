@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MCP Orchestra - Subject Prediction</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#00363d",
+                    "inverse-surface": "#e0e3e6",
+                    "tertiary-fixed-dim": "#f3bf26",
+                    "surface-dim": "#101416",
+                    "on-secondary-fixed-variant": "#004e59",
+                    "surface-container-highest": "#313538",
+                    "primary": "#c3f5ff",
+                    "on-surface": "#e0e3e6",
+                    "tertiary": "#ffeac0",
+                    "error": "#ffb4ab",
+                    "on-tertiary-container": "#6f5500",
+                    "on-error-container": "#ffdad6",
+                    "on-primary-container": "#00626e",
+                    "surface-container-lowest": "#0b0f11",
+                    "primary-fixed": "#9cf0ff",
+                    "on-primary-fixed-variant": "#004f58",
+                    "on-primary-fixed": "#001f24",
+                    "background": "#101416",
+                    "tertiary-container": "#fec931",
+                    "secondary": "#44d8f1",
+                    "on-secondary-fixed": "#001f25",
+                    "error-container": "#93000a",
+                    "primary-fixed-dim": "#00daf3",
+                    "secondary-fixed": "#a1efff",
+                    "on-surface-variant": "#bac9cc",
+                    "on-tertiary": "#3e2e00",
+                    "surface-container": "#1c2022",
+                    "secondary-container": "#00bcd4",
+                    "outline": "#849396",
+                    "surface-tint": "#00daf3",
+                    "on-tertiary-fixed": "#251a00",
+                    "inverse-primary": "#006875",
+                    "on-secondary": "#00363e",
+                    "tertiary-fixed": "#ffdf96",
+                    "surface-bright": "#363a3c",
+                    "surface": "#101416",
+                    "inverse-on-surface": "#2d3133",
+                    "surface-variant": "#313538",
+                    "secondary-fixed-dim": "#44d8f1",
+                    "primary-container": "#00e5ff",
+                    "on-error": "#690005",
+                    "outline-variant": "#3b494c",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "surface-container-high": "#272a2d",
+                    "on-background": "#e0e3e6",
+                    "surface-container-low": "#181c1e",
+                    "on-secondary-container": "#004650"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk", "sans-serif"],
+                    "body": ["Inter", "sans-serif"],
+                    "label": ["Inter", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(49, 53, 56, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(195, 245, 255, 0.3);
+        }
+        .ghost-border {
+            position: relative;
+        }
+        .ghost-border::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(180deg, rgba(195, 245, 255, 0.15) 0%, rgba(195, 245, 255, 0) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .inner-glow-top {
+            box-shadow: inset 0 1px 0 0 rgba(195, 245, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body overflow-x-hidden min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 h-16 w-full z-50 flex justify-between items-center px-8 bg-[#101416] dark:bg-[#101416] shadow-[0_0_40px_-5px_rgba(195,245,255,0.06)]">
+<!-- Left: Brand / Search -->
+<div class="flex items-center gap-12 w-1/3">
+<div class="text-xl font-black tracking-[0.2em] text-[#00e5ff] uppercase font-headline">
+                MCP ORCHESTRA
+            </div>
+<div class="relative flex-1 hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-DEFAULT py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-primary focus:shadow-[0_0_8px_rgba(195,245,255,0.2)] transition-all outline-none font-label uppercase tracking-widest" placeholder="Search parameters..." type="text"/>
+</div>
+</div>
+<!-- Right: Actions & Profile -->
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="text-[#c3f5ff] dark:text-[#00e5ff] hover:text-[#00e5ff] transition-colors duration-300 scale-95 active:scale-90 flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+</button>
+<button class="text-[#c3f5ff] dark:text-[#00e5ff] hover:text-[#00e5ff] transition-colors duration-300 scale-95 active:scale-90 flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<span class="font-['Space_Grotesk'] tracking-tight text-sm uppercase font-bold text-on-surface-variant group-hover:text-primary transition-colors">Aetheris OS</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest ghost-border overflow-hidden flex items-center justify-center">
+<img alt="User Profile" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" data-alt="close up portrait of a young woman with futuristic soft cyan lighting on her face against a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8iVGFpsjIF91ZBpfVKy0j-jvA3DlLBLf8nNiGLANv6AI7pnjTQhrG_AIpM7IzWiYaLa5e1REgqcN9cE1fKbCfLN5MYDj9gZyqhwLMhL4WvzOxIito09OMpEYvc0vM4dludrQJM9hmYKbfVnP6tIldCo__NtW4xvUCpOz5tWtpVRbgpmtL3LXcDZgf4oR3dC2Mv0kGmVKvSOXlGZ6P5WOedvkHvsmDYVok4G7HL_LuX46LJ7A8YMC9MzWUofl8lk7m39XWN-xolg2a"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-64 bg-[#181c1e] dark:bg-[#181c1e] flex flex-col pt-20 z-40">
+<!-- Header Info -->
+<div class="px-6 pb-8 pt-4">
+<div class="text-lg font-['Space_Grotesk'] text-[#c3f5ff] tracking-widest mb-1">AETHERIS OS</div>
+<div class="font-['Inter'] text-[10px] font-bold tracking-[0.2em] uppercase text-secondary/60">CINEMATIC INTELLIGENCE</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 flex flex-col">
+<!-- Inactive -->
+<a class="flex items-center gap-4 text-[#44d8f1]/50 py-4 px-6 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Inter'] text-xs font-bold tracking-[0.1em] uppercase" href="#">
+<span class="material-symbols-outlined text-lg">hub</span>
+<span>Orchestra</span>
+</a>
+<!-- Active (Intelligence matches Subject Prediction intent) -->
+<a class="flex items-center gap-4 text-[#00e5ff] border-l-2 border-[#00e5ff] bg-gradient-to-r from-[#00e5ff]/10 to-transparent py-4 px-6 translate-x-1 transition-transform duration-300 font-['Inter'] text-xs font-bold tracking-[0.1em] uppercase" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="text-glow">Intelligence</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-4 text-[#44d8f1]/50 py-4 px-6 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Inter'] text-xs font-bold tracking-[0.1em] uppercase" href="#">
+<span class="material-symbols-outlined text-lg">settings_input_component</span>
+<span>Operations</span>
+</a>
+<a class="flex items-center gap-4 text-[#44d8f1]/50 py-4 px-6 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Inter'] text-xs font-bold tracking-[0.1em] uppercase" href="#">
+<span class="material-symbols-outlined text-lg">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-4 text-[#44d8f1]/50 py-4 px-6 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Inter'] text-xs font-bold tracking-[0.1em] uppercase mt-auto mb-4" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="p-6 pt-0 mt-auto">
+<button class="w-full bg-gradient-to-r from-primary-container to-secondary text-on-primary font-bold uppercase tracking-widest text-xs py-3 rounded-DEFAULT hover:shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all duration-300">
+                Deploy Module
+            </button>
+</div>
+</nav>
+<!-- Main Layout Wrapper -->
+<main class="ml-64 pt-16 min-h-screen flex">
+<!-- Left/Center Data Canvas -->
+<div class="flex-1 p-8 flex flex-col gap-8 max-w-6xl">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-2">
+<div>
+<h1 class="font-headline text-4xl text-on-surface tracking-tighter text-glow uppercase mb-2">Subject Prediction Matrix</h1>
+<p class="font-label text-sm uppercase tracking-widest text-on-surface-variant">Neural Analysis &amp; Trajectory Projection</p>
+</div>
+<div class="flex items-center gap-2 text-primary font-label text-xs uppercase tracking-widest">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    Live Simulation Active
+                </div>
+</div>
+<!-- Hero Recommendation Card -->
+<section class="bg-surface-container-high rounded-xl p-8 inner-glow-top relative overflow-hidden group">
+<!-- Decorative background elements -->
+<div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+<svg class="absolute -right-20 -top-20 w-96 h-96 text-primary/5 rotate-12" fill="none" stroke="currentColor" stroke-width="0.5" viewbox="0 0 100 100">
+<circle cx="50" cy="50" r="40"></circle>
+<circle cx="50" cy="50" r="30"></circle>
+<circle cx="50" cy="50" r="20"></circle>
+<path d="M10 50h80 M50 10v80" stroke-dasharray="2 2"></path>
+</svg>
+<div class="relative z-10 flex justify-between items-start">
+<div class="max-w-xl">
+<div class="font-label text-xs font-bold text-secondary tracking-[0.2em] uppercase mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+                            Optimal Pathway Identified
+                        </div>
+<h2 class="font-headline text-5xl text-on-surface tracking-tight mb-4">Advanced Computational Physics</h2>
+<p class="text-on-surface-variant leading-relaxed text-sm max-w-md">
+                            Based on your historic performance vector and cognitive topology, this module aligns with your peak aptitude states. Expected to catalyze a synergistic understanding of quantum mechanics and neural networking principles.
+                        </p>
+</div>
+<div class="flex flex-col items-end">
+<div class="text-[5rem] font-headline font-light text-primary leading-none tracking-tighter text-glow drop-shadow-md">
+                            98<span class="text-2xl text-primary/60 align-top">%</span>
+</div>
+<div class="font-label text-xs uppercase tracking-widest text-on-surface-variant mt-2 text-right">
+                            Confidence Score<br/>
+<span class="text-[10px] text-on-surface-variant/50">Algorithm v4.2.1</span>
+</div>
+</div>
+</div>
+<div class="mt-8 flex gap-4 relative z-10">
+<button class="bg-gradient-to-r from-primary to-secondary text-on-primary font-bold uppercase tracking-widest text-xs px-8 py-3 rounded-DEFAULT hover:shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all">
+                        Lock Selection
+                    </button>
+<button class="bg-transparent text-primary font-bold uppercase tracking-widest text-xs px-8 py-3 rounded-DEFAULT ghost-border hover:bg-surface-variant transition-colors">
+                        View Syllabus
+                    </button>
+</div>
+</section>
+<!-- Grid Layout for Topology & Projection -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Skill Topology Radar -->
+<div class="bg-surface-container-low rounded-xl p-6 inner-glow-top flex flex-col">
+<h3 class="font-label text-xs font-bold text-on-surface tracking-[0.15em] uppercase mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">radar</span>
+                        Skill Topology Drift
+                    </h3>
+<div class="flex-1 relative flex items-center justify-center min-h-[250px]">
+<!-- Simulated Radar Chart via CSS/SVG -->
+<svg class="w-full h-full max-w-[240px] drop-shadow-[0_0_15px_rgba(0,229,255,0.1)]" viewbox="0 0 200 200">
+<!-- Axis lines -->
+<path d="M100 20 L100 180 M20 100 L180 100 M43 43 L157 157 M43 157 L157 43" stroke="rgba(132, 147, 150, 0.2)" stroke-width="1"></path>
+<!-- Web grids -->
+<polygon fill="none" points="100,20 157,43 180,100 157,157 100,180 43,157 20,100 43,43" stroke="rgba(132, 147, 150, 0.1)" stroke-width="1"></polygon>
+<polygon fill="none" points="100,40 143,57 160,100 143,143 100,160 57,143 40,100 57,57" stroke="rgba(132, 147, 150, 0.2)" stroke-width="1"></polygon>
+<polygon fill="none" points="100,60 128,72 140,100 128,128 100,140 72,128 60,100 72,72" stroke="rgba(132, 147, 150, 0.3)" stroke-width="1"></polygon>
+<!-- Current State Polygon (Dimmer) -->
+<polygon fill="rgba(68, 216, 241, 0.1)" points="100,50 130,60 150,100 120,130 100,120 70,140 50,100 80,70" stroke="#44d8f1" stroke-dasharray="4 4" stroke-width="1.5"></polygon>
+<!-- Projected State Polygon (Primary, Glowing) -->
+<polygon fill="rgba(0, 229, 255, 0.15)" points="100,30 150,50 170,100 140,150 100,160 50,130 40,100 60,60" stroke="#00e5ff" stroke-width="2"></polygon>
+<!-- Nodes for Projected -->
+<circle cx="100" cy="30" fill="#00e5ff" r="3"></circle>
+<circle cx="150" cy="50" fill="#00e5ff" r="3"></circle>
+<circle cx="170" cy="100" fill="#00e5ff" r="3"></circle>
+<circle cx="140" cy="150" fill="#00e5ff" r="3"></circle>
+<circle cx="100" cy="160" fill="#00e5ff" r="3"></circle>
+<circle cx="50" cy="130" fill="#00e5ff" r="3"></circle>
+<circle cx="40" cy="100" fill="#00e5ff" r="3"></circle>
+<circle cx="60" cy="60" fill="#00e5ff" r="3"></circle>
+</svg>
+<!-- Legend overlay -->
+<div class="absolute bottom-0 right-0 flex flex-col gap-2 bg-surface-container/80 p-3 rounded-lg backdrop-blur-sm border border-outline-variant/30">
+<div class="flex items-center gap-2">
+<div class="w-3 h-[2px] bg-secondary border-t border-dashed border-surface"></div>
+<span class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">Current Profile</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-primary/20 border border-primary rounded-sm"></div>
+<span class="font-label text-[10px] uppercase tracking-wider text-primary text-glow">Projected Drift</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Semester Projection Tile -->
+<div class="bg-surface-container-low rounded-xl p-6 inner-glow-top flex flex-col">
+<h3 class="font-label text-xs font-bold text-on-surface tracking-[0.15em] uppercase mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">timeline</span>
+                        Semester Trajectory
+                    </h3>
+<div class="flex-1 grid grid-cols-2 gap-4">
+<!-- Metric 1 -->
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between ghost-border">
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Credit Load Density</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline text-3xl text-on-surface">18</span>
+<span class="text-on-surface-variant/50 text-sm">/20</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest mt-3 rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[90%]"></div>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between ghost-border">
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">GPA Impact Delta</span>
+<div class="flex items-baseline gap-1 text-primary">
+<span class="material-symbols-outlined text-lg leading-none">trending_up</span>
+<span class="font-headline text-3xl text-glow">+0.45</span>
+</div>
+<span class="text-[10px] text-primary/60 uppercase tracking-wider mt-2">Optimal variance</span>
+</div>
+<!-- Metric 3 (Full width) -->
+<div class="col-span-2 bg-gradient-to-br from-surface-container to-surface-container-highest rounded-lg p-4 flex items-center justify-between ghost-border relative overflow-hidden">
+<div class="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div>
+<div class="relative z-10">
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest block mb-1">System Readiness</span>
+<span class="font-headline text-xl text-on-surface tracking-tight block">Level 4: High Capacity</span>
+</div>
+<div class="relative z-10 flex gap-1">
+<div class="w-2 h-8 bg-primary rounded-sm shadow-[0_0_8px_rgba(195,245,255,0.4)]"></div>
+<div class="w-2 h-8 bg-primary rounded-sm shadow-[0_0_8px_rgba(195,245,255,0.4)]"></div>
+<div class="w-2 h-8 bg-primary rounded-sm shadow-[0_0_8px_rgba(195,245,255,0.4)]"></div>
+<div class="w-2 h-8 bg-primary rounded-sm shadow-[0_0_8px_rgba(195,245,255,0.4)]"></div>
+<div class="w-2 h-8 bg-surface-variant rounded-sm"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Alternative Options -->
+<div>
+<h3 class="font-label text-xs font-bold text-on-surface-variant tracking-[0.15em] uppercase mb-4 pl-2 border-l-2 border-surface-container-highest">Secondary Vectors</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Alt Card 1 -->
+<div class="bg-surface-container-low p-5 rounded-lg flex items-center justify-between hover:bg-surface-container transition-colors group border border-transparent hover:border-outline-variant/30">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">data_object</span>
+</div>
+<div>
+<h4 class="font-headline text-base text-on-surface">Data Structures III</h4>
+<span class="font-label text-[10px] text-secondary uppercase tracking-widest">Match: 84%</span>
+</div>
+</div>
+<button class="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant group-hover:text-primary transition-colors flex items-center gap-1">
+                            Add to Matrix <span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<!-- Alt Card 2 -->
+<div class="bg-surface-container-low p-5 rounded-lg flex items-center justify-between hover:bg-surface-container transition-colors group border border-transparent hover:border-outline-variant/30">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">memory</span>
+</div>
+<div>
+<h4 class="font-headline text-base text-on-surface">Hardware Architecture</h4>
+<span class="font-label text-[10px] text-secondary uppercase tracking-widest">Match: 79%</span>
+</div>
+</div>
+<button class="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant group-hover:text-primary transition-colors flex items-center gap-1">
+                            Add to Matrix <span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Intelligence Panel (Parameter Adjustment) -->
+<aside class="w-80 bg-surface-container-lowest border-l border-surface-container-low p-6 flex flex-col overflow-y-auto">
+<div class="mb-8 border-b border-surface-container-highest pb-4">
+<h3 class="font-headline text-lg text-primary tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined">tune</span>
+                    Telemetry Tuning
+                </h3>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2 leading-relaxed">Adjust parameters to simulate alternative trajectory outcomes.</p>
+</div>
+<!-- Parameters -->
+<div class="flex flex-col gap-6 flex-1">
+<!-- Slider 1 -->
+<div>
+<div class="flex justify-between mb-2">
+<label class="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface">Cognitive Aptitude Weight</label>
+<span class="text-[10px] text-secondary font-mono">0.85</span>
+</div>
+<div class="relative w-full h-1 bg-surface-variant rounded-full">
+<div class="absolute left-0 top-0 h-full bg-secondary w-[85%] rounded-full shadow-[0_0_10px_rgba(68,216,241,0.5)]"></div>
+<div class="absolute left-[85%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full cursor-pointer shadow-md"></div>
+</div>
+</div>
+<!-- Slider 2 -->
+<div>
+<div class="flex justify-between mb-2">
+<label class="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface">Workload Tolerance</label>
+<span class="text-[10px] text-primary font-mono">0.60</span>
+</div>
+<div class="relative w-full h-1 bg-surface-variant rounded-full">
+<div class="absolute left-0 top-0 h-full bg-primary w-[60%] rounded-full shadow-[0_0_10px_rgba(195,245,255,0.5)]"></div>
+<div class="absolute left-[60%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full cursor-pointer shadow-md"></div>
+</div>
+</div>
+<!-- Slider 3 -->
+<div>
+<div class="flex justify-between mb-2">
+<label class="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface">Market Trend Impact</label>
+<span class="text-[10px] text-tertiary font-mono">0.42</span>
+</div>
+<div class="relative w-full h-1 bg-surface-variant rounded-full">
+<div class="absolute left-0 top-0 h-full bg-tertiary-fixed-dim w-[42%] rounded-full shadow-[0_0_10px_rgba(243,191,38,0.3)]"></div>
+<div class="absolute left-[42%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full cursor-pointer shadow-md"></div>
+</div>
+</div>
+<!-- Rationale Box -->
+<div class="mt-4 bg-surface-container rounded-lg p-4 ghost-border border-l-2 border-l-primary">
+<h4 class="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-primary mb-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lightbulb</span>
+                        System Rationale
+                    </h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+                        Lowering Workload Tolerance below 0.50 shifts the primary recommendation to 'Hardware Architecture' to preserve system stability, despite a minor drop in GPA Delta projection.
+                    </p>
+</div>
+</div>
+<button class="mt-8 w-full bg-transparent border border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest text-xs py-3 rounded-DEFAULT hover:border-primary hover:text-primary transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                Recalibrate
+            </button>
+</aside>
+</main>
+</body></html>

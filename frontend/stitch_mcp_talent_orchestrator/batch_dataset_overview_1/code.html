@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>University Student Analytics Dashboard - Aetheric AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #05090C;
+            background-image: radial-gradient(circle at 0% 0%, rgba(0, 229, 255, 0.05) 0%, transparent 50%),
+                              radial-gradient(circle at 100% 100%, rgba(0, 229, 255, 0.03) 0%, transparent 50%);
+            color: #dce4e5;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        
+        .glass-widget {
+            background: rgba(21, 29, 30, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 229, 255, 0.15);
+        }
+
+        .premium-gradient {
+            background: linear-gradient(135deg, #00e5ff 0%, #00626e 100%);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+        }
+
+        .bar-group:hover .custom-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -10px);
+        }
+
+        #donut-segment {
+            transition: stroke-dasharray 0.5s ease-in-out, stroke 0.5s ease-in-out;
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary": "#00363c",
+                        "on-secondary-container": "#004249",
+                        "surface": "#0d1516",
+                        "on-surface": "#dce4e5",
+                        "on-primary-fixed": "#001f24",
+                        "surface-container-low": "#151d1e",
+                        "primary-container": "#00e5ff",
+                        "on-tertiary-fixed": "#0f1d24",
+                        "on-primary": "#00363d",
+                        "error": "#ffb4ab",
+                        "primary": "#c3f5ff",
+                        "surface-container-high": "#242b2d",
+                        "on-error": "#690005",
+                        "tertiary": "#dfeff8",
+                        "secondary-container": "#00b7c8",
+                        "on-secondary-fixed": "#001f23",
+                        "error-container": "#93000a",
+                        "surface-bright": "#333a3c",
+                        "on-tertiary-fixed-variant": "#3a4950",
+                        "primary-fixed-dim": "#00daf3",
+                        "tertiary-fixed-dim": "#b9c9d1",
+                        "tertiary-fixed": "#d5e5ed",
+                        "surface-tint": "#00daf3",
+                        "on-primary-container": "#00626e",
+                        "surface-container-highest": "#2e3638",
+                        "surface-container-lowest": "#080f11",
+                        "on-surface-variant": "#bac9cc",
+                        "inverse-on-surface": "#2a3233",
+                        "surface-container": "#192122",
+                        "inverse-surface": "#dce4e5",
+                        "on-primary-fixed-variant": "#004f58",
+                        "secondary-fixed": "#91f1ff",
+                        "secondary": "#49d8ea",
+                        "surface-variant": "#2e3638",
+                        "on-secondary-fixed-variant": "#004f57",
+                        "surface-dim": "#0d1516",
+                        "on-tertiary-container": "#4c5b62",
+                        "secondary-fixed-dim": "#49d8ea",
+                        "on-tertiary": "#243239",
+                        "outline": "#849396",
+                        "background": "#0d1516",
+                        "inverse-primary": "#006875",
+                        "outline-variant": "#3b494c",
+                        "on-background": "#dce4e5",
+                        "tertiary-container": "#c3d3db",
+                        "primary-fixed": "#9cf0ff",
+                        "on-error-container": "#ffdad6"
+                    },
+                    spacing: {
+                        "gutter": "24px",
+                        "margin-mobile": "20px",
+                        "unit": "8px",
+                        "container-padding": "24px"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+<div class="flex flex-col min-h-screen">
+<main class="flex-1 p-container-padding max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-y-auto pb-12">
+<!-- Section: CSV Upload -->
+<section class="mb-gutter">
+<div class="glass-widget rounded-xl p-8 flex flex-col items-center justify-center text-center gap-4 min-h-[160px]">
+<div class="flex flex-col items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-4xl">upload_file</span>
+<p class="text-lg font-manrope font-bold text-on-surface">Drag and drop student dataset CSV or click to browse</p>
+</div>
+<button class="premium-gradient text-on-primary px-8 py-2.5 font-manrope font-extrabold rounded-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
+                    Upload CSV
+                </button>
+<p class="text-sm text-on-surface-variant/60 font-medium">Supported format: .csv | Max file size: 10MB</p>
+</div>
+</section>
+<!-- Section 1: Header -->
+<header class="mb-6">
+<h2 class="text-xs font-manrope font-extrabold tracking-[0.2em] text-primary-container uppercase">DATASET OVERVIEW — 200 STUDENTS</h2>
+</header>
+<!-- Section 2: KPI Row -->
+<section class="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">Total students</span>
+<span class="text-3xl font-manrope font-extrabold leading-tight glow-text">200</span>
+</div>
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">High (≥3.5)</span>
+<span class="text-3xl font-manrope font-extrabold text-primary-container leading-tight">51</span>
+</div>
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">Mid (2.5–3.49)</span>
+<span class="text-3xl font-manrope font-extrabold text-tertiary-fixed-dim leading-tight">85</span>
+</div>
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">Low (&lt;2.5)</span>
+<span class="text-3xl font-manrope font-extrabold text-error leading-tight">64</span>
+</div>
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">Avg SGPA</span>
+<span class="text-3xl font-manrope font-extrabold text-primary-fixed-dim leading-tight">2.86</span>
+</div>
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">Avg study hrs</span>
+<span class="text-3xl font-manrope font-extrabold leading-tight">5.0<span class="text-sm font-medium ml-1">h</span></span>
+</div>
+<div class="glass-widget p-4 rounded-lg flex flex-col">
+<span class="text-[10px] font-manrope font-extrabold text-on-surface-variant uppercase tracking-wider mb-1">Avg attendance</span>
+<span class="text-3xl font-manrope font-extrabold leading-tight">74%</span>
+</div>
+</section>
+<!-- Section 3: Category Distribution -->
+<section class="mb-8">
+<h3 class="text-xs font-manrope font-extrabold tracking-[0.2em] text-on-surface-variant/70 uppercase mb-4">CATEGORY DISTRIBUTION</h3>
+<div class="w-full h-3 flex rounded-full overflow-hidden mb-4 bg-surface-container-highest/30">
+<div class="bg-primary-container h-full" style="width: 26%;"></div>
+<div class="bg-tertiary-fixed-dim h-full" style="width: 43%;"></div>
+<div class="bg-error h-full" style="width: 31%;"></div>
+</div>
+<div class="flex flex-wrap gap-6">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-primary-container rounded-full shadow-[0_0_8px_rgba(0,229,255,0.5)]"></div>
+<span class="text-sm font-medium">High — 26%</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-tertiary-fixed-dim rounded-full shadow-[0_0_8px_rgba(185,201,209,0.5)]"></div>
+<span class="text-sm font-medium">Mid — 43%</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-error rounded-full shadow-[0_0_8px_rgba(255,180,171,0.5)]"></div>
+<span class="text-sm font-medium">Low — 31%</span>
+</div>
+</div>
+</section>
+<!-- Section 4: Lower Analytics Two-Column -->
+<section class="grid grid-cols-1 lg:grid-cols-10 gap-gutter items-stretch mb-8">
+<!-- Left: Student Distribution (60%) -->
+<div class="glass-widget rounded-xl p-6 flex flex-col lg:col-span-6 min-h-[300px]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xs font-manrope font-extrabold text-on-surface-variant uppercase tracking-widest">STUDENT DISTRIBUTION BY PREVIOUS SGPA</h3>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer text-sm">more_horiz</span>
+</div>
+<div class="relative flex-1 flex items-end justify-around border-b border-outline-variant/30 pb-4 mb-6">
+<!-- Y-Axis Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+<div class="border-t border-on-surface-variant/30 w-full flex justify-end"><span class="text-[9px] -mt-2 pr-1">100%</span></div>
+<div class="border-t border-on-surface-variant/30 w-full flex justify-end"><span class="text-[9px] -mt-2 pr-1">80%</span></div>
+<div class="border-t border-on-surface-variant/30 w-full flex justify-end"><span class="text-[9px] -mt-2 pr-1">60%</span></div>
+<div class="border-t border-on-surface-variant/30 w-full flex justify-end"><span class="text-[9px] -mt-2 pr-1">40%</span></div>
+<div class="border-t border-on-surface-variant/30 w-full flex justify-end"><span class="text-[9px] -mt-2 pr-1">20%</span></div>
+<div class="w-full h-0 flex justify-end"><span class="text-[9px] -mt-2 pr-1">0%</span></div>
+</div>
+<!-- Bar: High -->
+<div class="relative bar-group flex flex-col items-center w-16 md:w-24 z-10 cursor-pointer">
+<div class="custom-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-44 bg-surface-container-lowest/90 backdrop-blur-md border border-primary-container/30 shadow-2xl p-3 opacity-0 invisible transition-all duration-300 pointer-events-none z-50 rounded-lg">
+<h4 class="font-manrope font-bold text-xs text-on-surface mb-2 border-b border-outline-variant/30 pb-1">High (≥3.5)</h4>
+<div class="flex items-center gap-2"><div class="w-3 h-3 bg-primary-container rounded-full"></div><span class="text-xs font-medium">51 students (26%)</span></div>
+</div>
+<div class="bg-primary-container w-full rounded-t-lg transition-all hover:scale-x-105 hover:brightness-125 shadow-[0_0_15px_rgba(0,229,255,0.2)]" style="height: 25.5%; min-height: 4px;"></div>
+<span class="absolute -bottom-8 text-[10px] font-manrope font-extrabold uppercase tracking-tighter">HIGH</span>
+</div>
+<!-- Bar: Mid -->
+<div class="relative bar-group flex flex-col items-center w-16 md:w-24 z-10 cursor-pointer">
+<div class="custom-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-44 bg-surface-container-lowest/90 backdrop-blur-md border border-primary-container/30 shadow-2xl p-3 opacity-0 invisible transition-all duration-300 pointer-events-none z-50 rounded-lg">
+<h4 class="font-manrope font-bold text-xs text-on-surface mb-2 border-b border-outline-variant/30 pb-1">Mid (2.5–3.49)</h4>
+<div class="flex items-center gap-2"><div class="w-3 h-3 bg-tertiary-fixed-dim rounded-full"></div><span class="text-xs font-medium">85 students (43%)</span></div>
+</div>
+<div class="bg-tertiary-fixed-dim w-full rounded-t-lg transition-all hover:scale-x-105 hover:brightness-125" style="height: 42.5%; min-height: 4px;"></div>
+<span class="absolute -bottom-8 text-[10px] font-manrope font-extrabold uppercase tracking-tighter">MID</span>
+</div>
+<!-- Bar: Low -->
+<div class="relative bar-group flex flex-col items-center w-16 md:w-24 z-10 cursor-pointer">
+<div class="custom-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-44 bg-surface-container-lowest/90 backdrop-blur-md border border-primary-container/30 shadow-2xl p-3 opacity-0 invisible transition-all duration-300 pointer-events-none z-50 rounded-lg">
+<h4 class="font-manrope font-bold text-xs text-on-surface mb-2 border-b border-outline-variant/30 pb-1">Low (&lt;2.5)</h4>
+<div class="flex items-center gap-2"><div class="w-3 h-3 bg-error rounded-full"></div><span class="text-xs font-medium">64 students (31%)</span></div>
+</div>
+<div class="bg-error w-full rounded-t-lg transition-all hover:scale-x-105 hover:brightness-125" style="height: 32%; min-height: 4px;"></div>
+<span class="absolute -bottom-8 text-[10px] font-manrope font-extrabold uppercase tracking-tighter">LOW</span>
+</div>
+</div>
+</div>
+<!-- Right: Department & Gender (40%) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- AVG SGPA BY DEPARTMENT -->
+<div class="glass-widget rounded-xl p-6 flex flex-col min-h-[220px]">
+<h3 class="text-xs font-manrope font-extrabold text-on-surface-variant uppercase tracking-widest mb-6">AVG SGPA BY DEPARTMENT</h3>
+<div class="flex-1 flex flex-col justify-between gap-4">
+<!-- CSE -->
+<div class="flex items-center gap-4">
+<span class="text-xs font-bold w-10">CSE</span>
+<div class="flex-1 h-1.5 bg-surface-container-highest/20 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full shadow-[0_0_8px_rgba(0,229,255,0.4)]" style="width: 68.1%"></div>
+</div>
+<span class="text-xs font-manrope font-bold w-10 text-right">2.76</span>
+</div>
+<!-- EEE -->
+<div class="flex items-center gap-4">
+<span class="text-xs font-bold w-10">EEE</span>
+<div class="flex-1 h-1.5 bg-surface-container-highest/20 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 71.6%"></div>
+</div>
+<span class="text-xs font-manrope font-bold w-10 text-right">2.90</span>
+</div>
+<!-- BBA -->
+<div class="flex items-center gap-4">
+<span class="text-xs font-bold w-10">BBA</span>
+<div class="flex-1 h-1.5 bg-surface-container-highest/20 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 71.8%"></div>
+</div>
+<span class="text-xs font-manrope font-bold w-10 text-right">2.91</span>
+</div>
+<!-- Civil -->
+<div class="flex items-center gap-4">
+<span class="text-xs font-bold w-10">Civil</span>
+<div class="flex-1 h-1.5 bg-surface-container-highest/20 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 73.8%"></div>
+</div>
+<span class="text-xs font-manrope font-bold w-10 text-right">2.99</span>
+</div>
+</div>
+</div>
+<!-- GENDER SPLIT -->
+<div class="glass-widget rounded-xl p-6 flex flex-col min-h-[220px]">
+<div class="flex justify-between items-center mb-4">
+<div class="relative">
+<button class="flex items-center gap-2 bg-on-primary-container/20 border border-primary-container/30 text-on-surface px-4 py-2 text-[10px] font-manrope font-extrabold rounded shadow-sm hover:bg-on-primary-container/30 transition-colors uppercase tracking-widest" id="gender-filter-btn">
+<span id="selected-filter">All Students</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<div class="hidden absolute left-0 top-full mt-2 w-52 bg-surface-container-lowest border border-primary-container/20 shadow-2xl z-50 py-2 rounded-lg backdrop-blur-xl" id="gender-dropdown">
+<div class="filter-option px-4 py-2 text-[11px] font-bold hover:bg-primary-container/10 cursor-pointer transition-colors" data-value="all">All Students</div>
+<div class="filter-option px-4 py-2 text-[11px] font-bold hover:bg-primary-container/10 cursor-pointer transition-colors" data-value="male">Male Only</div>
+<div class="filter-option px-4 py-2 text-[11px] font-bold hover:bg-primary-container/10 cursor-pointer transition-colors" data-value="female">Female Only</div>
+<div class="border-t border-primary-container/10 my-1"></div>
+<div class="filter-option px-4 py-2 text-[11px] font-bold hover:bg-primary-container/10 cursor-pointer transition-colors" data-value="high">High SGPA (≥3.5)</div>
+<div class="filter-option px-4 py-2 text-[11px] font-bold hover:bg-primary-container/10 cursor-pointer transition-colors" data-value="mid">Mid SGPA (2.5–3.49)</div>
+<div class="filter-option px-4 py-2 text-[11px] font-bold hover:bg-primary-container/10 cursor-pointer transition-colors" data-value="low">Low SGPA (&lt;2.5)</div>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center gap-4">
+<div class="relative w-28 h-28">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="transparent" id="donut-bg" r="40" stroke="#004249" stroke-width="10"></circle>
+<circle class="filter drop-shadow-[0_0_5px_rgba(0,229,255,0.6)]" cx="50" cy="50" fill="transparent" id="donut-segment" r="40" stroke="#00E5FF" stroke-dasharray="138.16 251.2" stroke-linecap="round" stroke-width="10"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-3xl font-manrope font-extrabold leading-none glow-text" id="donut-total">200</span>
+<span class="text-[8px] font-manrope font-extrabold tracking-widest text-on-surface-variant uppercase mt-1">TOTAL</span>
+</div>
+</div>
+<div class="flex items-center justify-center gap-6" id="donut-legend">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-[#00E5FF] rounded-full shadow-[0_0_8px_#00E5FF]"></div>
+<span class="text-[10px] font-bold uppercase tracking-wider">Male</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-[#004249] rounded-full"></div>
+<span class="text-[10px] font-bold uppercase tracking-wider">Female</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="mt-4 flex flex-wrap gap-4 justify-center">
+<button class="premium-gradient text-on-primary px-10 py-3 rounded-lg font-manrope font-extrabold hover:scale-105 transition-all uppercase tracking-widest text-xs border border-primary-container/20">
+                Prediction
+            </button>
+<button class="premium-gradient text-on-primary px-10 py-3 rounded-lg font-manrope font-extrabold hover:scale-105 transition-all uppercase tracking-widest text-xs border border-primary-container/20">
+                Prescribe
+            </button>
+<button class="premium-gradient text-on-primary px-10 py-3 rounded-lg font-manrope font-extrabold hover:scale-105 transition-all uppercase tracking-widest text-xs border border-primary-container/20">
+                Forecasting
+            </button>
+</section>
+</main>
+</div>
+<script>
+const filterBtn = document.getElementById('gender-filter-btn');
+const dropdown = document.getElementById('gender-dropdown');
+const selectedText = document.getElementById('selected-filter');
+const donutBg = document.getElementById('donut-bg');
+const donutSegment = document.getElementById('donut-segment');
+const donutTotal = document.getElementById('donut-total');
+const legend = document.getElementById('donut-legend');
+
+filterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('hidden');
+});
+
+window.addEventListener('click', () => {
+    dropdown.classList.add('hidden');
+});
+
+const config = {
+  all: { total: '200', bg: '#004249', seg: '#00E5FF', offset: 138.16, labels: [{l:'Male', c:'#00E5FF'}, {l:'Female', c:'#004249'}] },
+  male: { total: '104', bg: '#00E5FF', seg: '#00E5FF', offset: 251.2, labels: [{l:'Male', c:'#00E5FF'}] },
+  female: { total: '96', bg: '#004249', seg: '#004249', offset: 251.2, labels: [{l:'Female', c:'#004249'}] },
+  high: { total: '51', bg: '#333a3c', seg: '#00E5FF', offset: 150, labels: [{l:'Male', c:'#00E5FF'}, {l:'Female', c:'#333a3c'}] },
+  mid: { total: '85', bg: '#151d1e', seg: '#b9c9d1', offset: 110, labels: [{l:'Male', c:'#b9c9d1'}, {l:'Female', c:'#151d1e'}] },
+  low: { total: '64', bg: '#0d1516', seg: '#ffb4ab', offset: 140, labels: [{l:'Male', c:'#ffb4ab'}, {l:'Female', c:'#0d1516'}] }
+};
+
+document.querySelectorAll('.filter-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const val = opt.dataset.value;
+    const data = config[val];
+    
+    selectedText.innerText = opt.innerText;
+    dropdown.classList.add('hidden');
+    
+    donutTotal.style.opacity = '0';
+    setTimeout(() => {
+        donutTotal.innerText = data.total;
+        donutTotal.style.opacity = '1';
+    }, 150);
+    
+    donutBg.setAttribute('stroke', data.bg);
+    donutSegment.setAttribute('stroke', data.seg);
+    donutSegment.setAttribute('stroke-dasharray', `${data.offset} 251.2`);
+    
+    legend.innerHTML = data.labels.map(l => `
+      <div class="flex items-center gap-2 animate-in fade-in duration-500">
+        <div class="w-2 h-2 rounded-full" style="background-color: ${l.c}; box-shadow: 0 0 6px ${l.c}aa"></div>
+        <span class="text-[10px] font-bold uppercase tracking-wider">${l.l}</span>
+      </div>
+    `).join('');
+  });
+});
+</script>
+</body></html>

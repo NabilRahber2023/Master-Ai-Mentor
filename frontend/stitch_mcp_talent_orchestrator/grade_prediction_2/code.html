@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MCP Orchestra - Grade Prediction</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#001f25",
+                    "secondary-fixed": "#a1efff",
+                    "background": "#101416",
+                    "tertiary-fixed": "#ffdf96",
+                    "primary-fixed": "#9cf0ff",
+                    "inverse-on-surface": "#2d3133",
+                    "tertiary-container": "#fec931",
+                    "surface-container": "#1c2022",
+                    "on-secondary-fixed-variant": "#004e59",
+                    "on-background": "#e0e3e6",
+                    "on-secondary-container": "#004650",
+                    "on-error-container": "#ffdad6",
+                    "primary": "#c3f5ff",
+                    "on-primary-container": "#00626e",
+                    "surface-container-high": "#272a2d",
+                    "surface-bright": "#363a3c",
+                    "secondary": "#44d8f1",
+                    "tertiary-fixed-dim": "#f3bf26",
+                    "on-error": "#690005",
+                    "secondary-fixed-dim": "#44d8f1",
+                    "on-secondary": "#00363e",
+                    "tertiary": "#ffeac0",
+                    "surface-tint": "#00daf3",
+                    "surface-container-highest": "#313538",
+                    "on-tertiary-fixed": "#251a00",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "surface-variant": "#313538",
+                    "primary-container": "#00e5ff",
+                    "surface-container-low": "#181c1e",
+                    "surface-dim": "#101416",
+                    "secondary-container": "#00bcd4",
+                    "on-tertiary": "#3e2e00",
+                    "inverse-primary": "#006875",
+                    "on-surface": "#e0e3e6",
+                    "outline-variant": "#3b494c",
+                    "outline": "#849396",
+                    "surface": "#101416",
+                    "on-primary-fixed-variant": "#004f58",
+                    "error-container": "#93000a",
+                    "on-tertiary-container": "#6f5500",
+                    "primary-fixed-dim": "#00daf3",
+                    "surface-container-lowest": "#0b0f11",
+                    "error": "#ffb4ab",
+                    "on-surface-variant": "#bac9cc",
+                    "on-primary": "#00363d",
+                    "inverse-surface": "#e0e3e6",
+                    "on-primary-fixed": "#001f24"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": [
+                            "Space Grotesk"
+                    ],
+                    "body": [
+                            "Inter"
+                    ],
+                    "label": [
+                            "Inter"
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.surface');
+            color: theme('colors.on-surface');
+            font-family: theme('fontFamily.body');
+        }
+        
+        .glass-panel {
+            background-color: rgba(49, 53, 56, 0.4); /* surface-variant with opacity */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .glow-shadow {
+            box-shadow: 0 0 40px -5px rgba(195, 245, 255, 0.06); /* on-surface tint */
+        }
+        
+        .ghost-border {
+            border: 1px solid rgba(59, 73, 76, 0.15); /* outline-variant */
+            box-shadow: 0 0 8px rgba(59, 73, 76, 0.15);
+        }
+
+        .card-top-glow {
+            box-shadow: inset 0 1px 0 0 rgba(195, 245, 255, 0.1);
+        }
+        
+        .scanning-lines {
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 2px,
+                rgba(224, 227, 230, 0.02) 2px,
+                rgba(224, 227, 230, 0.02) 4px
+            );
+        }
+        
+        /* Typography specifics */
+        .text-display-lg {
+            font-family: theme('fontFamily.headline');
+            font-size: 3rem;
+            line-height: 1.1;
+            font-weight: 700;
+        }
+        .text-label-wide {
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (JSON Component) -->
+<nav class="docked fixed left-0 top-0 h-full w-64 bg-[#181c1e] z-50 flex flex-col py-8 px-0 border-r border-[#313538]/20 hidden md:flex">
+<div class="px-6 mb-8">
+<h1 class="text-lg font-black tracking-widest text-[#00e5ff] font-['Space_Grotesk']">MCP ORCHESTRA</h1>
+<p class="text-xs text-on-surface-variant font-medium tracking-[0.15em] uppercase font-['Space_Grotesk'] mt-1">Cinematic Intelligence</p>
+</div>
+<ul class="flex-1 flex flex-col gap-2 mt-4">
+<!-- Inactive -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#44d8f1]/40 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Space_Grotesk'] text-xs font-medium tracking-[0.15em] uppercase hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'wght' 300;">chat_bubble</span>
+                    Chatbot
+                </a>
+</li>
+<!-- Active -->
+<li class="relative">
+<a class="flex items-center gap-4 px-6 py-3 text-[#00e5ff] border-l-2 border-[#00e5ff] bg-gradient-to-r from-[#00e5ff]/10 to-transparent font-['Space_Grotesk'] text-xs font-medium tracking-[0.15em] uppercase" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1, 'wght' 400;">trending_up</span>
+                    Grade Prediction
+                </a>
+</li>
+<!-- Inactive -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#44d8f1]/40 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Space_Grotesk'] text-xs font-medium tracking-[0.15em] uppercase hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'wght' 300;">map</span>
+                    Career Prediction
+                </a>
+</li>
+<!-- Inactive -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#44d8f1]/40 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Space_Grotesk'] text-xs font-medium tracking-[0.15em] uppercase hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'wght' 300;">school</span>
+                    Subject Prediction
+                </a>
+</li>
+<!-- Inactive -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#44d8f1]/40 hover:text-[#c3f5ff] hover:bg-[#313538]/30 transition-all duration-200 font-['Space_Grotesk'] text-xs font-medium tracking-[0.15em] uppercase hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'wght' 300;">grid_view</span>
+                    9-Box Evaluation
+                </a>
+</li>
+</ul>
+<!-- Bottom Avatar/Profile area could go here, omitting for layout focus -->
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 relative overflow-y-auto h-full bg-surface">
+<!-- TopAppBar (JSON Component) -->
+<header class="docked full-width top-0 z-40 bg-[#101416]/80 backdrop-blur-xl flex justify-between items-center w-full px-6 h-16 max-w-[calc(100%-0rem)] md:max-w-full shadow-[0_0_40px_rgba(0,229,255,0.06)] border-b border-transparent sticky">
+<div class="flex items-center md:hidden">
+<span class="text-xl font-bold tracking-tighter text-[#c3f5ff] font-['Space_Grotesk']">MCP Orchestra</span>
+</div>
+<!-- Search -->
+<div class="hidden md:flex items-center bg-surface-container-highest rounded-DEFAULT px-4 py-2 w-64 ghost-border transition-all focus-within:border-primary focus-within:shadow-[0_0_8px_rgba(195,245,255,0.15)] group">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2 group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-wide text-xs text-on-surface w-full placeholder:text-on-surface-variant/50 font-['Space_Grotesk']" placeholder="QUERY ORCHESTRA..." type="text"/>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-6">
+<button class="text-[#44d8f1]/60 hover:text-[#00e5ff] transition-colors duration-300 relative group">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 300;">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full animate-pulse group-hover:scale-110"></span>
+</button>
+<button class="text-[#44d8f1]/60 hover:text-[#00e5ff] transition-colors duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 300;">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest ghost-border overflow-hidden cursor-pointer opacity-80 hover:opacity-100 hover:scale-95 transition-all">
+<!-- Placeholder for profile image -->
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a young professional with dark hair in dim atmospheric lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQCFyEn2eJWwLYLVlH15DcfSHUkp509UhV1uUvFHJh8HIVi36t0SfPjwb-aGtI3stmu2NHjsbXwp4OKLuVui2xqaYLarR2mZ6_dh86R9o0CuDQsi8qLwPZoYhHaK3WLnQVVxOPW9OrbGfDpah4EjPv5hwImDlTNbPRWqoqcA1ahqBbmCkBtjxNNeQY6BaWoVrHOfORsqrPGE_cyn8PA9TfksIQUXDCONIQb1VhBNQzZYsDF_bM3sIIK6EI4sug3S28nVVT1oxHcFzf"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-8 max-w-7xl mx-auto space-y-8 pb-24">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-12">
+<div>
+<h2 class="text-xs text-primary font-['Space_Grotesk'] tracking-[0.2em] uppercase mb-2">Predictive Analysis</h2>
+<h1 class="text-display-lg text-on-surface">Grade Prediction</h1>
+</div>
+<div class="text-right">
+<p class="text-xs text-on-surface-variant font-['Space_Grotesk'] tracking-[0.1em] uppercase mb-1">Model Confidence</p>
+<p class="text-xl font-bold text-primary font-['Space_Grotesk']">94.2%</p>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Hero Card: GPA Trend (Spans 8 cols) -->
+<div class="lg:col-span-8 bg-surface-container-high rounded-xl p-8 relative overflow-hidden card-top-glow glow-shadow flex flex-col justify-between min-h-[400px]">
+<div class="absolute inset-0 scanning-lines opacity-50 z-0"></div>
+<div class="relative z-10 flex justify-between items-start mb-8">
+<div>
+<p class="text-xs text-on-surface-variant font-['Space_Grotesk'] tracking-[0.1em] uppercase mb-1">Trajectory</p>
+<h3 class="text-2xl font-bold text-on-surface font-['Space_Grotesk']">Cumulative GPA Forecast</h3>
+</div>
+<div class="flex gap-4">
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant font-['Space_Grotesk'] tracking-[0.1em] uppercase mb-1">Current</p>
+<p class="text-xl font-bold text-on-surface font-['Space_Grotesk']">3.42</p>
+</div>
+<div class="w-px h-10 bg-surface-variant"></div>
+<div class="text-right">
+<p class="text-[10px] text-primary font-['Space_Grotesk'] tracking-[0.1em] uppercase mb-1">Predicted</p>
+<p class="text-xl font-bold text-primary font-['Space_Grotesk']">3.78</p>
+</div>
+</div>
+</div>
+<!-- Abstract Chart Representation -->
+<div class="relative z-10 flex-1 flex items-end mt-4">
+<div class="w-full h-48 relative">
+<!-- Faux Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between opacity-10">
+<div class="w-full h-px bg-on-surface"></div>
+<div class="w-full h-px bg-on-surface"></div>
+<div class="w-full h-px bg-on-surface"></div>
+<div class="w-full h-px bg-on-surface"></div>
+</div>
+<!-- Glowing Line SVG -->
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<!-- Historical Line -->
+<path d="M0,80 L20,75 L40,60 L60,50" fill="none" stroke="rgba(68, 216, 241, 0.4)" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<!-- Prediction Line -->
+<path d="M60,50 L80,30 L100,10" fill="none" stroke="#00e5ff" stroke-dasharray="4,4" stroke-width="2.5" vector-effect="non-scaling-stroke"></path>
+<!-- Glow Effect -->
+<path d="M60,50 L80,30 L100,10" fill="none" filter="blur(4px)" opacity="0.15" stroke="#00e5ff" stroke-width="8" vector-effect="non-scaling-stroke"></path>
+<!-- Points -->
+<circle cx="60" cy="50" fill="#101416" r="3" stroke="#44d8f1" stroke-width="1.5" vector-effect="non-scaling-stroke"></circle>
+<circle cx="100" cy="10" fill="#00e5ff" r="4"></circle>
+<circle class="animate-pulse" cx="100" cy="10" fill="#00e5ff" opacity="0.2" r="12"></circle>
+</svg>
+</div>
+</div>
+</div>
+<!-- Impact Factors (Spans 4 cols) -->
+<div class="lg:col-span-4 bg-surface-container-low rounded-xl p-8 relative flex flex-col card-top-glow">
+<div class="mb-6">
+<h3 class="text-sm text-on-surface font-['Space_Grotesk'] tracking-[0.1em] uppercase mb-1">Impact Factors</h3>
+<p class="text-xs text-on-surface-variant">Variables driving the prediction</p>
+</div>
+<div class="space-y-6 flex-1">
+<!-- Factor 1 -->
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface font-medium font-['Space_Grotesk'] tracking-widest uppercase">Attendance</span>
+<span class="text-primary font-bold">+0.15 GPA</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[85%]"></div>
+</div>
+</div>
+<!-- Factor 2 -->
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface font-medium font-['Space_Grotesk'] tracking-widest uppercase">Study Hours</span>
+<span class="text-primary font-bold">+0.12 GPA</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[70%]"></div>
+</div>
+</div>
+<!-- Factor 3 -->
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface font-medium font-['Space_Grotesk'] tracking-widest uppercase">Assignment Quality</span>
+<span class="text-tertiary-fixed-dim font-bold">-0.05 GPA</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-fixed-dim w-[45%]"></div>
+</div>
+</div>
+</div>
+<button class="mt-8 w-full py-3 px-4 bg-gradient-to-r from-primary to-secondary rounded text-surface font-['Space_Grotesk'] text-xs font-bold tracking-[0.15em] uppercase hover:opacity-90 transition-opacity flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'wght' 600;">tune</span>
+                        Simulate Variables
+                    </button>
+</div>
+<!-- Subject Grid (Spans full width) -->
+<div class="lg:col-span-12 mt-4">
+<h3 class="text-sm text-on-surface font-['Space_Grotesk'] tracking-[0.1em] uppercase mb-6 flex items-center gap-2">
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+                        Subject Level Breakdown
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Subject Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-lg p-5 flex flex-col gap-4 hover:bg-surface-container-low transition-colors duration-300">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-[10px] text-on-surface-variant font-['Space_Grotesk'] tracking-[0.15em] uppercase mb-1">CS 401</p>
+<h4 class="text-sm font-medium text-on-surface">Advanced Algorithms</h4>
+</div>
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'wght' 300;">code</span>
+</div>
+<div class="flex justify-between items-end mt-2">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Historical</p>
+<p class="text-lg font-['Space_Grotesk'] text-on-surface">B+</p>
+</div>
+<div class="flex flex-col items-center justify-center px-4">
+<span class="material-symbols-outlined text-secondary text-sm mb-1">arrow_forward</span>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-primary uppercase tracking-wider mb-1">Predicted</p>
+<p class="text-xl font-bold font-['Space_Grotesk'] text-primary drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]">A-</p>
+</div>
+</div>
+</div>
+<!-- Subject Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-lg p-5 flex flex-col gap-4 hover:bg-surface-container-low transition-colors duration-300">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-[10px] text-on-surface-variant font-['Space_Grotesk'] tracking-[0.15em] uppercase mb-1">MATH 350</p>
+<h4 class="text-sm font-medium text-on-surface">Linear Algebra</h4>
+</div>
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'wght' 300;">calculate</span>
+</div>
+<div class="flex justify-between items-end mt-2">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Historical</p>
+<p class="text-lg font-['Space_Grotesk'] text-on-surface">A</p>
+</div>
+<div class="flex flex-col items-center justify-center px-4">
+<span class="material-symbols-outlined text-secondary text-sm mb-1">arrow_forward</span>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-primary uppercase tracking-wider mb-1">Predicted</p>
+<p class="text-xl font-bold font-['Space_Grotesk'] text-primary drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]">A</p>
+</div>
+</div>
+</div>
+<!-- Subject Card 3 (Warning) -->
+<div class="bg-surface-container-lowest border border-tertiary-fixed-dim/20 rounded-lg p-5 flex flex-col gap-4 hover:bg-surface-container-low transition-colors duration-300 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary-fixed-dim"></div>
+<div class="flex justify-between items-start pl-2">
+<div>
+<p class="text-[10px] text-on-surface-variant font-['Space_Grotesk'] tracking-[0.15em] uppercase mb-1">PHYS 201</p>
+<h4 class="text-sm font-medium text-on-surface">Quantum Mechanics</h4>
+</div>
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-xl" style="font-variation-settings: 'wght' 300;">science</span>
+</div>
+<div class="flex justify-between items-end mt-2 pl-2">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Historical</p>
+<p class="text-lg font-['Space_Grotesk'] text-on-surface">C+</p>
+</div>
+<div class="flex flex-col items-center justify-center px-4">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-sm mb-1">trending_down</span>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-tertiary-fixed-dim uppercase tracking-wider mb-1">Predicted</p>
+<p class="text-xl font-bold font-['Space_Grotesk'] text-tertiary-fixed-dim drop-shadow-[0_0_8px_rgba(243,191,38,0.3)]">C</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

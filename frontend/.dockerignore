@@ -1,0 +1,35 @@
+# Dependencies - never send to Docker, let pnpm install fresh
+node_modules/
+.pnpm-store/
+
+# Next.js build output (use the build cache mount instead)
+.next/
+out/
+
+# Development files
+.env.local
+.env.development
+.env.development.local
+.env.test.local
+
+# Git
+.git/
+.gitignore
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# TypeScript build info
+*.tsbuildinfo

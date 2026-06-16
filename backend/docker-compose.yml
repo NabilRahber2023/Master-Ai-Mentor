@@ -1,0 +1,110 @@
+# AI Mentor SaaS Platform - Docker Compose Configuration
+# Services: FastAPI, PostgreSQL with pgvector, Ollama LLM
+
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: ai_mentor_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_mentor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d ai_mentor" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai_mentor_network
+
+  # Ollama LLM Server (phi3:mini - optimized for low memory)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai_mentor_ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_MAX_LOADED_MODELS=1
+    deploy:
+      resources:
+        reservations:
+          memory: 4G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ai_mentor_network
+
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_mentor_api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ai_mentor
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: phi3:mini
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app:ro
+      - model_cache:/app/models
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ai_mentor_network
+    command: >
+      sh -c "
+        echo 'Waiting for services...' &&
+        sleep 5 &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Ollama Model Puller (one-time setup)
+  ollama-pull:
+    image: curlimages/curl:latest
+    container_name: ai_mentor_ollama_pull
+    depends_on:
+      ollama:
+        condition: service_started
+    networks:
+      - ai_mentor_network
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for Ollama to start...' &&
+        sleep 10 &&
+        echo 'Pulling phi3:mini model...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"phi3:mini\"}' &&
+        echo 'Model pull initiated!'
+      "
+    restart: "no"
+
+networks:
+  ai_mentor_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:
+  model_cache:

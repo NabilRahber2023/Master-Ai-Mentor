@@ -1,0 +1,5 @@
+                       id                       |        email        | role  |                  account_id                  | provider_id |                        password_hash                         
+------------------------------------------------+---------------------+-------+----------------------------------------------+-------------+--------------------------------------------------------------
+ test-user-1de935cc-d353-489d-8f70-b36a7dd6e495 | test@aimentor.local | guest | account-43ce5e7c-a832-45b0-ba37-137e1ff181b0 | credential  | $2b$10$.4lfhzNq/gowAwceZUW0/en8JZxbf50vw.mYuAzQ3/FHuFbN0ZMTq
+(1 row)
+

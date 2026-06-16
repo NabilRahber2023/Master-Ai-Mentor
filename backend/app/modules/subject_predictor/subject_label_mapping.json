@@ -1,0 +1,22 @@
+{
+    "Architecture": 0,
+    "BBA": 1,
+    "CIS": 2,
+    "CSE": 3,
+    "Civil": 4,
+    "Data Science": 5,
+    "EEE": 6,
+    "Economics": 7,
+    "English": 8,
+    "ITM": 9,
+    "Journalism & Media Studies": 10,
+    "LLB": 11,
+    "Multimedia & Creative Technology": 12,
+    "Nutrition & Food Engineering": 13,
+    "Pharmacy": 14,
+    "Real Estate": 15,
+    "SWE": 16,
+    "Software Engineering": 17,
+    "Textile Engineering": 18,
+    "Tourism & Hospitality Management": 19
+}

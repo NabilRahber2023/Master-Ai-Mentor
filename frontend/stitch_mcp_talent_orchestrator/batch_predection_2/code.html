@@ -1,0 +1,1456 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Academic Predictor | Student Dashboard</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-secondary": "#00363c",
+                "on-secondary-container": "#004249",
+                "surface": "#0d1516",
+                "on-surface": "#dce4e5",
+                "on-primary-fixed": "#001f24",
+                "surface-container-low": "#151d1e",
+                "primary-container": "#00e5ff",
+                "on-tertiary-fixed": "#0f1d24",
+                "on-primary": "#00363d",
+                "error": "#ffb4ab",
+                "primary": "#c3f5ff",
+                "surface-container-high": "#242b2d",
+                "on-error": "#690005",
+                "tertiary": "#dfeff8",
+                "secondary-container": "#00b7c8",
+                "on-secondary-fixed": "#001f23",
+                "error-container": "#93000a",
+                "surface-bright": "#333a3c",
+                "on-tertiary-fixed-variant": "#3a4950",
+                "primary-fixed-dim": "#00daf3",
+                "tertiary-fixed-dim": "#b9c9d1",
+                "tertiary-fixed": "#d5e5ed",
+                "surface-tint": "#00daf3",
+                "on-primary-container": "#00626e",
+                "surface-container-highest": "#2e3638",
+                "surface-container-lowest": "#080f11",
+                "on-surface-variant": "#bac9cc",
+                "inverse-on-surface": "#2a3233",
+                "surface-container": "#192122",
+                "inverse-surface": "#dce4e5",
+                "on-primary-fixed-variant": "#004f58",
+                "secondary-fixed": "#91f1ff",
+                "secondary": "#49d8ea",
+                "surface-variant": "#2e3638",
+                "on-secondary-fixed-variant": "#004f57",
+                "surface-dim": "#0d1516",
+                "on-tertiary-container": "#4c5b62",
+                "secondary-fixed-dim": "#49d8ea",
+                "on-tertiary": "#243239",
+                "outline": "#849396",
+                "background": "#05090C",
+                "inverse-primary": "#006875",
+                "outline-variant": "#3b494c",
+                "on-background": "#dce4e5",
+                "tertiary-container": "#c3d3db",
+                "primary-fixed": "#9cf0ff",
+                "on-error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "24px",
+                "margin-mobile": "20px",
+                "unit": "8px",
+                "margin-desktop": "64px",
+                "container-max": "1440px"
+        },
+        "fontFamily": {
+                "body-lg": ["Inter"],
+                "headline-lg": ["Manrope"],
+                "label-sm": ["Inter"],
+                "headline-sm": ["Manrope"],
+                "display-lg": ["Manrope"],
+                "display-md": ["Manrope"],
+                "label-md": ["Inter"],
+                "body-md": ["Inter"]
+        },
+        "fontSize": {
+                "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0", "fontWeight": "500"}],
+                "headline-sm": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                "display-md": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+        }
+      },
+    },
+  }
+</script>
+<style>
+        body {
+            background-color: #05090C;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: #dce4e5;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #080f11; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b494c; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #849396; }
+        
+        .glass-card {
+            background: rgba(13, 21, 22, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+        }
+
+        .neo-input {
+            background: rgba(8, 15, 17, 0.8);
+            border: 1px solid #3b494c;
+            color: #dce4e5;
+            transition: all 0.3s ease;
+        }
+        .neo-input:focus {
+            border-color: #00E5FF;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+            outline: none;
+        }
+
+        .neo-button {
+            background: linear-gradient(135deg, #00E5FF 0%, #00B7C8 100%);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .neo-button:hover {
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #151d1e;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="p-8 pb-[200px]">
+<main class="max-w-[1440px] mx-auto flex flex-col gap-8">
+<!-- SECTION 1: PREDICTION FILTERS -->
+<section class="glass-card p-6">
+<h2 class="font-label-md text-label-sm font-bold mb-6 tracking-[0.2em] uppercase text-primary-fixed-dim">PREDICTION FILTERS</h2>
+<div class="flex flex-wrap items-end gap-6">
+<!-- Dept -->
+<div class="flex flex-col gap-2 flex-1 min-w-[180px]">
+<label class="text-label-sm font-label-md text-on-surface-variant">Department</label>
+<select class="neo-input rounded-lg text-body-md font-body-md h-12 px-4" id="filter-dept">
+<option value="All">All Departments</option>
+<option value="Pharmacy">Pharmacy</option>
+<option value="BBA">BBA</option>
+<option value="Civil">Civil</option>
+<option value="EEE">EEE</option>
+<option value="CSE">CSE</option>
+<option value="Textile">Textile</option>
+</select>
+</div>
+<!-- Category -->
+<div class="flex flex-col gap-2 flex-1 min-w-[180px]">
+<label class="text-label-sm font-label-md text-on-surface-variant">Category</label>
+<select class="neo-input rounded-lg text-body-md font-body-md h-12 px-4" id="filter-cat">
+<option value="All">All Categories</option>
+<option value="Low">Low</option>
+<option value="Mid">Mid</option>
+<option value="High">High</option>
+</select>
+</div>
+<!-- Parental Support -->
+<div class="flex flex-col gap-2 flex-1 min-w-[180px]">
+<label class="text-label-sm font-label-md text-on-surface-variant">Parental Support</label>
+<select class="neo-input rounded-lg text-body-md font-body-md h-12 px-4" id="filter-parent">
+<option value="All">All</option>
+<option value="Yes">Yes</option>
+<option value="No">No</option>
+</select>
+</div>
+<!-- Min Study Hrs -->
+<div class="flex flex-col gap-2 flex-1 min-w-[180px]">
+<label class="text-label-sm font-label-md text-on-surface-variant">Min Study Hrs</label>
+<select class="neo-input rounded-lg text-body-md font-body-md h-12 px-4" id="filter-hrs">
+<option value="0">Any</option>
+<option value="1">1 hr</option>
+<option value="2">2 hrs</option>
+<option value="3">3 hrs</option>
+<option value="4">4 hrs</option>
+<option value="5">5 hrs</option>
+<option value="6">6 hrs</option>
+<option value="8">8 hrs</option>
+<option value="10">10 hrs</option>
+</select>
+</div>
+<!-- Min Attendance -->
+<div class="flex flex-col gap-2 flex-1 min-w-[180px]">
+<label class="text-label-sm font-label-md text-on-surface-variant">Min Attendance</label>
+<select class="neo-input rounded-lg text-body-md font-body-md h-12 px-4" id="filter-att">
+<option value="0">&gt;0%</option>
+<option value="50">&gt;50%</option>
+<option value="60">&gt;60%</option>
+<option value="70">&gt;70%</option>
+<option value="80">&gt;80%</option>
+<option value="90">&gt;90%</option>
+</select>
+</div>
+<!-- Run Button -->
+<button class="neo-button text-on-primary px-8 h-12 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 whitespace-nowrap" onclick="runPrediction()">RUN PREDICTION</button>
+</div>
+</section>
+<!-- SECTION 2: PREDICTION RESULTS -->
+<section>
+<div class="flex items-center gap-4 mb-6">
+<h2 class="font-headline-lg text-headline-lg text-white">PREDICTION RESULTS</h2>
+<span class="bg-surface-container-highest px-3 py-1 rounded-full text-label-sm font-bold text-primary-fixed-dim border border-primary-container/20" id="student-count-badge">200 STUDENTS</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+<!-- KPI Card 1 -->
+<div class="glass-card p-6 border-l-4 border-l-outline">
+<p class="text-label-sm font-label-md text-on-surface-variant mb-2">FILTERED</p>
+<p class="font-display-lg text-display-md text-white" id="kpi-filtered">200</p>
+</div>
+<!-- KPI Card 2 -->
+<div class="glass-card p-6 border-l-4 border-l-secondary">
+<p class="text-label-sm font-label-md text-on-surface-variant mb-2">ON-TRACK</p>
+<p class="font-display-lg text-display-md text-secondary" id="kpi-ontrack">110</p>
+</div>
+<!-- KPI Card 3 -->
+<div class="glass-card p-6 border-l-4 border-l-error">
+<p class="text-label-sm font-label-md text-on-surface-variant mb-2">AT-RISK</p>
+<p class="font-display-lg text-display-md text-error" id="kpi-atrisk">90</p>
+</div>
+<!-- KPI Card 4 -->
+<div class="glass-card p-6 border-l-4 border-l-primary-fixed-dim">
+<p class="text-label-sm font-label-md text-on-surface-variant mb-2">AVG PREDICTED</p>
+<p class="font-display-lg text-display-md text-white" id="kpi-avg">2.69</p>
+</div>
+<!-- KPI Card 5 -->
+<div class="glass-card p-6 border-l-4 border-l-primary">
+<p class="text-label-sm font-label-md text-on-surface-variant mb-2">PASS RATE</p>
+<p class="font-display-lg text-display-md text-white" id="kpi-passrate">55%</p>
+</div>
+</div>
+</section>
+<!-- SECTION 3: CHARTS -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="glass-card p-6">
+<h3 class="font-label-md text-label-sm font-bold border-b border-outline-variant/30 pb-3 mb-6 uppercase tracking-wider text-white">PREDICTED SGPA DISTRIBUTION</h3>
+<div class="h-[300px]">
+<canvas id="barChart" style="box-sizing: border-box; display: block; height: 300px; width: 585.5px;" width="468" height="240"></canvas>
+</div>
+</div>
+<div class="glass-card p-6">
+<h3 class="font-label-md text-label-sm font-bold border-b border-outline-variant/30 pb-3 mb-6 uppercase tracking-wider text-white">PREV VS PREDICTED SGPA</h3>
+<div class="h-[300px]">
+<canvas id="scatterChart" style="box-sizing: border-box; display: block; height: 300px; width: 585.5px;" width="468" height="240"></canvas>
+</div>
+</div>
+</section>
+<!-- SECTION 4: STUDENT DATA TABLE -->
+<section class="glass-card overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant/30 bg-surface-container-lowest flex justify-between items-center">
+<h3 class="font-label-md text-label-sm font-bold uppercase tracking-widest text-primary-fixed-dim">STUDENT DATA STREAM</h3>
+<div class="flex gap-6">
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#00E5FF]"></span> <span class="text-label-sm text-on-surface">High</span></div>
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-secondary-fixed shadow-[0_0_8px_#49d8ea]"></span> <span class="text-label-sm text-on-surface">Mid</span></div>
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-error shadow-[0_0_8px_#ffb4ab]"></span> <span class="text-label-sm text-on-surface">Low</span></div>
+</div>
+</div>
+<div class="max-h-[400px] overflow-y-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider">ID</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider">Name</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider">Dept</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider">Category</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider text-right">Prev. SGPA</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider text-right">Study Hrs</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider text-right">Attendance</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider text-right">Predicted</th>
+<th class="px-6 py-4 text-label-sm font-bold uppercase text-on-surface-variant tracking-wider">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20" id="student-table-body"><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU001</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aditi Rao</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.67</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">9h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">62%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.62</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU002</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Arjun Patel</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.59</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">9h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">85%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.94</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU003</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Bhavya Singh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.60</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">54%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.30</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU004</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Chaitanya Jha</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.68</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">83%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.03</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU005</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Deepika Gupta</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.50</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">53%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.45</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU006</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Eshwar Kumar</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.71</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">86%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.81</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU007</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Farhan Malik</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.79</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">6h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">54%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.74</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU008</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Gayatri Devi</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.72</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">63%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.42</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU009</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Harsh Vardhan</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.33</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">44%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.03</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU010</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ishani Reddy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.35</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">66%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.05</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU011</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Jatin Malhotra</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.22</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">68%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.92</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU012</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Kavya Iyer</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.43</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">10h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">96%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.78</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU013</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Lokesh Jain</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.88</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">87%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">4.00</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU014</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Meghna Roy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.12</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">5h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">86%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.22</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU015</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Nitin Pandey</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.93</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">54%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.88</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU016</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ojaswi Patil</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.91</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">51%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.61</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU017</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Pranav Deshmukh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.90</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">6h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">86%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.25</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU018</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Quasim Ali</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.61</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">43%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.31</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU019</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Riya Sen</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.06</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">72%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.76</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU020</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aarav Sharma</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.65</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">6h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">92%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">4.00</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU021</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aditi Rao</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.12</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">97%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.47</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU022</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Arjun Patel</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.28</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">72%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.98</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU023</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Bhavya Singh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.52</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">55%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.47</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU024</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Chaitanya Jha</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.58</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">78%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.53</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU025</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Deepika Gupta</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.92</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">61%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.87</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU026</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Eshwar Kumar</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.42</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">72%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.37</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU027</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Farhan Malik</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.50</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">10h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">46%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.45</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU028</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Gayatri Devi</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.24</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">5h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">96%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.34</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU029</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Harsh Vardhan</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.12</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">99%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.47</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU030</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ishani Reddy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.63</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">45%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.33</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU031</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Jatin Malhotra</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.48</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">64%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.18</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU032</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Kavya Iyer</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.86</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">61%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.81</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU033</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Lokesh Jain</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.80</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">0h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">71%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.50</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU034</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Meghna Roy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.89</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">60%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.59</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU035</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Nitin Pandey</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.34</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">9h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">54%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.29</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU036</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ojaswi Patil</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.24</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">57%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.19</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU037</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Pranav Deshmukh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.19</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">0h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">54%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.89</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU038</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Quasim Ali</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.00</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">67%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.95</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU039</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Riya Sen</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.51</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">45%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.46</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU040</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aarav Sharma</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.97</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">3h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">52%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.67</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU041</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aditi Rao</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.51</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">3h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">63%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.21</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU042</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Arjun Patel</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.58</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">51%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.28</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU043</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Bhavya Singh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.28</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">95%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.38</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU044</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Chaitanya Jha</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.95</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">46%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.90</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU045</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Deepika Gupta</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.67</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">10h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">77%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.62</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU046</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Eshwar Kumar</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.23</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">9h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">65%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.18</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU047</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Farhan Malik</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-primary-container border-primary-container/30 bg-primary-container/5">High</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.64</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">6h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">45%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.59</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU048</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Gayatri Devi</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.84</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">44%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.54</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU049</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Harsh Vardhan</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.55</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">3h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">89%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.65</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU050</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ishani Reddy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.77</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">98%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.87</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU051</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Jatin Malhotra</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.13</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">40%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.08</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU052</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Kavya Iyer</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.97</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">10h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">99%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.32</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU053</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Lokesh Jain</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.00</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">0h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">48%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.70</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU054</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Meghna Roy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.17</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">9h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">68%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.12</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU055</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Nitin Pandey</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.30</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">10h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">78%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.25</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU056</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ojaswi Patil</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.99</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">49%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.94</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU057</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Pranav Deshmukh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.12</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">6h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">97%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.47</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU058</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Quasim Ali</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.07</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">84%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.42</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU059</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Riya Sen</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.36</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">96%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.71</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU060</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aarav Sharma</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.62</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">95%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.72</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU061</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aditi Rao</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.73</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">7h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">44%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.68</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU062</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Arjun Patel</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.52</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">68%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.22</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU063</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Bhavya Singh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.66</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">95%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.76</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU064</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Chaitanya Jha</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.80</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">6h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">81%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.15</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU065</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Deepika Gupta</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.39</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">50%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.34</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU066</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Eshwar Kumar</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.71</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">10h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">45%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.66</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU067</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Farhan Malik</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.50</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">63%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.20</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU068</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Gayatri Devi</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.87</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">92%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.97</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU069</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Harsh Vardhan</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.04</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">5h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">58%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.74</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU070</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ishani Reddy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.77</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">67%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.47</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU071</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Jatin Malhotra</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.85</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">4h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">57%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.55</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU072</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Kavya Iyer</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Pharmacy</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.02</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">65%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.97</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU073</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Lokesh Jain</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">CSE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.24</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">40%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.94</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU074</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Meghna Roy</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">1.99</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">8h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">68%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.94</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU075</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Nitin Pandey</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5">Mid</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">3.71</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">3h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">42%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">3.41</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-secondary-fixed">On track</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU076</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Ojaswi Patil</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.58</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">3h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">57%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.28</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU077</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Pranav Deshmukh</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">EEE</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.44</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">1h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">77%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.14</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU078</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Quasim Ali</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Textile</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.22</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">5h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">88%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.32</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU079</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Riya Sen</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">BBA</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.03</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">11h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">54%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">1.98</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr><tr class="hover:bg-primary-container/10 transition-colors group">
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">STU080</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">Aarav Sharma</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">Civil</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase text-error border-error/30 bg-error/5">Low</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">2.37</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">2h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">61%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">2.07</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest text-error">At risk</td>
+                </tr></tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-outline-variant/30 flex justify-between items-center bg-surface-container-lowest">
+<p class="text-label-sm font-medium text-[#B8C2CC]" id="table-footer-text">Showing 80 of 200 rows</p>
+<div class="relative inline-block text-left">
+<button class="bg-white text-black px-8 py-2 rounded-full text-label-md font-bold hover:bg-primary-container transition-all flex items-center gap-2" id="predict-dropdown-toggle">Predict With AI </button>
+<div class="absolute bottom-full mb-2 right-0 w-64 rounded-xl shadow-2xl bg-surface-container-high border border-outline-variant/30 focus:outline-none z-[100] hidden" id="predict-dropdown-menu">
+<div class="py-2">
+<button class="text-on-surface block px-6 py-3 text-sm w-full text-left hover:bg-primary-container hover:text-black transition-colors font-bold uppercase tracking-wider" onclick="togglePrescriptionEngine('Mid')">Predict for mid level</button>
+<button class="text-on-surface block px-6 py-3 text-sm w-full text-left hover:bg-primary-container hover:text-black transition-colors font-bold uppercase tracking-wider" onclick="togglePrescriptionEngine('At risk')">Predict for at-risk</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: PRESCRIPTION ENGINE -->
+<section class="hidden glass-card w-full overflow-hidden mb-12" id="prescription-engine">
+<div class="px-6 py-4 border-b border-outline-variant/30 bg-surface-container-highest flex items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<h2 class="font-bold text-[14px] uppercase tracking-[0.2em] text-primary-container" id="engine-title">AI PRESCRIPTION ENGINE</h2>
+<span class="text-[12px] font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded" id="engine-student-count">0 STUDENTS</span>
+</div>
+<!-- SEARCH ENGINE FEATURE -->
+<div class="flex items-center gap-3">
+<input class="neo-input rounded-lg text-[13px] font-body-md h-10 px-4 w-64" id="engine-search-input" placeholder="Search by Name or ID..." type="text">
+<button class="neo-button text-on-primary px-6 h-10 rounded-lg font-bold text-[12px] uppercase transition-all" onclick="handleEngineSearch()">RUN PREDICTION <span class="material-symbols-outlined text-base">bolt</span></button>
+</div>
+</div>
+<div class="p-8 flex flex-col gap-10" id="prescription-list">
+<!-- At-risk student cards injected here -->
+</div>
+</section>
+</main>
+<script>
+        // Mock Data Generation
+        const depts = ["Pharmacy", "BBA", "Civil", "EEE", "CSE", "Textile"];
+        const names = ["Aarav Sharma", "Aditi Rao", "Arjun Patel", "Bhavya Singh", "Chaitanya Jha", "Deepika Gupta", "Eshwar Kumar", "Farhan Malik", "Gayatri Devi", "Harsh Vardhan", "Ishani Reddy", "Jatin Malhotra", "Kavya Iyer", "Lokesh Jain", "Meghna Roy", "Nitin Pandey", "Ojaswi Patil", "Pranav Deshmukh", "Quasim Ali", "Riya Sen"];
+        
+        let students = [];
+        for (let i = 1; i <= 200; i++) {
+            const prevSgpa = (Math.random() * (4.0 - 1.5) + 1.5).toFixed(2);
+            const attendance = Math.floor(Math.random() * (100 - 40) + 40);
+            const studyHrs = Math.floor(Math.random() * 12);
+            const parental = Math.random() > 0.5 ? "Yes" : "No";
+            
+            // Artificial Logic for prediction
+            let predictedVal = parseFloat(prevSgpa) + (attendance > 80 ? 0.2 : -0.2) + (studyHrs > 5 ? 0.15 : -0.1);
+            predictedVal = Math.min(4.0, Math.max(1.0, predictedVal)).toFixed(2);
+            
+            const dept = depts[Math.floor(Math.random() * depts.length)];
+            const cat = predictedVal < 2.5 ? "Low" : (predictedVal < 3.5 ? "Mid" : "High");
+            const status = predictedVal < 2.5 ? "At risk" : "On track";
+
+            students.push({
+                id: `STU${String(i).padStart(3, '0')}`,
+                name: names[i % names.length],
+                dept,
+                category: cat,
+                prevSgpa,
+                studyHrs,
+                attendance,
+                predicted: predictedVal,
+                status,
+                parental
+            });
+        }
+
+        let filteredData = [...students];
+        let barChart, scatterChart;
+
+        function runPrediction() {
+            const deptF = document.getElementById('filter-dept').value;
+            const catF = document.getElementById('filter-cat').value;
+            const parentF = document.getElementById('filter-parent').value;
+            const hrsF = parseInt(document.getElementById('filter-hrs').value);
+            const attF = parseInt(document.getElementById('filter-att').value);
+
+            filteredData = students.filter(s => {
+                return (deptF === 'All' || s.dept === deptF) &&
+                       (catF === 'All' || s.category === catF) &&
+                       (parentF === 'All' || s.parental === parentF) &&
+                       (s.studyHrs >= hrsF) &&
+                       (s.attendance >= attF);
+            });
+
+            updateDashboard();
+            if (!document.getElementById('prescription-engine').classList.contains('hidden')) {
+                renderFilteredPrescriptions(currentFilter);
+            }
+        }
+
+        function updateDashboard() {
+            // Update Table
+            const tbody = document.getElementById('student-table-body');
+            tbody.innerHTML = '';
+            filteredData.slice(0, 80).forEach(s => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-primary-container/10 transition-colors group';
+                
+                const catColor = s.category === 'High' ? 'text-primary-container border-primary-container/30 bg-primary-container/5' : (s.category === 'Mid' ? 'text-secondary-fixed border-secondary-fixed/30 bg-secondary-fixed/5' : 'text-error border-error/30 bg-error/5');
+                const statusColor = s.status === 'At risk' ? 'text-error font-bold' : 'text-secondary-fixed';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-[13px] font-mono text-on-surface-variant">${s.id}</td>
+                    <td class="px-6 py-4 text-body-md font-bold text-white group-hover:text-primary-container transition-colors">${s.name}</td>
+                    <td class="px-6 py-4 text-body-md text-[#B8C2CC]">${s.dept}</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded border text-[10px] font-black uppercase ${catColor}">${s.category}</span></td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-white">${s.prevSgpa}</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">${s.studyHrs}h</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono text-[#B8C2CC]">${s.attendance}%</td>
+                    <td class="px-6 py-4 text-right text-[13px] font-mono font-black text-primary-container">${s.predicted}</td>
+                    <td class="px-6 py-4 text-label-sm font-bold uppercase tracking-widest ${statusColor}">${s.status}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Update KPIs
+            const atRiskCount = filteredData.filter(s => s.status === 'At risk').length;
+            const onTrackCount = filteredData.length - atRiskCount;
+            const avg = filteredData.length ? (filteredData.reduce((acc, curr) => acc + parseFloat(curr.predicted), 0) / filteredData.length).toFixed(2) : 0;
+            const passRate = filteredData.length ? ((onTrackCount / filteredData.length) * 100).toFixed(0) : 0;
+
+            document.getElementById('student-count-badge').textContent = `${filteredData.length} STUDENTS`;
+            document.getElementById('kpi-filtered').textContent = filteredData.length;
+            document.getElementById('kpi-ontrack').textContent = onTrackCount;
+            document.getElementById('kpi-atrisk').textContent = atRiskCount;
+            document.getElementById('kpi-avg').textContent = avg;
+            document.getElementById('kpi-passrate').textContent = `${passRate}%`;
+            document.getElementById('table-footer-text').textContent = `Showing ${Math.min(80, filteredData.length)} of ${filteredData.length} rows`;
+
+            updateCharts();
+        }
+
+        function updateCharts() {
+            const bins = ["1.0-1.4", "1.5-1.9", "2.0-2.4", "2.5-2.9", "3.0-3.4", "3.5-4.0"];
+            const binCounts = [0, 0, 0, 0, 0, 0];
+            filteredData.forEach(s => {
+                const p = parseFloat(s.predicted);
+                if (p < 1.5) binCounts[0]++;
+                else if (p < 2.0) binCounts[1]++;
+                else if (p < 2.5) binCounts[2]++;
+                else if (p < 3.0) binCounts[3]++;
+                else if (p < 3.5) binCounts[4]++;
+                else binCounts[5]++;
+            });
+
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            if(barChart) barChart.destroy();
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: bins,
+                    datasets: [{
+                        label: 'Students',
+                        data: binCounts,
+                        backgroundColor: binCounts.map((_, i) => i < 3 ? '#ffb4ab' : (i < 5 ? '#49d8ea' : '#00E5FF')),
+                        borderRadius: 4,
+                        borderWidth: 0,
+                        hoverBackgroundColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, 
+                            ticks: { color: '#B8C2CC', font: { family: 'Inter', size: 11 } } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: '#B8C2CC', font: { family: 'Inter', size: 11 } } 
+                        }
+                    }
+                }
+            });
+
+            const atRiskData = filteredData.filter(s => s.status === 'At risk').map(s => ({ x: parseFloat(s.prevSgpa), y: 1.5 }));
+            const onTrackData = filteredData.filter(s => s.status === 'On track').map(s => ({ x: parseFloat(s.prevSgpa), y: 3.5 }));
+
+            const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+            if(scatterChart) scatterChart.destroy();
+            scatterChart = new Chart(scatterCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'At risk',
+                            data: atRiskData,
+                            backgroundColor: '#ffb4ab',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'On track',
+                            data: onTrackData,
+                            backgroundColor: '#00E5FF',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            display: true, 
+                            position: 'top',
+                            labels: { color: '#ffffff', font: { family: 'Inter', size: 12, weight: 'bold' } }
+                        } 
+                    },
+                    scales: {
+                        y: { 
+                            min: 0, max: 5, 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { 
+                                color: '#ffffff',
+                                font: { family: 'Inter', size: 11, weight: 'bold' },
+                                callback: function(v) {
+                                    if(v === 1.5) return 'AT RISK';
+                                    if(v === 3.5) return 'ON TRACK';
+                                    return '';
+                                }
+                            }
+                        },
+                        x: { 
+                            title: { display: true, text: 'PREV SGPA', color: '#B8C2CC', font: { size: 12, family: 'Manrope', weight: '800' } },
+                            min: 1, max: 4, grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#B8C2CC', font: { family: 'Inter', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        const engineSection = document.getElementById('prescription-engine');
+        const prescriptionList = document.getElementById('prescription-list');
+        const dropdownToggle = document.getElementById('predict-dropdown-toggle');
+        const dropdownMenu = document.getElementById('predict-dropdown-menu');
+        let currentFilter = 'At risk';
+
+        function generateRecommendations(student) {
+            const recs = [];
+            if (student.attendance < 75) {
+                recs.push(`Critical Attendance Alert: Student is at ${student.attendance}%. Automated warning suggested to reach ≥85% baseline.`);
+            } else {
+                recs.push("Attendance stability detected. Maintain regular attendance for consistent performance.");
+            }
+            
+            if (student.studyHrs < 5) {
+                recs.push(`Activity Deficiency: ${student.studyHrs} study hours/day is suboptimal. Increase to 6.5h for target stability.`);
+            } else {
+                recs.push("High intensity study patterns identified. Focus on specific curriculum gaps.");
+            }
+            
+            if (student.parental === 'No') {
+                recs.push("Low home support factor detected. Prioritize campus mentorship program enrollment.");
+            }
+            
+            if (parseFloat(student.predicted) < 2.0) {
+                recs.push("CRITICAL FAILURE RISK: Initiate formal academic recovery protocol immediately.");
+            }
+
+            return recs;
+        }
+
+        dropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => {
+            dropdownMenu.classList.add('hidden');
+        });
+
+        function togglePrescriptionEngine(status) {
+            const isHidden = engineSection.classList.contains('hidden');
+            if (isHidden || currentFilter !== status) {
+                currentFilter = status;
+                document.getElementById('engine-search-input').value = '';
+                renderFilteredPrescriptions(status);
+                engineSection.classList.remove('hidden');
+                document.getElementById('engine-title').textContent = `AI PRESCRIPTION ENGINE - ${status.toUpperCase()} STUDENTS`;
+                engineSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                engineSection.classList.add('hidden');
+            }
+            dropdownMenu.classList.add('hidden');
+        }
+
+        function handleEngineSearch() {
+            renderFilteredPrescriptions(currentFilter);
+        }
+
+        function renderFilteredPrescriptions(status) {
+            const searchTerm = document.getElementById('engine-search-input').value.toLowerCase().trim();
+            let baseData = filteredData.filter(s => s.status === status || (status === 'Mid' && s.category === 'Mid'));
+            
+            let targetStudents = baseData;
+            if (searchTerm) {
+                targetStudents = baseData.filter(s => 
+                    s.name.toLowerCase().includes(searchTerm) || 
+                    s.id.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            document.getElementById('engine-student-count').textContent = `${targetStudents.length} STUDENTS`;
+            const list = document.getElementById('prescription-list');
+            list.innerHTML = '';
+            
+            if (targetStudents.length === 0) {
+                list.innerHTML = `<p class="text-on-surface-variant text-center py-12 font-body-md uppercase tracking-widest opacity-50">No matching telemetry found.</p>`;
+                return;
+            }
+
+            targetStudents.forEach((s) => {
+                const recs = generateRecommendations(s);
+                const card = document.createElement('div');
+                card.className = 'p-6 bg-surface-container-low border border-outline-variant/30 rounded-xl relative overflow-hidden group hover:border-primary-container transition-all';
+                card.innerHTML = `
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-primary-container/5 rounded-bl-full -mr-8 -mt-8 group-hover:bg-primary-container/10 transition-all"></div>
+                    <div class="flex justify-between items-start mb-6 relative">
+                        <div>
+                            <h3 class="text-xl font-black text-white tracking-tight">${s.name}</h3>
+                            <p class="text-sm font-mono text-primary-container uppercase mt-1">${s.id} // ${s.dept}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter block mb-1">PROBABILITY SCORE</span>
+                            <span class="text-2xl font-black ${s.status === 'At risk' ? 'text-error' : 'text-primary-container'}">${s.predicted}</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3 relative">
+                        ${recs.map(r => `
+                            <div class="flex items-start gap-3 p-3 bg-black/40 rounded-lg border-l-2 ${s.status === 'At risk' ? 'border-l-error' : 'border-l-primary-container'}">
+                                <span class="material-symbols-outlined text-sm mt-0.5 ${s.status === 'At risk' ? 'text-error' : 'text-primary-container'}">sensors</span>
+                                <p class="text-sm leading-relaxed text-[#B8C2CC]">${r}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        window.onload = () => {
+            runPrediction();
+        };
+
+        document.getElementById('engine-search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleEngineSearch();
+        });
+    </script>
+
+
+</body></html>
