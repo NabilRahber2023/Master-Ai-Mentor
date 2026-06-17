@@ -24,13 +24,7 @@ export default function GradePredictionDashboardPage() {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
-            <div className="flex-1 space-y-6 p-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Student analytics</h1>
-                    <p className="text-muted-foreground">
-                        Segmentation, prediction, prescriptions, and forecast insights.
-                    </p>
-                </div>
+            <div className="flex-1 p-6 md:p-8 bg-[#101416]">
                 <StudentAnalyticsDashboard />
             </div>
         </>
