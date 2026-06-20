@@ -47,7 +47,13 @@ class AlternativeOption(BaseModel):
     department: str
     probability: float
 
+class ContributingFactor(BaseModel):
+    feature: str
+    value: float | str
+    impact_score: float
+
 class SubjectPredictionOutput(BaseModel):
     recommended_department: str
     confidence_score: float
     alternative_options: List[AlternativeOption]
+    contributing_factors: List[ContributingFactor] = []

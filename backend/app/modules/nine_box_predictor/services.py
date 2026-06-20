@@ -35,7 +35,7 @@ class NineBoxService:
             request.Career_Motivation
         ]
         
-        perf_score, pot_score = self.ml_engine.predict(features)
+        perf_score, pot_score, confidence = self.ml_engine.predict(features)
         
         # Grid Position Key (P_L)
         grid_key = f"{perf_score}_{pot_score}"
@@ -67,6 +67,7 @@ class NineBoxService:
         return NineBoxPredictionResponse(
             performance_level_score=perf_score,
             potential_level_score=pot_score,
+            confidence_score=confidence,
             nine_box_position_label=description_label,
             position_in_grid=f"P{perf_score}L{pot_score}",
             descriptive_recommendation=recommendation

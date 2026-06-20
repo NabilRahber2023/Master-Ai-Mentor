@@ -56,7 +56,13 @@ class CareerPath(BaseModel):
     career: str
     probability: float
 
+class ContributingFactor(BaseModel):
+    feature: str
+    value: float | str
+    impact_score: float
+
 class CareerPredictionResponse(BaseModel):
     predicted_career: str
     confidence_score: float
     alternative_paths: List[CareerPath]
+    contributing_factors: List[ContributingFactor] = []

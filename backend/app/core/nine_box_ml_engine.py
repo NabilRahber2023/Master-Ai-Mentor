@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 from catboost import CatBoostClassifier
 from threading import Lock
 
@@ -62,12 +63,20 @@ class NineBoxMLEngine:
         """
         # CatBoost expects 2D array for single prediction or list of list
         # We pass [features]
-        perf_pred = self.performance_model.predict([features])[0]
-        pot_pred = self.potential_model.predict([features])[0]
-        
-        # Predictions are returned as arrays/matrices sometimes, need to ensure scalar
-        # Check if output is list/array and take first element if so, though [0] above should handle it for single sample
-        return int(perf_pred), int(pot_pred)
+        perf_pred = self.performance_model.predict([features])
+        pot_pred = self.potential_model.predict([features])
+
+        # CatBoost may return nested arrays (e.g. [[2]]) for multiclass. Flatten to a
+        # scalar robustly — newer NumPy raises on int() of a non-0-d array.
+        perf_val = int(np.asarray(perf_pred).flatten()[0])
+        pot_val = int(np.asarray(pot_pred).flatten()[0])
+
+        # Confidence: average of the two models' top class probabilities (0.0 - 1.0).
+        perf_proba = np.asarray(self.performance_model.predict_proba([features])).flatten()
+        pot_proba = np.asarray(self.potential_model.predict_proba([features])).flatten()
+        confidence = float((perf_proba.max() + pot_proba.max()) / 2.0)
+
+        return perf_val, pot_val, confidence
 
     def get_mapping_description(self, key: str) -> str:
         return self.mapping.get(key, "Unknown")

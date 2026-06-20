@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -9,8 +10,18 @@ import {
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { StudentAnalyticsDashboard } from "@/components/grade-prediction/StudentAnalyticsDashboard";
+import { GradePredictionPanel } from "@/components/modules/live-prediction/grade-prediction-panel";
+import type { SGPAPredictionResponse } from "@/lib/api/predictions";
 
 export default function GradePredictionDashboardPage() {
+    const [livePrediction, setLivePrediction] = useState<SGPAPredictionResponse | null>(null);
+
+    const riskColor = livePrediction?.risk_level?.toLowerCase().includes("high")
+        ? "text-red-400"
+        : livePrediction?.risk_level?.toLowerCase().includes("mid")
+          ? "text-amber-400"
+          : "text-emerald-400";
+
     return (
         <>
             <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -24,8 +35,53 @@ export default function GradePredictionDashboardPage() {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
-            <div className="flex-1 p-6 md:p-8 bg-[#101416]">
-                <StudentAnalyticsDashboard />
+            <div className="flex-1 space-y-8 p-6 md:p-8 bg-[#101416]">
+                <GradePredictionPanel
+                    onResult={setLivePrediction}
+                    onReset={() => setLivePrediction(null)}
+                />
+
+                {/* Fresh state: nothing shows until the user runs a prediction */}
+                {!livePrediction && (
+                    <section className="rounded-xl border border-dashed border-white/10 bg-[#161b1e]/50 p-12 text-center">
+                        <p className="text-sm text-slate-400">
+                            Enter student metrics above and click{" "}
+                            <span className="font-semibold text-cyan-300">Predict SGPA</span> to
+                            populate the analytics dashboard.
+                        </p>
+                    </section>
+                )}
+
+                {/* The full dashboard only renders from a live prediction */}
+                {livePrediction && (
+                    <>
+                        <section className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 p-5">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
+                                    Live Prediction
+                                </span>
+                                <span className="text-2xl font-bold text-white">
+                                    {livePrediction.predicted_sgpa.toFixed(2)}
+                                    <span className="ml-2 text-sm font-normal text-slate-400">predicted SGPA</span>
+                                </span>
+                                <span className={`text-sm font-semibold ${riskColor}`}>
+                                    {livePrediction.risk_level}
+                                </span>
+                            </div>
+                            {livePrediction.contributing_factors.length > 0 && (
+                                <p className="mt-2 text-[11px] text-slate-400">
+                                    Top factor:{" "}
+                                    <span className="font-semibold text-cyan-300">
+                                        {livePrediction.contributing_factors[0].feature}
+                                    </span>{" "}
+                                    (impact {livePrediction.contributing_factors[0].impact_score.toFixed(3)})
+                                </p>
+                            )}
+                        </section>
+
+                        <StudentAnalyticsDashboard prediction={livePrediction} />
+                    </>
+                )}
             </div>
         </>
     );

@@ -1,6 +1,7 @@
 import os
 import json
-from catboost import CatBoostClassifier
+import numpy as np
+from catboost import CatBoostClassifier, Pool
 import pandas as pd
 from typing import List, Dict, Tuple
 
@@ -51,39 +52,69 @@ class CareerMLEngine:
             self._feature_columns = None
             print(f"⚠️ Feature Columns not found at {features_path}")
 
-    def predict_career(self, features: dict) -> Tuple[str, float, List[dict]]:
+    def predict_career(self, features: dict) -> Tuple[str, float, List[dict], List[dict]]:
         """
         Predicts career and top probabilities.
-        Returns: (best_career, confidence, alternatives_list)
+        Returns: (best_career, confidence, alternatives_list, contributing_factors)
         """
         if not self._model or not self._label_mapping:
             raise RuntimeError("Model or Label Mapping not loaded. Please train the model first.")
 
         # Prepare input dataframe
         df = pd.DataFrame([features])
-        
+
         # Enforce column order if available
         if self._feature_columns:
             # Ensure all columns exist, fill missing with defaults if necessary (or error)
             # Here we assume validation ensures presence.
             df = df[self._feature_columns]
-        
+
         # Get probabilities
         probs = self._model.predict_proba(df)[0]
-        
+
         # Get top 3 indices
         top_indices = probs.argsort()[-3:][::-1]
-        
+
         results = []
         for idx in top_indices:
             career_name = self._label_mapping.get(idx, f"Unknown-{idx}")
             prob = float(probs[idx])
             results.append({"career": career_name, "probability": prob})
-            
+
         best_choice = results[0]
         alternatives = results[1:]
-        
-        return best_choice["career"], best_choice["probability"], alternatives
+
+        contributing_factors = self._contributing_factors(df, features, int(top_indices[0]))
+
+        return best_choice["career"], best_choice["probability"], alternatives, contributing_factors
+
+    def _contributing_factors(self, df: pd.DataFrame, features: dict, predicted_idx: int) -> List[dict]:
+        """Top feature contributions for the predicted class via CatBoost SHAP values."""
+        try:
+            cat_idx = self._model.get_cat_feature_indices()
+            pool = Pool(df, cat_features=cat_idx)
+            shap = np.array(self._model.get_feature_importance(pool, type="ShapValues"))
+
+            # Multiclass: (n_samples, n_classes, n_features+1). Binary: (n_samples, n_features+1).
+            if shap.ndim == 3:
+                row = shap[0, predicted_idx, :-1]
+            else:
+                row = shap[0, :-1]
+
+            cols = list(df.columns)
+            factors = [
+                {
+                    "feature": cols[i].replace("_", " "),
+                    "value": features.get(cols[i]),
+                    "impact_score": round(abs(float(row[i])), 4),
+                }
+                for i in range(len(cols))
+            ]
+            factors.sort(key=lambda f: f["impact_score"], reverse=True)
+            return factors[:5]
+        except Exception as e:
+            print(f"Error calculating career SHAP values: {e}")
+            return []
 
 # Global instance removed to support explicit lifecycle management
 career_ml_engine = CareerMLEngine.get_instance()

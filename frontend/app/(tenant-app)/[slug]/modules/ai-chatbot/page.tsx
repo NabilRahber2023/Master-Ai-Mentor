@@ -241,56 +241,64 @@ export default function AiChatbotPage() {
         };
         setIsTyping(false);
         setMessages((prev) => [...prev, disambMsg]);
-      } else if (data.intent === "grade" && data.result) {
-        // High fidelity presentation for grade predictions
-        const r = data.result;
-        const msgText = data.message;
-        
-        const complexMsg: Message = {
-          id: `ai-${Date.now()}`,
-          sender: "ai",
-          text: "", // will be streamed
-          timestamp: aiTime,
-          type: "complex",
-          resultData: {
-            title: "ACADEMIC PREDICTION ANALYSIS",
-            metrics: [
-              { label: "Predicted SGPA", value: r.predicted_sgpa?.toFixed(2) || "3.45", desc: `Risk category: ${r.risk_level || "Low"}` },
-              { label: "Attendance Rate", value: `${r.attendance_rate || "92"}%`, desc: "Sufficient threshold" }
-            ],
-            sources: [
-              { name: "Jira_Q3_Dataset", type: "dataset" },
-              { name: "GH_Issues_Main", type: "code" }
-            ],
-            actions: [
-              { label: "View Detailed Forecast", action: "details" },
-              { label: "Export Analysis", action: "export" }
-            ]
-          }
-        };
+      } else if (data.result?.result && ["grade", "career", "subject", "9box"].includes(data.intent)) {
+        // Structured prediction cards bound to the REAL nested result payload.
+        const r = data.result.result;
+        const studentName = data.result.student_name || "Student";
+        let resultData: Message["resultData"] | undefined;
 
-        // Stream the text portion
-        streamResponse(msgText, complexMsg);
-      } else if (data.intent === "career" && data.result) {
-        const r = data.result;
-        const complexMsg: Message = {
+        if (data.intent === "grade") {
+          const factors = (r.contributing_factors || []).slice(0, 4);
+          resultData = {
+            title: `ACADEMIC PREDICTION · ${studentName}`,
+            metrics: [
+              { label: "Predicted SGPA", value: r.predicted_sgpa?.toFixed(2) ?? "—", desc: `Risk: ${r.risk_level ?? "—"}` },
+              ...(factors[0] ? [{ label: "Top Factor", value: factors[0].feature, desc: `Impact ${factors[0].impact_score?.toFixed(3)}` }] : []),
+            ],
+            sources: factors.map((f: any) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
+          };
+        } else if (data.intent === "career") {
+          const alts = r.alternative_paths || [];
+          resultData = {
+            title: `CAREER RECOMMENDATION · ${studentName}`,
+            metrics: [
+              { label: "Top Career", value: r.predicted_career ?? "—", desc: `Confidence ${Math.round((r.confidence_score ?? 0) * 100)}%` },
+              ...(alts[0] ? [{ label: "Alternative", value: alts[0].career, desc: `${Math.round(alts[0].probability * 100)}% match` }] : []),
+            ],
+            sources: (r.contributing_factors || []).slice(0, 4).map((f: any) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
+          };
+        } else if (data.intent === "subject") {
+          const alts = r.alternative_options || [];
+          resultData = {
+            title: `SUBJECT RECOMMENDATION · ${studentName}`,
+            metrics: [
+              { label: "Recommended", value: r.recommended_department ?? "—", desc: `Confidence ${Math.round((r.confidence_score ?? 0) * 100)}%` },
+              ...(alts[0] ? [{ label: "Alternative", value: alts[0].department, desc: `${Math.round(alts[0].probability * 100)}% match` }] : []),
+            ],
+            sources: (r.contributing_factors || []).slice(0, 4).map((f: any) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
+          };
+        } else {
+          // 9box
+          resultData = {
+            title: `9-BOX EVALUATION · ${studentName}`,
+            metrics: [
+              { label: "Position", value: r.nine_box_position_label ?? "—", desc: `Grid ${r.position_in_grid ?? "—"}` },
+              { label: "Confidence", value: `${Math.round((r.confidence_score ?? 0) * 100)}%`, desc: `Perf ${r.performance_level_score}/2 · Pot ${r.potential_level_score}/2` },
+            ],
+            sources: r.descriptive_recommendation ? [{ name: r.descriptive_recommendation, type: "recommendation" }] : [],
+          };
+        }
+
+        streamResponse(data.message, {
           id: `ai-${Date.now()}`,
           sender: "ai",
           text: "",
           timestamp: aiTime,
           type: "complex",
-          resultData: {
-            title: "CAREER RECOMMENDATION MODEL",
-            metrics: [
-              { label: "Top Recommendation", value: r.career_path || "Software Engineer", desc: `Match rate: ${r.match_percentage || "94"}%` },
-              { label: "Market Demand", value: "92%", desc: "High growth indicator" }
-            ],
-            sources: [{ name: "9Box_Evaluation_Criteria_2023.pdf", type: "document" }]
-          }
-        };
-        streamResponse(data.message, complexMsg);
+          resultData,
+        });
       } else {
-        // Default message flow
+        // Default message flow (search results, info, errors, missing fields, etc.)
         streamResponse(data.message, {
           id: `ai-${Date.now()}`,
           sender: "ai",
@@ -301,53 +309,18 @@ export default function AiChatbotPage() {
 
     } catch (err) {
       setIsTyping(false);
-      // Fallback response simulation when backend is unreachable or fails
+      // Surface the real failure instead of faking a response.
       const aiTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      // Simulate command response locally to keep UI fully functional
-      if (textToSend.includes("@grade")) {
-        const mockMsg: Message = {
-          id: `ai-${Date.now()}`,
-          sender: "ai",
-          text: "",
-          timestamp: aiTime,
-          type: "complex",
-          resultData: {
-            title: "Q3 PERFORMANCE DIAGNOSTIC",
-            metrics: [
-              { label: "Velocity Impact", value: "-12%", desc: "During refactor window", isNegative: true },
-              { label: "Defect Rate", value: "-34%", desc: "Post-refactor sustain" }
-            ],
-            chartData: [
-              { week: "W1", Velocity: 80, Defects: 45 },
-              { week: "W2", Velocity: 82, Defects: 40 },
-              { week: "W3", Velocity: 85, Defects: 38 },
-              { week: "W4", Velocity: 68, Defects: 30 },
-              { week: "W5", Velocity: 65, Defects: 28 },
-              { week: "W6", Velocity: 62, Defects: 25 },
-              { week: "W7", Velocity: 74, Defects: 22 },
-              { week: "W8", Velocity: 78, Defects: 18 },
-              { week: "W9", Velocity: 80, Defects: 15 }
-            ],
-            sources: [
-              { name: "Jira_Q3_Dataset", type: "dataset" },
-              { name: "GH_Issues_Main", type: "code" }
-            ],
-            actions: [
-              { label: "View Mitigation Plan", action: "mitigation" },
-              { label: "Export Analysis", action: "export" }
-            ]
-          }
-        };
-        streamResponse("I've analyzed the Q3 data across the engineering cohort. The 12% dip correlates heavily with two primary factors in the 9-Box Evaluation data: \n\n* **Resource Allocation**: 40% of senior engineers were temporarily reassigned to Project Alpha, impacting baseline velocity. \n* **Skill Gap**: A recent shift to the new cloud infrastructure introduced a learning curve, reflected in lower Subject Prediction scores for 'Advanced Cloud Architecture'.", mockMsg);
-      } else {
-        streamResponse("Telemetry processed successfully. Aetheris chatbot simulation is operational. Commands supported: `@grade`, `@career`, `@subject`, `@9box`.", {
+      const reason = err instanceof Error ? err.message : "Unknown error";
+      streamResponse(
+        `⚠️ Unable to reach the AI Mentor backend (${reason}). Please make sure the API is running on port 8001 and try again.`,
+        {
           id: `ai-${Date.now()}`,
           sender: "ai",
           text: "",
           timestamp: aiTime
-        });
-      }
+        }
+      );
     }
   };
 

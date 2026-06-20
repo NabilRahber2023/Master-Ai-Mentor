@@ -1,17 +1,31 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { 
-  GraduationCap, 
-  Search, 
-  Bell, 
-  Settings as SettingsIcon, 
-  TrendingUp, 
-  TrendingDown, 
-  Play, 
+import {
+  GraduationCap,
+  Search,
+  Bell,
+  Settings as SettingsIcon,
+  TrendingUp,
+  TrendingDown,
+  Play,
   Edit2,
   Info
 } from "lucide-react";
+import type { SGPAPredictionResponse } from "@/lib/api/predictions";
+
+interface StudentAnalyticsDashboardProps {
+  /** Live SGPA prediction result. The dashboard renders against this. */
+  prediction: SGPAPredictionResponse;
+}
+
+// Pull the original numeric value of a contributing factor by feature name.
+function factorValue(prediction: SGPAPredictionResponse, feature: string): number | null {
+  const f = prediction.contributing_factors.find(
+    (c) => c.feature.toLowerCase() === feature.toLowerCase(),
+  );
+  return f && typeof f.value === "number" ? f.value : null;
+}
 
 // Initial Subject configurations
 const INITIAL_SUBJECTS_DIAGNOSTICS = [
@@ -26,53 +40,66 @@ const INITIAL_SUBJECTS_BREAKDOWN = [
   { code: "PHYS 201", title: "Quantum Mechanics", historical: "C+", predicted: "C", icon: "science", warning: true },
 ];
 
-export function StudentAnalyticsDashboard() {
-  // Simulator Tuning States (bound to visual simulator widgets)
-  const [attendanceRate, setAttendanceRate] = useState<number>(92);
-  const [studyHours, setStudyHours] = useState<number>(18);
+export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashboardProps) {
+  // Baseline (current) SGPA comes straight from the prediction inputs.
+  const currentSgpa = factorValue(prediction, "Previous SGPA") ?? prediction.predicted_sgpa;
+  const basePredicted = prediction.predicted_sgpa;
+
+  // Simulator Tuning States — seeded from the prediction so "what-if" starts at the
+  // real attendance/study-hours values used for the prediction.
+  const [attendanceRate, setAttendanceRate] = useState<number>(
+    () => Math.round(factorValue(prediction, "Attendance Rate") ?? 92),
+  );
+  const [studyHours, setStudyHours] = useState<number>(
+    () => Math.round((factorValue(prediction, "Study Hours Per Day") ?? 4) * 4),
+  );
   const [simulationActive, setSimulationActive] = useState(false);
 
   // Editable Model Baseline Parameters
-  const [sscGpa, setSscGpa] = useState<number>(4.80);
-  const [hscGpa, setHscGpa] = useState<number>(4.92);
+  const [sscGpa, setSscGpa] = useState<number>(() => factorValue(prediction, "SSC GPA") ?? 4.8);
+  const [hscGpa, setHscGpa] = useState<number>(() => factorValue(prediction, "HSC GPA") ?? 4.92);
   const [familyIncome, setFamilyIncome] = useState<string>("Tier 2");
   const [scholarship, setScholarship] = useState<string>("Merit Based");
   const [distanceFromUni, setDistanceFromUni] = useState<string>("12 km");
-  const [prevSemesterSgpa, setPrevSemesterSgpa] = useState<number>(3.42);
+  const [prevSemesterSgpa, setPrevSemesterSgpa] = useState<number>(() => currentSgpa);
   const [editingParams, setEditingParams] = useState(false);
 
   // Diagnostics states
   const [subjectsDiagnostics, setSubjectsDiagnostics] = useState(INITIAL_SUBJECTS_DIAGNOSTICS);
 
-  // Simulator Calculus
+  // Confidence is derived from the risk band the model assigned (regression model
+  // has no native probability). Clearly explainable mapping.
+  const riskLower = prediction.risk_level.toLowerCase();
+  const baseConfidence = riskLower.includes("high")
+    ? 62
+    : riskLower.includes("mod") || riskLower.includes("mid")
+      ? 79
+      : 93;
+
+  // Simulator Calculus — anchored on the real predicted SGPA; sliders nudge it.
   const simulatedValues = useMemo(() => {
-    const baseline = prevSemesterSgpa; // 3.42
-    
-    // Attendance rate formula
-    const attImpact = (attendanceRate - 92) * 0.015;
-    // Study hours formula
-    const studyImpact = (studyHours - 18) * 0.02;
+    // Deltas relative to the prediction's own attendance / study hours.
+    const attImpact = (attendanceRate - (factorValue(prediction, "Attendance Rate") ?? 92)) * 0.015;
+    const studyImpact = (studyHours - (factorValue(prediction, "Study Hours Per Day") ?? 4) * 4) * 0.02;
 
-    const rawSim = baseline + 0.36 + attImpact + studyImpact;
-    const predicted = Math.min(4.0, Math.max(1.0, Number(rawSim.toFixed(2))));
+    const rawSim = basePredicted + attImpact + studyImpact;
+    const predicted = Math.min(4.0, Math.max(0.0, Number(rawSim.toFixed(2))));
 
-    // Primary Confidence
-    const primaryConfidence = Math.min(99.9, Math.max(70.0, 94.2 + attImpact * 5 + studyImpact * 4));
+    const primaryConfidence = Math.min(99.9, Math.max(50.0, baseConfidence + attImpact * 5 + studyImpact * 4));
 
-    // Dynamic predicted values for granular components
-    const cryptoGpa = Math.min(4.0, 3.7 + attImpact + studyImpact);
-    const quantumGpa = Math.min(4.0, 2.3 + attImpact + studyImpact);
-    
+    const cryptoGpa = Math.min(4.0, predicted);
+    const quantumGpa = Math.min(4.0, Math.max(0, predicted - 1.4));
+
     return {
       predicted,
       confidence: primaryConfidence.toFixed(1),
-      risk: predicted >= 3.5 ? "Low Risk" : predicted >= 3.0 ? "Moderate Risk" : "High Risk",
+      risk: prediction.risk_level,
       riskColor: predicted >= 3.5 ? "text-cyan-400 bg-cyan-950/40 border-cyan-800/30" : predicted >= 3.0 ? "text-yellow-400 bg-yellow-950/40 border-yellow-800/30" : "text-red-400 bg-red-950/40 border-red-800/30",
       cryptoForecast: cryptoGpa >= 3.85 ? "A" : cryptoGpa >= 3.5 ? "A-" : cryptoGpa >= 3.15 ? "B+" : "B",
       quantumForecast: quantumGpa >= 3.15 ? "B" : quantumGpa >= 2.85 ? "B-" : quantumGpa >= 2.5 ? "C+" : "C",
-      predicted2: Math.min(4.0, Math.max(1.0, Number((rawSim + 0.04).toFixed(2))))
+      predicted2: predicted,
     };
-  }, [attendanceRate, studyHours, prevSemesterSgpa]);
+  }, [attendanceRate, studyHours, basePredicted, baseConfidence, prediction]);
 
   return (
     <div className="w-full bg-[#101416] text-[#e0e3e6] min-h-screen font-body selection:bg-cyan-500/30 selection:text-cyan-200 space-y-8 pb-24">
@@ -209,61 +236,38 @@ export function StudentAnalyticsDashboard() {
             <p className="text-[11px] text-slate-400 mb-6">Variables driving the prediction</p>
             
             <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-[11px] mb-1.5">
-                  <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">Attendance</span>
-                  <span className="text-cyan-400 font-bold font-headline">+{attendanceRate >= 92 ? "0.15" : (0.15 + (attendanceRate - 92) * 0.005).toFixed(2)} GPA</span>
-                </div>
-                <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(10, attendanceRate - 10))}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1.5">
-                  <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">Study Hours</span>
-                  <span className="text-cyan-400 font-bold font-headline">+{studyHours >= 18 ? "0.12" : (0.12 + (studyHours - 18) * 0.008).toFixed(2)} GPA</span>
-                </div>
-                <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(10, (studyHours / 40) * 100))}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1.5">
-                  <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">Participation</span>
-                  <span className="text-cyan-400 font-bold font-headline">+0.08 GPA</span>
-                </div>
-                <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 rounded-full w-[50%]"></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1.5">
-                  <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">Extracurriculars</span>
-                  <span className="text-cyan-400 font-bold font-headline">+0.04 GPA</span>
-                </div>
-                <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 rounded-full w-[30%]"></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1.5">
-                  <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">Assignment Quality</span>
-                  <span className="text-yellow-500 font-bold font-headline">-0.05 GPA</span>
-                </div>
-                <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
-                  <div className="h-full bg-yellow-500 rounded-full w-[45%]"></div>
-                </div>
-              </div>
+              {(() => {
+                const maxImpact = Math.max(
+                  ...prediction.contributing_factors.map((f) => Math.abs(f.impact_score)),
+                  0.0001,
+                );
+                return prediction.contributing_factors.map((f) => {
+                  const positive = f.impact_score >= 0;
+                  const pct = Math.min(100, Math.max(8, (Math.abs(f.impact_score) / maxImpact) * 100));
+                  return (
+                    <div key={f.feature}>
+                      <div className="flex justify-between text-[11px] mb-1.5">
+                        <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">
+                          {f.feature}
+                        </span>
+                        <span className={`font-bold font-headline ${positive ? "text-cyan-400" : "text-yellow-500"}`}>
+                          {positive ? "+" : "−"}
+                          {Math.abs(f.impact_score).toFixed(3)}
+                          <span className="ml-1 text-slate-500">
+                            ({typeof f.value === "number" ? f.value : f.value})
+                          </span>
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${positive ? "bg-cyan-400 shadow-[0_0_8px_rgba(0,229,255,0.4)]" : "bg-yellow-500"}`}
+                          style={{ width: `${pct}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
 
@@ -298,16 +302,19 @@ export function StudentAnalyticsDashboard() {
                 <h3 className="font-headline text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cumulative GPA Forecast</h3>
                 <div className="flex items-end gap-3">
                   <span className="font-headline text-5xl font-bold text-white">{simulatedValues.predicted2.toFixed(2)}</span>
-                  <div className="pb-1.5 flex items-center gap-0.5 text-cyan-400">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span className="font-headline text-xs font-semibold">+0.14 Projected</span>
+                  <div className={`pb-1.5 flex items-center gap-0.5 ${simulatedValues.predicted2 >= currentSgpa ? "text-cyan-400" : "text-yellow-500"}`}>
+                    {simulatedValues.predicted2 >= currentSgpa ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                    <span className="font-headline text-xs font-semibold">
+                      {simulatedValues.predicted2 >= currentSgpa ? "+" : ""}
+                      {(simulatedValues.predicted2 - currentSgpa).toFixed(2)} Projected
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
                 <span className="block font-headline text-[9px] text-slate-400 uppercase tracking-widest mb-0.5">Current Baseline</span>
-                <span className="font-headline text-xl text-slate-300">3.68</span>
+                <span className="font-headline text-xl text-slate-300">{currentSgpa.toFixed(2)}</span>
               </div>
             </div>
 
@@ -352,38 +359,37 @@ export function StudentAnalyticsDashboard() {
               <h3 className="font-headline text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Primary Impact Factors</h3>
               
               <div className="space-y-5">
-                <div>
-                  <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs text-slate-200">Algorithmic Consistency</span>
-                    <span className="font-headline text-sm font-semibold text-cyan-400">94%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#313538]/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-400 rounded-full w-[94%] shadow-[0_0_8px_rgba(0,229,255,0.6)]"></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs text-slate-200">Assignment Quality</span>
-                    <span className="font-headline text-sm font-semibold text-[#44d8f1]">88%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#313538]/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#44d8f1] rounded-full w-[88%]"></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs text-slate-200">Peer Collaboration</span>
-                    <span className="font-headline text-sm font-semibold text-yellow-500">62%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#313538]/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500 rounded-full w-[62%]"></div>
-                  </div>
-                  <p className="mt-2 text-[9px] text-yellow-500/80 font-headline uppercase tracking-wider flex items-center gap-1">
-                    <Info className="w-3 h-3" /> Potential Drag Factor
-                  </p>
-                </div>
+                {(() => {
+                  const maxImpact = Math.max(
+                    ...prediction.contributing_factors.map((f) => Math.abs(f.impact_score)),
+                    0.0001,
+                  );
+                  return prediction.contributing_factors.map((f) => {
+                    const positive = f.impact_score >= 0;
+                    const pct = Math.round(Math.min(100, Math.max(8, (Math.abs(f.impact_score) / maxImpact) * 100)));
+                    return (
+                      <div key={f.feature}>
+                        <div className="flex justify-between items-end mb-1">
+                          <span className="text-xs text-slate-200">{f.feature}</span>
+                          <span className={`font-headline text-sm font-semibold ${positive ? "text-cyan-400" : "text-yellow-500"}`}>
+                            {pct}%
+                          </span>
+                        </div>
+                        <div className="w-full h-1 bg-[#313538]/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${positive ? "bg-cyan-400 shadow-[0_0_8px_rgba(0,229,255,0.6)]" : "bg-yellow-500"}`}
+                            style={{ width: `${pct}%` }}
+                          ></div>
+                        </div>
+                        {!positive && (
+                          <p className="mt-2 text-[9px] text-yellow-500/80 font-headline uppercase tracking-wider flex items-center gap-1">
+                            <Info className="w-3 h-3" /> Potential Drag Factor
+                          </p>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
 

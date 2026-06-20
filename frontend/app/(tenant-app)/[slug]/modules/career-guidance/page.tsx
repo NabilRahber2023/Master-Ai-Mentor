@@ -9,8 +9,10 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { 
-  Radar, 
+import { CareerPredictionPanel } from "@/components/modules/live-prediction/career-prediction-panel";
+import type { CareerPredictionResponse } from "@/lib/api/predictions";
+import {
+  Radar,
   RadarChart, 
   PolarGrid, 
   PolarAngleAxis, 
@@ -88,6 +90,13 @@ export default function CareerGuidancePage() {
   // Target recommendations selection
   const [selectedCareer, setSelectedCareer] = useState<string>("Staff Software Engineer");
 
+  // Live ML evaluation result that drives the page when present.
+  const [livePrediction, setLivePrediction] = useState<CareerPredictionResponse | null>(null);
+  const handleLiveResult = (result: CareerPredictionResponse) => {
+    setLivePrediction(result);
+    setSelectedCareer(result.predicted_career);
+  };
+
   // Handle slide updates
   const handleSliderChange = (index: number, val: number) => {
     const updated = [...competencies];
@@ -113,18 +122,39 @@ export default function CareerGuidancePage() {
     const cloudMatch = Math.min(99, Math.round((dist * 0.45) + (sys * 0.25) + 15));
 
     // Telemetry values
-    const careerReadiness = Math.min(100, Math.round((alg + dist + mlo + sys) / 4 + 10));
+    // Career readiness reflects the live model confidence when available.
+    const careerReadiness = livePrediction
+      ? Math.round(livePrediction.confidence_score * 100)
+      : Math.min(100, Math.round((alg + dist + mlo + sys) / 4 + 10));
     const marketDemand = Math.min(99, Math.round(70 + (dist * 0.15) + (mlo * 0.15)));
     const futureGrowth = Math.min(99, Math.round(75 + (mlo * 0.2)));
     const automationRisk = Math.max(5, Math.round(50 - (alg * 0.25) - (sys * 0.2)));
 
-    // Target recommendations
-    const careers: CareerPath[] = [
-      { name: "Staff Software Engineer", match: seMatch, growth: "High Impact", demand: "High Growth", icon: Code },
-      { name: "Solutions Architect", match: cloudMatch, growth: "High Demand", demand: "High Growth", icon: Compass },
-      { name: "Engineering Manager", match: Math.min(99, Math.round((alg + sys) / 2 + 10)), growth: "Leadership", demand: "High Impact", icon: Briefcase },
-      { name: "Data Platform Engineer", match: dsMatch, growth: "High Demand", demand: "Future Ready", icon: Database },
-    ];
+    // Target recommendations — driven by the live ML prediction when available.
+    const recIcons = [Code, Compass, Briefcase, Database];
+    const careers: CareerPath[] = livePrediction
+      ? [
+          {
+            name: livePrediction.predicted_career,
+            match: Math.round(livePrediction.confidence_score * 100),
+            growth: "Top Match",
+            demand: "AI Predicted",
+            icon: Code,
+          },
+          ...livePrediction.alternative_paths.map((p, i) => ({
+            name: p.career,
+            match: Math.round(p.probability * 100),
+            growth: "Alternative",
+            demand: "AI Predicted",
+            icon: recIcons[(i + 1) % recIcons.length],
+          })),
+        ]
+      : [
+          { name: "Staff Software Engineer", match: seMatch, growth: "High Impact", demand: "High Growth", icon: Code },
+          { name: "Solutions Architect", match: cloudMatch, growth: "High Demand", demand: "High Growth", icon: Compass },
+          { name: "Engineering Manager", match: Math.min(99, Math.round((alg + sys) / 2 + 10)), growth: "Leadership", demand: "High Impact", icon: Briefcase },
+          { name: "Data Platform Engineer", match: dsMatch, growth: "High Demand", demand: "Future Ready", icon: Database },
+        ];
 
     // Radar Chart formatting
     const radarData = [
@@ -157,7 +187,7 @@ export default function CareerGuidancePage() {
       radarData,
       gaps,
     };
-  }, [competencies]);
+  }, [competencies, livePrediction]);
 
   // Recalibrate Competencies
   const resetCompetencies = () => {
@@ -222,15 +252,96 @@ export default function CareerGuidancePage() {
       {/* Main Container */}
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 relative">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00daf3]/5 rounded-full blur-[130px] pointer-events-none -translate-y-1/3 translate-x-1/4"></div>
+        <CareerPredictionPanel
+          onResult={handleLiveResult}
+          onReset={() => setLivePrediction(null)}
+        />
+
+        {/* Fresh state: nothing shows until the user runs a prediction */}
+        {!livePrediction && (
+          <section className="rounded-xl border border-dashed border-[#3b494c]/30 bg-[#181c1e]/40 p-12 text-center relative z-10">
+            <p className="text-sm text-slate-400">
+              Enter candidate attributes above and click{" "}
+              <span className="font-semibold text-cyan-300">Predict Career</span> to populate
+              the Career Horizon analysis.
+            </p>
+          </section>
+        )}
+
+        {/* The full dashboard only renders from a live prediction */}
+        {livePrediction && (
+          <>
+            {/* Live result banner */}
+            <section className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 p-5 relative z-10">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
+                  Live Prediction
+                </span>
+                <span className="text-2xl font-bold text-white">{livePrediction.predicted_career}</span>
+                <span className="font-mono text-xs text-cyan-300">
+                  {Math.round(livePrediction.confidence_score * 100)}% confidence
+                </span>
+              </div>
+              {livePrediction.alternative_paths.length > 0 && (
+                <p className="mt-2 text-[11px] text-slate-400">
+                  Alternatives:{" "}
+                  {livePrediction.alternative_paths
+                    .map((p) => `${p.career} (${Math.round(p.probability * 100)}%)`)
+                    .join(" · ")}
+                </p>
+              )}
+            </section>
+
+            {/* Impact Factors — real SHAP contributions from the career model */}
+            {livePrediction.contributing_factors.length > 0 && (
+              <section className="rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/60 p-5 relative z-10">
+                <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
+                <p className="text-[11px] text-slate-400 mb-4">Variables driving the career prediction</p>
+                <div className="space-y-4">
+                  {(() => {
+                    const maxImpact = Math.max(
+                      ...livePrediction.contributing_factors.map((f) => Math.abs(f.impact_score)),
+                      0.0001,
+                    );
+                    return livePrediction.contributing_factors.map((f) => {
+                      const pct = Math.min(100, Math.max(8, (Math.abs(f.impact_score) / maxImpact) * 100));
+                      return (
+                        <div key={f.feature}>
+                          <div className="flex justify-between text-[11px] mb-1.5">
+                            <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">
+                              {f.feature}
+                            </span>
+                            <span className="text-cyan-400 font-bold font-headline">
+                              {f.impact_score.toFixed(3)}
+                              <span className="ml-1 text-slate-500">
+                                ({typeof f.value === "number" ? f.value : f.value})
+                              </span>
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
+                              style={{ width: `${pct}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </section>
+            )}
 
         {/* Hero Top Title & Search bar row */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#3b494c]/15 pb-4 gap-4 relative z-10">
           <div>
             <h1 className="text-3xl md:text-4xl font-headline font-bold text-white tracking-tight uppercase flex items-center gap-3">
-              Career Horizon Analysis
+              {livePrediction?.predicted_career ?? "Career Horizon Analysis"}
             </h1>
             <p className="text-[10px] text-slate-400 font-headline uppercase tracking-[0.2em] mt-1">
-              PREDICTIVE VECTOR: 5-YEAR CINEMATIC PROJECTION
+              {livePrediction
+                ? `PREDICTED CAREER · ${Math.round(livePrediction.confidence_score * 100)}% CONFIDENCE`
+                : "PREDICTIVE VECTOR: 5-YEAR CINEMATIC PROJECTION"}
             </p>
           </div>
 
@@ -779,6 +890,8 @@ export default function CareerGuidancePage() {
             </p>
           </div>
         </section>
+          </>
+        )}
 
       </main>
 

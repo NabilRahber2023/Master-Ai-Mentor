@@ -1,5 +1,5 @@
 from app.core.subject_ml_engine import SubjectMLEngine
-from .schemas import SubjectPredictionInput, SubjectPredictionOutput, AlternativeOption
+from .schemas import SubjectPredictionInput, SubjectPredictionOutput, AlternativeOption, ContributingFactor
 import numpy as np
 
 class SubjectPredictorService:
@@ -35,22 +35,26 @@ class SubjectPredictorService:
         
         # 3. Get Top K (3) classes
         top_k_indices = np.argsort(probs)[::-1][:3]
-        
+
         recommendation = None
         alternatives = []
-        
+
         for i, idx in enumerate(top_k_indices):
             label = self.engine.get_class_label(idx)
             confidence = float(probs[idx])
-            
+
             if i == 0:
                 recommendation = label
                 rec_confidence = confidence
             else:
                 alternatives.append(AlternativeOption(department=label, probability=confidence))
-                
+
+        # 4. Contributing factors (SHAP) for the predicted class
+        factors = self.engine.contributing_factors(feature_vector, int(top_k_indices[0]))
+
         return SubjectPredictionOutput(
             recommended_department=recommendation,
             confidence_score=rec_confidence,
-            alternative_options=alternatives
+            alternative_options=alternatives,
+            contributing_factors=[ContributingFactor(**f) for f in factors]
         )

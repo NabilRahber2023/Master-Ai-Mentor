@@ -529,10 +529,32 @@ class MCPDispatcher:
         
         # Get tool executor
         executor = get_tool_executor()
-        
+
+        # The LLM occasionally hallucinates a non-existent tool (e.g. "clarification",
+        # "none", "answer"). Treat those as a request for clarification and respond
+        # helpfully instead of surfacing a raw error, falling back to the LLM's own text.
+        KNOWN_TOOLS = {
+            "search_student", "get_student",
+            "predict_sgpa", "predict_career", "predict_9box", "predict_subject",
+        }
+        if tool_name not in KNOWN_TOOLS:
+            fallback = (llm_message or "").strip()
+            if not fallback:
+                fallback = (
+                    "I can help you search for a student and predict their SGPA, career path, "
+                    "9-box talent position, or recommended subject. Try \"find student named ...\" "
+                    "or, once a student is selected, \"predict career\"."
+                )
+            return ChatResponse(
+                session_id=session.session_id,
+                message=fallback,
+                intent="clarification",
+                requires_input=True,
+            )
+
         # Execute the tool
         success, result = await executor.execute(tool_name, arguments)
-        
+
         if not success:
             # Check for missing fields
             if "missing_fields" in result:

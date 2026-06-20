@@ -7,11 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Wand2 } from "lucide-react";
 
 interface EmailLoginFormProps {
     redirectTo?: string;
 }
+
+// Demo account seeded in the local database (see "We have done.md")
+const DEMO_CREDENTIALS = {
+    email: "oxford@gmail.com",
+    password: "@oxford123#",
+};
 
 export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLoginFormProps) {
     const router = useRouter();
@@ -77,6 +83,23 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
             }}
             className="space-y-4"
         >
+            {/* Quick fill demo credentials — development only */}
+            {process.env.NODE_ENV !== "production" && (
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                        form.setFieldValue("email", DEMO_CREDENTIALS.email);
+                        form.setFieldValue("password", DEMO_CREDENTIALS.password);
+                        setError(null);
+                    }}
+                    className="w-full border-cyan-500/40 bg-cyan-500/5 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
+                >
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Fill demo credentials
+                </Button>
+            )}
+
             {/* Email */}
             <form.Field name="email">
                 {(field) => (

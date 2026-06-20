@@ -9,8 +9,10 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { 
-  Brain, 
+import { SubjectPredictionPanel } from "@/components/modules/live-prediction/subject-prediction-panel";
+import type { SubjectPredictionResponse } from "@/lib/api/predictions";
+import {
+  Brain,
   Search, 
   Bell, 
   Settings, 
@@ -37,10 +39,15 @@ export default function SubjectPredictionPage() {
   const [matrixList, setMatrixList] = useState<string[]>([]);
   const [isLocked, setIsLocked] = useState(false);
 
+  // Live ML evaluation result that drives the page when present.
+  const [livePrediction, setLivePrediction] = useState<SubjectPredictionResponse | null>(null);
+
   // Dynamic state simulation
   const simulatedValues = useMemo(() => {
-    // Confidence score base + factors
-    const confidence = Math.min(99, Math.max(70, Math.round(92 + (cognitiveWeight - 0.85) * 8 - (workloadTolerance - 0.6) * 5 + (marketTrendImpact - 0.42) * 6)));
+    // Confidence: use the live model confidence when available, else slider sim.
+    const confidence = livePrediction
+      ? Math.round(livePrediction.confidence_score * 100)
+      : Math.min(99, Math.max(70, Math.round(92 + (cognitiveWeight - 0.85) * 8 - (workloadTolerance - 0.6) * 5 + (marketTrendImpact - 0.42) * 6)));
     
     // GPA impact
     const gpaImpact = Number((0.45 + (cognitiveWeight - 0.85) * 0.15 + (marketTrendImpact - 0.42) * 0.10).toFixed(2));
@@ -74,7 +81,7 @@ export default function SubjectPredictionPage() {
       archMatch,
       rationale
     };
-  }, [cognitiveWeight, workloadTolerance, marketTrendImpact]);
+  }, [cognitiveWeight, workloadTolerance, marketTrendImpact, livePrediction]);
 
   // Map radar coordinate updates dynamically based on current slider values
   const getRadarPoints = () => {
@@ -131,7 +138,90 @@ export default function SubjectPredictionPage() {
         </Breadcrumb>
       </header>
 
+      {/* Live API-connected prediction panel */}
+      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
+        <SubjectPredictionPanel
+          onResult={setLivePrediction}
+          onReset={() => setLivePrediction(null)}
+        />
+
+        {/* Fresh state: nothing shows until the user runs a prediction */}
+        {!livePrediction && (
+          <section className="rounded-xl border border-dashed border-[#3b494c]/30 bg-[#181c1e]/40 p-12 text-center">
+            <p className="text-sm text-slate-400">
+              Enter student attributes above and click{" "}
+              <span className="font-semibold text-cyan-300">Recommend Subject</span> to populate
+              the prediction matrix.
+            </p>
+          </section>
+        )}
+
+        {/* Live result banner */}
+        {livePrediction && (
+          <section className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 p-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
+                Live Recommendation
+              </span>
+              <span className="text-2xl font-bold text-white">{livePrediction.recommended_department}</span>
+              <span className="font-mono text-xs text-cyan-300">
+                {Math.round(livePrediction.confidence_score * 100)}% confidence
+              </span>
+            </div>
+            {livePrediction.alternative_options.length > 0 && (
+              <p className="mt-2 text-[11px] text-slate-400">
+                Alternatives:{" "}
+                {livePrediction.alternative_options
+                  .map((o) => `${o.department} (${Math.round(o.probability * 100)}%)`)
+                  .join(" · ")}
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* Impact Factors — real SHAP contributions from the subject model */}
+        {livePrediction && livePrediction.contributing_factors.length > 0 && (
+          <section className="rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/60 p-5">
+            <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
+            <p className="text-[11px] text-slate-400 mb-4">Variables driving the recommendation</p>
+            <div className="space-y-4">
+              {(() => {
+                const maxImpact = Math.max(
+                  ...livePrediction.contributing_factors.map((f) => Math.abs(f.impact_score)),
+                  0.0001,
+                );
+                return livePrediction.contributing_factors.map((f) => {
+                  const pct = Math.min(100, Math.max(8, (Math.abs(f.impact_score) / maxImpact) * 100));
+                  return (
+                    <div key={f.feature}>
+                      <div className="flex justify-between text-[11px] mb-1.5">
+                        <span className="text-slate-300 font-medium font-headline tracking-wider uppercase">
+                          {f.feature}
+                        </span>
+                        <span className="text-cyan-400 font-bold font-headline">
+                          {f.impact_score.toFixed(3)}
+                          <span className="ml-1 text-slate-500">
+                            ({typeof f.value === "number" ? f.value : f.value})
+                          </span>
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
+                          style={{ width: `${pct}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </section>
+        )}
+      </div>
+
       {/* Main Page Layout Grid (OpenAI Enterprise/Palantir Dark theme) */}
+      {livePrediction && (
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Columns (8 columns): Main Analytics and Modules */}
@@ -180,9 +270,9 @@ export default function SubjectPredictionPage() {
                   <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
                   Live Prediction Active
                 </div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-headline">Recommended Pathway</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-headline">Recommended Department</p>
                 <h2 className="text-3xl font-headline font-bold text-white tracking-tight leading-none uppercase">
-                  Optimal Course Trajectory
+                  {livePrediction?.recommended_department ?? "Optimal Course Trajectory"}
                 </h2>
                 <p className="text-slate-400 text-xs leading-relaxed font-body">
                   Based on your historical performance vector and cognitive load analysis, this pathway represents the optimal subject sequence to maximize your academic potential for Semester 04.
@@ -407,10 +497,10 @@ export default function SubjectPredictionPage() {
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-[9px] text-cyan-400 font-mono tracking-wider">QCS-401</span>
                     <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30 text-[9px] font-bold">
-                      {simulatedValues.cryptoMatch}% Match
+                      {livePrediction ? simulatedValues.confidence : simulatedValues.cryptoMatch}% Match
                     </span>
                   </div>
-                  <h4 className="text-sm font-semibold text-white truncate mb-1">Quantum Cryptography</h4>
+                  <h4 className="text-sm font-semibold text-white truncate mb-1">{livePrediction?.recommended_department ?? "Quantum Cryptography"}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
                     Advanced theoretical frameworks for securing post-binary data systems and networks.
                   </p>
@@ -435,10 +525,10 @@ export default function SubjectPredictionPage() {
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-[9px] text-cyan-400 font-mono tracking-wider">SBD-308</span>
                     <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30 text-[9px] font-bold">
-                      {simulatedValues.bioMatch}% Match
+                      {livePrediction?.alternative_options[0] ? Math.round(livePrediction.alternative_options[0].probability * 100) : simulatedValues.bioMatch}% Match
                     </span>
                   </div>
-                  <h4 className="text-sm font-semibold text-white truncate mb-1">Synthetic Bio-Data</h4>
+                  <h4 className="text-sm font-semibold text-white truncate mb-1">{livePrediction?.alternative_options[0]?.department ?? "Synthetic Bio-Data"}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
                     Data structures mapping organic computational methodologies and cellular algorithms.
                   </p>
@@ -487,10 +577,10 @@ export default function SubjectPredictionPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                      Data Structures III
+                      {livePrediction?.alternative_options[1]?.department ?? "Data Structures III"}
                     </h4>
                     <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
-                      Match: {simulatedValues.structuresMatch}%
+                      Match: {livePrediction?.alternative_options[1] ? Math.round(livePrediction.alternative_options[1].probability * 100) : simulatedValues.structuresMatch}%
                     </span>
                   </div>
                 </div>
@@ -512,10 +602,10 @@ export default function SubjectPredictionPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                      Hardware Architecture
+                      {livePrediction?.alternative_options[2]?.department ?? "Hardware Architecture"}
                     </h4>
                     <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
-                      Match: {simulatedValues.archMatch}%
+                      Match: {livePrediction?.alternative_options[2] ? Math.round(livePrediction.alternative_options[2].probability * 100) : simulatedValues.archMatch}%
                     </span>
                   </div>
                 </div>
@@ -741,6 +831,7 @@ export default function SubjectPredictionPage() {
           </section>
         </div>
       </main>
+      )}
 
       {/* Footer copyright notice from mockup */}
       <footer className="border-t border-[#3b494c]/10 bg-[#101416]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">

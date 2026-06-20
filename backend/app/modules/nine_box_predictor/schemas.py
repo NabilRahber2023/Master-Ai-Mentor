@@ -30,6 +30,7 @@ class NineBoxPredictionRequest(BaseModel):
 class NineBoxPredictionResponse(BaseModel):
     performance_level_score: int = Field(..., description="Predicted Performance Level (0, 1, 2)")
     potential_level_score: int = Field(..., description="Predicted Potential Level (0, 1, 2)")
+    confidence_score: float = Field(..., description="Model confidence (0.0 - 1.0)")
     nine_box_position_label: str = Field(..., description="Descriptive label of the 9-box position")
     position_in_grid: str = Field(..., description="Grid position code (e.g., 'P2L1')")
     descriptive_recommendation: str = Field(..., description="Recommendation based on the position")

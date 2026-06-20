@@ -413,7 +413,7 @@ class ToolExecutor:
         client = await self._get_http_client()
         try:
             response = await client.post(
-                f"{API_BASE_URL}/api/v1/prediction/career",
+                f"{API_BASE_URL}/api/v1/prediction/career/career",
                 json=payload
             )
             if response.status_code == 422:
@@ -527,7 +527,7 @@ class ToolExecutor:
         client = await self._get_http_client()
         try:
             response = await client.post(
-                f"{API_BASE_URL}/api/v1/prediction/subject_choice",
+                f"{API_BASE_URL}/api/v1/prediction/subject/subject_choice",
                 json=payload
             )
             if response.status_code == 422:

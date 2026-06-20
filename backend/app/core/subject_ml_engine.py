@@ -1,9 +1,17 @@
 import json
 import os
 import threading
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
-from catboost import CatBoostClassifier
+import numpy as np
+from catboost import CatBoostClassifier, Pool
+
+# Human-readable names matching the feature vector order built in the service.
+SUBJECT_FEATURE_NAMES = [
+    "Gender", "Study Style", "Math Skill", "Programming Interest",
+    "Business Interest", "Creative Interest", "Location", "Career Goal",
+    "Age", "HSC GPA", "Tech Interest", "Budget Per Semester",
+]
 
 class SubjectMLEngine:
     _instance = None
@@ -63,6 +71,35 @@ class SubjectMLEngine:
             
         # CatBoost predict_proba returns a numpy array
         return self.model.predict_proba([features])
+
+    def contributing_factors(self, features: list, predicted_idx: int) -> List[dict]:
+        """Top feature contributions for the predicted class via CatBoost SHAP values."""
+        if not self.model:
+            return []
+        try:
+            cat_idx = self.model.get_cat_feature_indices()
+            pool = Pool([features], cat_features=cat_idx)
+            shap = np.array(self.model.get_feature_importance(pool, type="ShapValues"))
+
+            # Multiclass: (n_samples, n_classes, n_features+1). Binary: (n_samples, n_features+1).
+            if shap.ndim == 3:
+                row = shap[0, predicted_idx, :-1]
+            else:
+                row = shap[0, :-1]
+
+            factors = [
+                {
+                    "feature": SUBJECT_FEATURE_NAMES[i] if i < len(SUBJECT_FEATURE_NAMES) else f"Feature {i}",
+                    "value": features[i],
+                    "impact_score": round(abs(float(row[i])), 4),
+                }
+                for i in range(len(row))
+            ]
+            factors.sort(key=lambda f: f["impact_score"], reverse=True)
+            return factors[:5]
+        except Exception as e:
+            print(f"SubjectMLEngine: Error calculating SHAP values: {e}")
+            return []
 
     def get_class_label(self, class_index: int) -> str:
         """Returns the original class label for a given index."""

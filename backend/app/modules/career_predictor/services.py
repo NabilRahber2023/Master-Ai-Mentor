@@ -9,13 +9,14 @@ class CareerPredictorService:
         features = payload.model_dump(mode='json')
         
         # 2. Call ML Engine
-        best_career, confidence, alternatives = CareerMLEngine.get_instance().predict_career(features)
-        
+        best_career, confidence, alternatives, contributing_factors = CareerMLEngine.get_instance().predict_career(features)
+
         # 3. Format Response
         return CareerPredictionResponse(
             predicted_career=best_career,
             confidence_score=confidence,
-            alternative_paths=alternatives
+            alternative_paths=alternatives,
+            contributing_factors=contributing_factors
         )
 
 # Instantiate service (can also be done via dependency injection)
