@@ -1,7 +1,7 @@
 # Run The Project
 
 Goal: whole app live on localhost — backend `:8001` (+Swagger `/docs`), Postgres `:5433`, Ollama `:11434`, frontend `:3000`. Login `oxford@gmail.com` / `@oxford123#`.
-Rule: **check first; start what's stopped; install/build only what's missing.** All steps are idempotent — skip any whose check already passes. Windows Git Bash: keep `MSYS_NO_PATHCONV=1` where shown. Need: Docker Desktop (running), Node ≥20, pnpm (`npm i -g pnpm`).
+Rule: **check first; start what's stopped; install/build only what's missing.** All steps are idempotent — skip any whose check already passes. Windows Git Bash: keep `MSYS_NO_PATHCONV=1` where shown. Need: Docker Desktop (running), Node ≥20, npm (ships with Node), and **`backend/master_dataset.csv`** placed manually — it's gitignored (`*.csv`), so a fresh clone does not include it (see step 3).
 
 ## 1. Preflight — run this, then do only the flagged steps
 ```bash
@@ -24,10 +24,17 @@ until curl -sf http://localhost:8001/health >/dev/null; do sleep 3; done; echo "
 ```
 
 ## 3. Load dataset (10k students; powers chatbot + predictions + CSV mode)
+> ⚠️ **`backend/master_dataset.csv` is NOT in the repo** — `.gitignore` excludes `*.csv`, so a
+> fresh clone won't have it. **Obtain `master_dataset.csv` separately and place it in `backend/`**
+> before running this step (copy it from the original machine / shared drive). Confirm it's there:
+> `ls -la backend/master_dataset.csv` (should be ~2.8 MB, **63 columns**). Without it, this step
+> fails ("CSV not found") and the chatbot, Batch Prediction, and CSV mode all come up empty.
+
 `master_dataset.csv` is the **63-column** dataset: the original 48 (chatbot + Batch
 Prediction) plus 15 extra feature columns that let Grade/Career/Subject/Growth run in
-**CSV mode** (see `DATASET_SPEC.md`). To regenerate the 15 columns after replacing the
-base data: `python backend/scripts/augment_dataset.py` (backs up to `master_dataset.original.csv`).
+**CSV mode** (see `DATASET_SPEC.md`). The 15 columns are regenerated from a 48-column base via
+`python backend/scripts/augment_dataset.py` (backs up to `master_dataset.original.csv`) — this
+*augments* an existing file, it does not create the 10k base rows, so you still need the source CSV.
 ```bash
 cd backend && docker cp master_dataset.csv ai_mentor_api:/tmp/master_dataset.csv
 MSYS_NO_PATHCONV=1 docker exec ai_mentor_api python -m app.chatbot.ingest_csv /tmp/master_dataset.csv
@@ -52,7 +59,7 @@ EOF
 
 ## 5. Auth tables
 ```bash
-cd frontend && pnpm install && pnpm db:push
+cd frontend && npm install && npm run db:push
 ```
 
 ## 6. Seed login user + Daffodil org
@@ -62,7 +69,7 @@ cd .. && npm install && node create-oxford-user.mjs
 
 ## 7. Frontend dev server
 ```bash
-cd frontend && pnpm dev    # http://localhost:3000
+cd frontend && npm run dev    # http://localhost:3000
 ```
 
 ## Done — confirm
@@ -76,4 +83,4 @@ Open http://localhost:3000, log in, open `/daffodil/modules/...` (each starts bl
 - ingest "CSV not found: C:/Users/..." → missing `MSYS_NO_PATHCONV=1` (step 3).
 - login 404 / fails → steps 5 then 6 not done.
 - 308 on `…/sgpa/` or `…/9box/` → normal trailing-slash redirect, browsers follow it.
-- restart later (already set up): `cd backend && docker compose up -d` then `cd frontend && pnpm dev` (data persists in the `postgres_data` volume).
+- restart later (already set up): `cd backend && docker compose up -d` then `cd frontend && npm run dev` (data persists in the `postgres_data` volume).
