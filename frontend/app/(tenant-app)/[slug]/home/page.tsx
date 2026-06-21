@@ -19,6 +19,7 @@ import {
     Activity,
 } from "lucide-react";
 import Link from "next/link";
+import { CsvUploadCard } from "@/components/dashboard/csv-upload-card";
 
 // Quick stat cards data
 const getQuickStats = (tenant: NonNullable<ReturnType<typeof useTenant>>) => [
@@ -109,6 +110,9 @@ export default function TenantDashboard() {
                         Manage your AI-powered student success modules from here.
                     </p>
                 </div>
+
+                {/* Dataset upload — feeds the chatbot + Batch Prediction live */}
+                <CsvUploadCard />
 
                 {/* Quick Stats */}
                 <div className="grid gap-4 md:grid-cols-3">

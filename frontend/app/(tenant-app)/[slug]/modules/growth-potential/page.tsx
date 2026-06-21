@@ -10,6 +10,8 @@ import {
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { NineBoxPredictionPanel } from "@/components/modules/live-prediction/nine-box-prediction-panel";
+import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
+import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { NineBoxPredictionResponse } from "@/lib/api/predictions";
 import {
   TrendingUp,
@@ -143,6 +145,7 @@ const MOCK_EMPLOYEES: Employee[] = [
 ];
 
 export default function GrowthPotentialPage() {
+  const [mode, setMode] = useState<"manual" | "csv">("manual");
   const [selectedDept, setSelectedDept] = useState<string>("Engineering");
   const [selectedCohort, setSelectedCohort] = useState<string>("Q3 2023");
   const [selectedCategory, setSelectedCategory] = useState<NineBoxCategory>("Star");
@@ -327,7 +330,21 @@ export default function GrowthPotentialPage() {
 
       {/* Main Page Content */}
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
-        <NineBoxPredictionPanel onResult={handleLiveResult} onReset={handleLiveReset} />
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Input source</p>
+          <ModeSwitch mode={mode} onChange={(m) => { setMode(m); handleLiveReset(); }} />
+        </div>
+
+        {mode === "manual" ? (
+          <NineBoxPredictionPanel onResult={handleLiveResult} onReset={handleLiveReset} />
+        ) : (
+          <CsvModePanel
+            module="growth"
+            label="Growth Potential"
+            onSingleResult={(p) => handleLiveResult(p as NineBoxPredictionResponse)}
+            onSingleClear={handleLiveReset}
+          />
+        )}
 
         {/* Live evaluation banner — drives the dashboard below */}
         {livePrediction && (

@@ -17,6 +17,8 @@ from app.modules.grade_predictor.router import router as sgpa_router
 from app.modules.nine_box_predictor.router import router as nine_box_router
 from app.modules.career_predictor.router import router as career_router
 from app.modules.subject_predictor.router import router as subject_router
+from app.modules.batch_predictor.router import router as batch_router
+from app.modules.csv_mode.router import router as csv_mode_router
 
 # Import Chatbot
 from app.chatbot import (
@@ -153,6 +155,8 @@ app.include_router(sgpa_router, prefix="/api/v1/prediction/sgpa")
 app.include_router(nine_box_router, prefix="/api/v1/prediction/9box")
 app.include_router(career_router, prefix="/api/v1/prediction/career")
 app.include_router(subject_router, prefix="/api/v1/prediction/subject")
+app.include_router(batch_router, prefix="/api/v1/prediction/batch")
+app.include_router(csv_mode_router, prefix="/api/v1/prediction/csv")
 
 # Register Chatbot Router
 app.include_router(chatbot_router, prefix="/api/v1")

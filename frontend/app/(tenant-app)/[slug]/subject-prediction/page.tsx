@@ -10,6 +10,8 @@ import {
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { SubjectPredictionPanel } from "@/components/modules/live-prediction/subject-prediction-panel";
+import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
+import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { SubjectPredictionResponse } from "@/lib/api/predictions";
 import {
   Brain,
@@ -39,6 +41,8 @@ export default function SubjectPredictionPage() {
   const [matrixList, setMatrixList] = useState<string[]>([]);
   const [isLocked, setIsLocked] = useState(false);
 
+  // Input source: manual form vs. uploaded CSV.
+  const [mode, setMode] = useState<"manual" | "csv">("manual");
   // Live ML evaluation result that drives the page when present.
   const [livePrediction, setLivePrediction] = useState<SubjectPredictionResponse | null>(null);
 
@@ -140,10 +144,24 @@ export default function SubjectPredictionPage() {
 
       {/* Live API-connected prediction panel */}
       <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
-        <SubjectPredictionPanel
-          onResult={setLivePrediction}
-          onReset={() => setLivePrediction(null)}
-        />
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Input source</p>
+          <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setLivePrediction(null); }} />
+        </div>
+
+        {mode === "manual" ? (
+          <SubjectPredictionPanel
+            onResult={setLivePrediction}
+            onReset={() => setLivePrediction(null)}
+          />
+        ) : (
+          <CsvModePanel
+            module="subject"
+            label="Subject Prediction"
+            onSingleResult={(p) => setLivePrediction(p as SubjectPredictionResponse)}
+            onSingleClear={() => setLivePrediction(null)}
+          />
+        )}
 
         {/* Fresh state: nothing shows until the user runs a prediction */}
         {!livePrediction && (

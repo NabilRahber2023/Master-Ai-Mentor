@@ -107,6 +107,22 @@ COLUMN_MAPPING = {
     "performance_score": "performance_score",
     "potential_score": "potential_score",
     "nine_box_position": "nine_box_position",
+    # Extra features for CSV-mode single-student ML predictions.
+    "ssc_gpa": "ssc_gpa",
+    "father_education": "father_education",
+    "mother_education": "mother_education",
+    "part_time_hours": "part_time_hours",
+    "parental_support": "parental_support",
+    "active_participation": "active_participation",
+    "public_speaking": "public_speaking",
+    "internship_experience_months": "internship_experience_months",
+    "projects_completed": "projects_completed",
+    "preferred_work_environment": "preferred_work_environment",
+    "interest_area": "interest_area",
+    "teamwork_score": "teamwork_score",
+    "learning_agility": "learning_agility",
+    "adaptability": "adaptability",
+    "career_motivation": "career_motivation",
 }
 
 
@@ -181,9 +197,11 @@ async def ingest_csv(csv_path: str, clear_existing: bool = True) -> int:
     # Initialize database
     await init_db()
     
-    # Load CSV
+    # Load CSV. keep_default_na=False so the literal string "None" (a valid
+    # parental-education category for the grade model) is preserved rather than
+    # being parsed as NaN; only genuinely empty cells become missing.
     print("Loading CSV...")
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path, keep_default_na=False, na_values=[""])
     print(f"Loaded {len(df)} rows")
     
     # Map columns
@@ -191,8 +209,10 @@ async def ingest_csv(csv_path: str, clear_existing: bool = True) -> int:
     df = map_csv_columns(df)
     print(f"Mapped columns: {list(df.columns)}")
     
-    # Handle NaN values
-    df = df.where(pd.notnull(df), None)
+    # Handle NaN values. Cast to object first: on pandas 3.x, .where(..., None)
+    # against a numeric column re-coerces None back to NaN, which then fails on
+    # insert ("expected str/float, got nan"). object dtype makes None stick.
+    df = df.astype(object).where(pd.notnull(df), None)
     
     # Generate embedding texts
     print("Generating embedding texts...")

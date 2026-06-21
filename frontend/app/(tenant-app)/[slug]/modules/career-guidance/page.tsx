@@ -10,6 +10,8 @@ import {
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { CareerPredictionPanel } from "@/components/modules/live-prediction/career-prediction-panel";
+import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
+import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { CareerPredictionResponse } from "@/lib/api/predictions";
 import {
   Radar,
@@ -90,6 +92,8 @@ export default function CareerGuidancePage() {
   // Target recommendations selection
   const [selectedCareer, setSelectedCareer] = useState<string>("Staff Software Engineer");
 
+  // Input source: manual form vs. uploaded CSV.
+  const [mode, setMode] = useState<"manual" | "csv">("manual");
   // Live ML evaluation result that drives the page when present.
   const [livePrediction, setLivePrediction] = useState<CareerPredictionResponse | null>(null);
   const handleLiveResult = (result: CareerPredictionResponse) => {
@@ -252,10 +256,26 @@ export default function CareerGuidancePage() {
       {/* Main Container */}
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 relative">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00daf3]/5 rounded-full blur-[130px] pointer-events-none -translate-y-1/3 translate-x-1/4"></div>
-        <CareerPredictionPanel
-          onResult={handleLiveResult}
-          onReset={() => setLivePrediction(null)}
-        />
+        <div className="relative z-10 flex items-center justify-between">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Input source</p>
+          <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setLivePrediction(null); }} />
+        </div>
+
+        {mode === "manual" ? (
+          <CareerPredictionPanel
+            onResult={handleLiveResult}
+            onReset={() => setLivePrediction(null)}
+          />
+        ) : (
+          <div className="relative z-10">
+            <CsvModePanel
+              module="career"
+              label="Career Guidance"
+              onSingleResult={(p) => handleLiveResult(p as CareerPredictionResponse)}
+              onSingleClear={() => setLivePrediction(null)}
+            />
+          </div>
+        )}
 
         {/* Fresh state: nothing shows until the user runs a prediction */}
         {!livePrediction && (

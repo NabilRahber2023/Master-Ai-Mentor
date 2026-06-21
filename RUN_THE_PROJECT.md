@@ -23,11 +23,19 @@ cd backend && docker compose up -d --build
 until curl -sf http://localhost:8001/health >/dev/null; do sleep 3; done; echo "API up"
 ```
 
-## 3. Load dataset (10k students; powers chatbot + predictions)
+## 3. Load dataset (10k students; powers chatbot + predictions + CSV mode)
+`master_dataset.csv` is the **63-column** dataset: the original 48 (chatbot + Batch
+Prediction) plus 15 extra feature columns that let Grade/Career/Subject/Growth run in
+**CSV mode** (see `DATASET_SPEC.md`). To regenerate the 15 columns after replacing the
+base data: `python backend/scripts/augment_dataset.py` (backs up to `master_dataset.original.csv`).
 ```bash
 cd backend && docker cp master_dataset.csv ai_mentor_api:/tmp/master_dataset.csv
 MSYS_NO_PATHCONV=1 docker exec ai_mentor_api python -m app.chatbot.ingest_csv /tmp/master_dataset.csv
 ```
+> Re-uploading the CSV from **Dashboard → Upload Student Dataset** does the same ingest in
+> the background (truncates + re-inserts with embeddings). If the live DB predates the 15
+> columns, add them once: `docker exec ai_mentor_db psql -U postgres -d ai_mentor -f -` with
+> the `ALTER TABLE students ADD COLUMN …` set (the columns are also in `init.sql` for fresh DBs).
 
 ## 4. Frontend env (create only if `frontend/.env.local` missing)
 ```bash
@@ -59,6 +67,9 @@ cd frontend && pnpm dev    # http://localhost:3000
 
 ## Done — confirm
 Open http://localhost:3000, log in, open `/daffodil/modules/...` (each starts blank → click predict/evaluate to populate Grade/Career/Subject/9-Box), try the chatbot ("find student named Allison" → pick → "predict career"), and Swagger at http://localhost:8001/docs.
+
+**CSV mode:** on each prediction module, flip the **Manual | CSV** toggle (top-right). CSV mode → **Single student** (search/pick from the dataset; the dashboard populates from that record) or **Whole batch** (model runs across all 10k students with KPIs + table). Backed by `/api/v1/prediction/csv/{students,grade,career,subject,growth}` — quick check:
+`curl "http://localhost:8001/api/v1/prediction/csv/grade/batch?limit=3"`.
 
 ## If it breaks
 - `api` returns `000` briefly → API runs `--reload`, it restarted; retry.

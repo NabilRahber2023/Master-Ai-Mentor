@@ -11,9 +11,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import { StudentAnalyticsDashboard } from "@/components/grade-prediction/StudentAnalyticsDashboard";
 import { GradePredictionPanel } from "@/components/modules/live-prediction/grade-prediction-panel";
+import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
+import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { SGPAPredictionResponse } from "@/lib/api/predictions";
 
 export default function GradePredictionDashboardPage() {
+    const [mode, setMode] = useState<"manual" | "csv">("manual");
     const [livePrediction, setLivePrediction] = useState<SGPAPredictionResponse | null>(null);
 
     const riskColor = livePrediction?.risk_level?.toLowerCase().includes("high")
@@ -36,10 +39,32 @@ export default function GradePredictionDashboardPage() {
                 </Breadcrumb>
             </header>
             <div className="flex-1 space-y-8 p-6 md:p-8 bg-[#101416]">
-                <GradePredictionPanel
-                    onResult={setLivePrediction}
-                    onReset={() => setLivePrediction(null)}
-                />
+                <div className="flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                        Input source
+                    </p>
+                    <ModeSwitch
+                        mode={mode}
+                        onChange={(m) => {
+                            setMode(m);
+                            setLivePrediction(null);
+                        }}
+                    />
+                </div>
+
+                {mode === "manual" ? (
+                    <GradePredictionPanel
+                        onResult={setLivePrediction}
+                        onReset={() => setLivePrediction(null)}
+                    />
+                ) : (
+                    <CsvModePanel
+                        module="grade"
+                        label="Grade Prediction"
+                        onSingleResult={(p) => setLivePrediction(p as SGPAPredictionResponse)}
+                        onSingleClear={() => setLivePrediction(null)}
+                    />
+                )}
 
                 {/* Fresh state: nothing shows until the user runs a prediction */}
                 {!livePrediction && (

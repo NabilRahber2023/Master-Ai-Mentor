@@ -1,4 +1,8 @@
-import bcrypt from 'bcryptjs';
+// NOTE: better-auth (the frontend auth library) verifies passwords with its own
+// scrypt-based hasher, NOT bcrypt. Seeding a bcrypt hash causes a 500
+// "Invalid password hash" on sign-in. We hash with better-auth's own helper so
+// the documented credentials actually work.
+import { hashPassword } from './frontend/node_modules/better-auth/dist/crypto/index.mjs';
 import pg from 'pg';
 import { randomUUID } from 'crypto';
 
@@ -46,8 +50,8 @@ async function createOxfordUser() {
       console.log(`📝 User created: ${userId}`);
     }
     
-    // Set password hash
-    const hash = await bcrypt.hash(password, 10);
+    // Set password hash using better-auth's own scrypt hasher (verifiable at sign-in)
+    const hash = await hashPassword(password);
     
     const existingAccount = await client.query(
       `SELECT id FROM account WHERE "user_id" = $1 AND "provider_id" = 'credential'`,

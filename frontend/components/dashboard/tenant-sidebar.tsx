@@ -9,6 +9,7 @@ import {
     Settings,
     LayoutDashboard,
     Brain,
+    Layers,
 } from "lucide-react";
 import { BaseSidebar, type NavItem } from "@/components/dashboard/base-sidebar";
 import type { Sidebar } from "@/components/ui/sidebar";
@@ -26,6 +27,11 @@ const getTenantNavItems = (slug: string, enabledModules: string[]): NavItem[] =>
             title: "Grade Prediction",
             url: `/${slug}/modules/grade-prediction`,
             icon: GraduationCap,
+        },
+        {
+            title: "Batch Prediction",
+            url: `/${slug}/modules/batch-prediction`,
+            icon: Layers,
         },
         {
             title: "Career Guidance",
@@ -48,6 +54,9 @@ const getTenantNavItems = (slug: string, enabledModules: string[]): NavItem[] =>
     // Dashboard is always visible
     return allNavItems.filter(item => {
         if (item.url === `/${slug}/home`) return true;
+        // Batch Prediction is a cohort analytics view that reads the shared
+        // students table directly — always available, not gated by package.
+        if (item.url === `/${slug}/modules/batch-prediction`) return true;
 
         // Extract module ID from URL
         const moduleId = item.url.replace(`/${slug}/modules/`, "");

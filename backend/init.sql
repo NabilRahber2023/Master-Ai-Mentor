@@ -55,6 +55,22 @@ CREATE TABLE IF NOT EXISTS students (
     performance_score INTEGER,
     potential_score INTEGER,
     nine_box_position VARCHAR(50),
+    -- Extra features required by the single-student ML models for CSV mode
+    ssc_gpa FLOAT,
+    father_education VARCHAR(20),
+    mother_education VARCHAR(20),
+    part_time_hours FLOAT,
+    parental_support VARCHAR(10),
+    active_participation VARCHAR(10),
+    public_speaking INTEGER,
+    internship_experience_months INTEGER,
+    projects_completed INTEGER,
+    preferred_work_environment VARCHAR(20),
+    interest_area VARCHAR(50),
+    teamwork_score INTEGER,
+    learning_agility INTEGER,
+    adaptability INTEGER,
+    career_motivation INTEGER,
     embedding VECTOR(384),
     created_at TIMESTAMP DEFAULT NOW()
 );

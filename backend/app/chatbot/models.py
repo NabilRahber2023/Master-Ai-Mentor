@@ -98,7 +98,26 @@ class Student(Base):
     performance_score = Column(Integer, nullable=True)
     potential_score = Column(Integer, nullable=True)
     nine_box_position = Column(String(50), nullable=True)
-    
+
+    # Extra features required by the single-student ML models for CSV mode.
+    # (Grade, Career, Growth/9-Box predictors expect these; synthesised in the
+    # dataset so every module can run directly off the uploaded CSV.)
+    ssc_gpa = Column(Float, nullable=True)
+    father_education = Column(String(20), nullable=True)
+    mother_education = Column(String(20), nullable=True)
+    part_time_hours = Column(Float, nullable=True)
+    parental_support = Column(String(10), nullable=True)
+    active_participation = Column(String(10), nullable=True)
+    public_speaking = Column(Integer, nullable=True)
+    internship_experience_months = Column(Integer, nullable=True)
+    projects_completed = Column(Integer, nullable=True)
+    preferred_work_environment = Column(String(20), nullable=True)
+    interest_area = Column(String(50), nullable=True)
+    teamwork_score = Column(Integer, nullable=True)
+    learning_agility = Column(Integer, nullable=True)
+    adaptability = Column(Integer, nullable=True)
+    career_motivation = Column(Integer, nullable=True)
+
     # Vector Embedding for semantic search (384 dimensions for MiniLM)
     embedding = Column(Vector(384), nullable=True)
     
