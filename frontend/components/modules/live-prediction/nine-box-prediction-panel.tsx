@@ -67,10 +67,10 @@ export function NineBoxPredictionPanel({ onResult, onReset }: NineBoxPredictionP
     }
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-[#161b1e] p-6">
+        <div className="rounded-2xl border border-white/10 bg-[var(--app-bg2)] p-6">
             <div className="mb-5 flex items-center gap-2">
                 <Grid3x3 className="h-5 w-5 text-cyan-400" />
-                <h3 className="text-lg font-semibold text-white">Live 9-Box Evaluation</h3>
+                <h3 className="text-lg font-semibold text-[var(--app-text)]">Live 9-Box Evaluation</h3>
                 <span className="ml-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-300">
                     Connected · /prediction/9box
                 </span>
@@ -104,7 +104,7 @@ export function NineBoxPredictionPanel({ onResult, onReset }: NineBoxPredictionP
             {result && (
                 <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <ResultCard title="9-Box Position">
-                        <span className="text-2xl font-bold text-white">{result.nine_box_position_label}</span>
+                        <span className="text-2xl font-bold text-[var(--app-text)]">{result.nine_box_position_label}</span>
                         <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-300">
                             <span>Grid: <span className="font-mono text-cyan-300">{result.position_in_grid}</span></span>
                             <span>Perf: <span className="font-mono text-cyan-300">{result.performance_level_score}</span></span>

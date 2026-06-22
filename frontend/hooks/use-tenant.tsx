@@ -1,14 +1,16 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from "react";
+import { can, type Permission, type PlatformRole } from "@/lib/rbac";
 
 export type TenantInfo = {
     slug: string;
     organizationId: string;
     organizationName: string;
     packageId: string | null;
-    enabledModules: string[];
-    userRole: string; // user's role in this organization (owner, admin, member)
+    enabledModules: string[]; // module ids enabled for this org (from org_module)
+    userRole: string; // user's role in this organization (owner, admin, mentor)
+    platformRole: string; // user.role (super_admin, support, user, guest)
 } | null;
 
 const TenantContext = createContext<TenantInfo>(null);
@@ -45,6 +47,16 @@ export function useModuleAccess(moduleId: string): boolean {
     const tenant = useTenant();
     if (!tenant) return false;
     return tenant.enabledModules.includes(moduleId);
+}
+
+/**
+ * Hook to check a permission for the current user, combining their platform role
+ * and organization role via the central RBAC matrix.
+ */
+export function useCan(perm: Permission): boolean {
+    const tenant = useTenant();
+    if (!tenant) return false;
+    return can({ platformRole: tenant.platformRole as PlatformRole, orgRole: tenant.userRole }, perm);
 }
 
 /**

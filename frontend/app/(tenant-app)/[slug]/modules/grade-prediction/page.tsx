@@ -38,7 +38,7 @@ export default function GradePredictionDashboardPage() {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
-            <div className="flex-1 space-y-8 p-6 md:p-8 bg-[#101416]">
+            <div className="flex-1 space-y-8 p-6 md:p-8 bg-[var(--app-bg)]">
                 <div className="flex items-center justify-between">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
                         Input source
@@ -68,7 +68,7 @@ export default function GradePredictionDashboardPage() {
 
                 {/* Fresh state: nothing shows until the user runs a prediction */}
                 {!livePrediction && (
-                    <section className="rounded-xl border border-dashed border-white/10 bg-[#161b1e]/50 p-12 text-center">
+                    <section className="rounded-xl border border-dashed border-white/10 bg-[var(--app-bg2)]/50 p-12 text-center">
                         <p className="text-sm text-slate-400">
                             Enter student metrics above and click{" "}
                             <span className="font-semibold text-cyan-300">Predict SGPA</span> to
@@ -85,7 +85,7 @@ export default function GradePredictionDashboardPage() {
                                 <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
                                     Live Prediction
                                 </span>
-                                <span className="text-2xl font-bold text-white">
+                                <span className="text-2xl font-bold text-[var(--app-text)]">
                                     {livePrediction.predicted_sgpa.toFixed(2)}
                                     <span className="ml-2 text-sm font-normal text-slate-400">predicted SGPA</span>
                                 </span>

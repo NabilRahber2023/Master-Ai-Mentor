@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils"
 import MobileNav from "@/components/mobile-navbar";
 import UserProfileDropdown from "@/components/auth/user-profile-dropdown";
+import { LogoThemeToggle } from "@/components/logo-theme-toggle";
 
 const navLinks = [
     { href: "/#services", label: "Services" },
@@ -90,8 +91,9 @@ export default function Navbar() {
             <header className="hidden md:block fixed z-50 top-0 right-0 left-0 backdrop-blur-md bg-background/80 border-b border-border/40">
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16">
-                        {/* Logo */}
-                        <div className="flex-shrink-0 font-bold">
+                        {/* Logo — click the mark to toggle light/dark mode */}
+                        <div className="flex-shrink-0 font-bold flex items-center gap-2">
+                            <LogoThemeToggle />
                             <Link href="/" className="text-xl flex items-center gap-2 group">
                                 <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                                     AI Mentor

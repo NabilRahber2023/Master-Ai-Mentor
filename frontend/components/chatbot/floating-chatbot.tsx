@@ -41,7 +41,7 @@ export function FloatingChatbot() {
 
             <button
                 type="button"
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-white shadow-lg hover:bg-cyan-600"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-[var(--app-text)] shadow-lg hover:bg-cyan-600"
                 onClick={() => setOpen((value) => !value)}
                 aria-label="Toggle chatbot"
             >

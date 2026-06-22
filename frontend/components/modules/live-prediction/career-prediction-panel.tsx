@@ -42,10 +42,10 @@ const DEFAULTS: CareerPredictionRequest = {
 };
 
 const inputClass =
-    "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/10";
+    "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-[var(--app-text)] outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/10";
 
 interface CareerPredictionPanelProps {
-    onResult?: (result: CareerPredictionResponse) => void;
+    onResult?: (result: CareerPredictionResponse, inputs: CareerPredictionRequest) => void;
     onReset?: () => void;
 }
 
@@ -69,7 +69,7 @@ export function CareerPredictionPanel({ onResult, onReset }: CareerPredictionPan
         try {
             const res = await predictCareer(form);
             setResult(res);
-            onResult?.(res);
+            onResult?.(res, form);
         } catch (err) {
             setError(err instanceof ApiError ? err.message : "Prediction failed");
             setResult(null);
@@ -79,10 +79,10 @@ export function CareerPredictionPanel({ onResult, onReset }: CareerPredictionPan
     }
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-[#161b1e] p-6">
+        <div className="rounded-2xl border border-white/10 bg-[var(--app-bg2)] p-6">
             <div className="mb-5 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-cyan-400" />
-                <h3 className="text-lg font-semibold text-white">Live Career Prediction</h3>
+                <h3 className="text-lg font-semibold text-[var(--app-text)]">Live Career Prediction</h3>
                 <span className="ml-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-300">
                     Connected · /prediction/career
                 </span>
@@ -121,7 +121,7 @@ export function CareerPredictionPanel({ onResult, onReset }: CareerPredictionPan
             {result && (
                 <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <ResultCard title="Predicted Career">
-                        <span className="text-3xl font-bold text-white">{result.predicted_career}</span>
+                        <span className="text-3xl font-bold text-[var(--app-text)]">{result.predicted_career}</span>
                         <p className="mt-2 text-sm text-cyan-300">
                             {Math.round(result.confidence_score * 100)}% confidence
                         </p>

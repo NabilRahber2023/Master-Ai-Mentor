@@ -178,7 +178,7 @@ const PricingCalculator: React.FC<PricingCalculatorProps> = ({
                         </svg>
                         <span className="text-sm font-medium text-cyan-100">Price Calculator</span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    <h3 className="text-3xl md:text-4xl font-bold text-[var(--app-text)] mb-3">
                         Customize Your{' '}
                         <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                             Plan
@@ -229,7 +229,7 @@ const PricingCalculator: React.FC<PricingCalculatorProps> = ({
                                         className={cn(
                                             "relative px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 border",
                                             state.duration === months
-                                                ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-transparent shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                                                ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-[var(--app-text)] border-transparent shadow-[0_0_20px_rgba(6,182,212,0.3)]"
                                                 : "bg-gray-950/50 border-cyan-500/30 text-gray-300 hover:border-cyan-500/50 hover:bg-cyan-950/30"
                                         )}
                                     >
@@ -293,14 +293,14 @@ const PricingCalculator: React.FC<PricingCalculatorProps> = ({
                         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent pointer-events-none rounded-2xl" />
 
                         <div className="relative z-10 space-y-6">
-                            <h4 className="text-xl font-bold text-white mb-6 pb-4 border-b border-cyan-500/20">
+                            <h4 className="text-xl font-bold text-[var(--app-text)] mb-6 pb-4 border-b border-cyan-500/20">
                                 Price Breakdown
                             </h4>
 
                             {/* Base Price */}
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Base Price</span>
-                                <span className="text-white font-semibold">৳{calculation.basePrice.toLocaleString()}/mo</span>
+                                <span className="text-[var(--app-text)] font-semibold">৳{calculation.basePrice.toLocaleString()}/mo</span>
                             </div>
 
                             {/* Duration Discount */}
@@ -334,7 +334,7 @@ const PricingCalculator: React.FC<PricingCalculatorProps> = ({
                                 {/* Discounted Monthly Price */}
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="text-gray-300">Monthly Price</span>
-                                    <span className="text-xl font-bold text-white">
+                                    <span className="text-xl font-bold text-[var(--app-text)]">
                                         ৳{calculation.discountedMonthlyPrice.toLocaleString()}
                                     </span>
                                 </div>
@@ -373,7 +373,7 @@ const PricingCalculator: React.FC<PricingCalculatorProps> = ({
                             </div>
 
                             {/* CTA Button */}
-                            <button className="w-full px-6 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-bold text-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all duration-300 hover:scale-105 mt-6">
+                            <button className="w-full px-6 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-[var(--app-text)] font-bold text-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all duration-300 hover:scale-105 mt-6">
                                 Get Started Now
                             </button>
 

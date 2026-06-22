@@ -36,10 +36,10 @@ export function CsvUpload() {
     }
 
     return (
-        <div className="max-w-xl rounded-2xl border border-white/10 bg-[#161b1e] p-6">
+        <div className="max-w-xl rounded-2xl border border-white/10 bg-[var(--app-bg2)] p-6">
             <div className="mb-1 flex items-center gap-2">
                 <Upload className="h-5 w-5 text-cyan-400" />
-                <h3 className="text-lg font-semibold text-white">Student Dataset Upload</h3>
+                <h3 className="text-lg font-semibold text-[var(--app-text)]">Student Dataset Upload</h3>
             </div>
             <p className="mb-5 text-sm text-slate-400">
                 Upload a CSV of student data. Ingestion (with embeddings) runs in the
@@ -72,7 +72,7 @@ export function CsvUpload() {
                 type="button"
                 disabled={!file || loading}
                 onClick={handleUpload}
-                className="mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-[var(--app-text)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Upload & Ingest

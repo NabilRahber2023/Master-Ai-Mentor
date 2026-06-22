@@ -59,7 +59,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ tier, className }) => {
             {tier.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-50">
                     <div className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 shadow-lg">
-                        <span className="text-white font-bold text-sm uppercase tracking-wider whitespace-nowrap">
+                        <span className="text-[var(--app-text)] font-bold text-sm uppercase tracking-wider whitespace-nowrap">
                             Most Popular
                         </span>
                     </div>
@@ -115,7 +115,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ tier, className }) => {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-5xl md:text-6xl font-bold text-white">
+                                <span className="text-5xl md:text-6xl font-bold text-[var(--app-text)]">
                                     ৳{tier.discountedPrice.toLocaleString()}
                                 </span>
                                 <span className="text-2xl text-gray-500 line-through">
@@ -126,7 +126,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ tier, className }) => {
                         </>
                     ) : (
                         <div className="flex items-baseline gap-2">
-                            <span className="text-5xl md:text-6xl font-bold text-white">
+                            <span className="text-5xl md:text-6xl font-bold text-[var(--app-text)]">
                                 ৳{tier.basePrice.toLocaleString()}
                             </span>
                             <span className="text-gray-400 text-lg">/month</span>
@@ -173,7 +173,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ tier, className }) => {
                     className={cn(
                         "w-full px-6 py-4 rounded-full font-semibold text-base md:text-lg transition-all duration-300",
                         tier.popular
-                            ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:scale-105"
+                            ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-[var(--app-text)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:scale-105"
                             : "border-2 border-cyan-500/30 bg-transparent text-cyan-100 hover:bg-cyan-500/10 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]"
                     )}>
                     Get Started

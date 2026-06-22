@@ -3,7 +3,8 @@
 import {
     LayoutDashboardIcon,
     TruckIcon,
-    DollarSign
+    DollarSign,
+    ToggleRight
 } from "lucide-react";
 import {BaseSidebar, type NavItem} from "@/components/dashboard/base-sidebar";
 import type {Sidebar} from "@/components/ui/sidebar";
@@ -24,6 +25,11 @@ const adminNavLinks: NavItem[] = [
         title: "Pricing",
         url: `${ADMIN_BASE}/pricing`,
         icon: DollarSign,
+    },
+    {
+        title: "Modules",
+        url: `${ADMIN_BASE}/modules`,
+        icon: ToggleRight,
     },
 ];
 

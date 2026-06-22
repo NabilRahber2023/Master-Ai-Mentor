@@ -1,7 +1,8 @@
 # AI Mentor — Project Roadmap & Technical Status
 
-> **Last updated:** 2026-06-21
+> **Last updated:** 2026-06-22
 > **Purpose:** Single source of truth for what this project is, its verified current state, and the prioritized work remaining. Read this first when resuming work.
+> **Companion docs:** `db.md` (full database map), `RBAC.md` (access-control design), `DATASET_SPEC.md` (CSV contract), `RUN_THE_PROJECT.md` (fresh-clone run guide), `We have done.md` (change log).
 
 ---
 
@@ -54,9 +55,12 @@ docker compose up -d --build      # first time; use --no-build after images exis
 
 # 2. Frontend (from frontend/)
 cd frontend
-pnpm install                      # if node_modules missing
-pnpm dev                          # http://localhost:3000
+npm install                       # if node_modules missing
+npm run dev                       # http://localhost:3000
 ```
+> ⚠️ `backend/master_dataset.csv` is **gitignored** — place it in `backend/` before ingesting
+> (see `RUN_THE_PROJECT.md` §3). The dataset is the **63-column** augmented file (48 base +
+> 15 columns for CSV-mode predictions).
 
 **URLs**
 - App: http://localhost:3000
@@ -85,8 +89,18 @@ A "Fill demo credentials" button was added to the login form for convenience (`f
 | POST | `/api/v1/chat/` | Chatbot message |
 | POST | `/api/v1/chat/reset` | Reset chat session |
 | GET  | `/api/v1/chat/health` | Chatbot/LLM health |
+| POST | `/api/v1/prediction/batch/{overview,predict,prescriptions,forecast}` | Batch Prediction cohort dashboard |
+| GET  | `/api/v1/prediction/csv/students` | CSV mode — list/search students |
+| GET  | `/api/v1/prediction/csv/{module}/predict/{id}` | CSV mode — single-student prediction |
+| GET  | `/api/v1/prediction/csv/{module}/batch` | CSV mode — whole-cohort prediction |
 | POST | `/api/v1/admin/upload-csv` | Admin CSV ingest |
-| GET  | `/health` | Service health |
+| GET  | `/api/v1/auth/whoami` | Resolve caller principal (debug) |
+| GET  | `/health` | Service health (public) |
+
+> 🔒 **Auth (NEW):** every `/api/v1` endpoint above (except `/health`) now requires a valid
+> Better Auth **session cookie** (validated against the shared `session` table) and enforces the
+> RBAC matrix + per-org module entitlement. Trusted internal calls (chatbot → ML) use an
+> `x-internal-token` header. See `RBAC.md`.
 
 > ⚠️ **Trailing-slash note:** endpoints expect a trailing slash; calling without it returns a **308 redirect**. Browser `fetch` follows it (preserving POST + body), but always call the exact path to avoid double round-trips.
 
@@ -100,29 +114,25 @@ A "Fill demo credentials" button was added to the login form for convenience (`f
 
 | Layer | Status | Evidence |
 |-------|--------|----------|
-| Docker stack (Postgres, Ollama, API) | ✅ Running & healthy | startup checks pass; `/health` → 200 |
+| Docker stack (Postgres, Ollama, API) | ✅ Running & healthy | `/health` → 200; `phi3:mini` loaded |
 | Swagger UI | ✅ Live | `/docs` → 200 |
-| Auth + multi-tenant login | ✅ Working | `oxford@gmail.com` → `/daffodil/home`; 1 org seeded |
-| **ML APIs** (sgpa, 9box, career, subject) | ✅ Backend works | live SGPA call returned `predicted_sgpa: 3.06` + SHAP factors |
-| **AI Chatbot wiring** | ⚠️ Connected but data-starved | frontend calls `/api/v1/chat/`, but `students` table = **0 rows** |
-| **Grade / Career / Subject / Growth UI** | ❌ **Not connected** | zero `fetch` to `/api/v1/prediction/*` — pure mock UIs |
-| Student dataset | ❌ Not ingested | `backend/master_dataset.csv` has 10,001 rows; DB has 0 |
+| Auth + multi-tenant login | ✅ Working | `oxford@gmail.com` → `/daffodil/home` |
+| **All 4 prediction modules** | ✅ Wired & live | manual Predict buttons → 200 with SHAP factors |
+| **CSV mode** (single + whole-batch) | ✅ Working | per-module single + cohort over 10k students → 200 |
+| **Batch Prediction** dashboard | ✅ Working | overview/predict/prescriptions/forecast → 200 |
+| **AI Chatbot** | ✅ Working | search, **list cohorts**, predictions, disambiguation |
+| **RBAC** (super_admin + org roles) | ✅ Implemented & enforced | backend 401 w/o cookie; module on/off console |
+| **Light/Dark theme** | ✅ Logo toggle on all pages | switches app shell + shadcn surfaces |
+| Student dataset | ✅ Ingested | **10,000 students**, 63 columns |
 
-### 🔑 The Core Gap
-The backend ML APIs **work** and the frontend pages **look complete**, but **only the chatbot is actually wired**. The 4 prediction modules are polished front-ends rendering **hardcoded/mock data** — none call the live ML endpoints visible in Swagger.
-
-### Frontend ↔ Backend connection map
-
-| Frontend page | Calls backend? | Endpoint it *should* use |
-|---------------|----------------|--------------------------|
-| `modules/ai-chatbot/page.tsx` | ✅ Yes (`/api/v1/chat/`, `/chat/reset`) — but has mock fallback at line ~309 | `/api/v1/chat/` |
-| `modules/grade-prediction` → `StudentAnalyticsDashboard.tsx` | ❌ No | `/api/v1/prediction/sgpa/` |
-| `modules/subject-prediction` (a.k.a. `subject-prediction/page.tsx`) | ❌ No | `/api/v1/prediction/subject/subject_choice` |
-| `modules/career-guidance/page.tsx` (797 lines) | ❌ No | `/api/v1/prediction/career/career` |
-| `modules/growth-potential/page.tsx` | ❌ No | `/api/v1/prediction/9box/` |
+### 🔑 Status: end-to-end working
+The 4 prediction modules, CSV mode, Batch Prediction, and the chatbot all call the live backend
+and render real results. Auth/RBAC now protects every endpoint. The remaining work is
+hardening (real OAuth, tenant data isolation, CI/deploy) — see §6.
 
 ### Database snapshot (`ai_mentor`)
-15 tables present. Counts: `students` = **0** ⚠️, `packages` = 3, `organization` = 1, `subscriptions` = 1, `user` = 3.
+~20 tables. Counts: `students` = **10,000**, `module_registry` = 6, `org_module` = 6,
+`packages` = 3, `organization` = 1, `user` = 3 (1 `super_admin`). Full map in `db.md`.
 
 ---
 
@@ -157,6 +167,49 @@ The backend ML APIs **work** and the frontend pages **look complete**, but **onl
 
 ---
 
+## 5c. Progress Log — 2026-06-22 (this session)
+
+**CSV Mode — predict directly off the uploaded dataset (DONE)**
+- ✅ Added a **Manual | CSV** toggle to every prediction module. CSV mode → **Single student**
+  (searchable picker; result drives the existing dashboard) and **Whole batch** (model over all
+  10k students with KPIs + table). Backend: `app/modules/csv_mode/` + `/api/v1/prediction/csv/*`.
+- ✅ Extended the dataset with **15 feature columns** (`backend/scripts/augment_dataset.py`) so
+  Grade/Career/Growth models can run off the CSV; schema + ingestion updated (see `DATASET_SPEC.md`).
+- 🐛 Fixed an ingestion bug: pandas 3.0 read literal `"None"` as NaN + `where(...,None)` re-coercion.
+
+**Career Guidance — fully prediction-driven (DONE)**
+- ✅ Every section (Industry Alignment Matrix, skill radar, gaps, telemetry, learning path,
+  trajectory labels, AI insights) now derives from the live prediction + its inputs and updates
+  per prediction. Alignment matrix is ranked so the predicted domain leads.
+
+**AI Chatbot — cohort listing + help (DONE)**
+- ✅ New `list_students` tool + deterministic parser → "list 10 mid-level students", "top 5 high
+  performers in CSE" return student cards. Added a help intent; the LLM fallback never returns blank.
+
+**RBAC — two-tier access control (DONE — see `RBAC.md`)**
+- ✅ Platform roles `super_admin`/`support`/`user`; org roles `owner`/`admin`/`mentor`
+  (`lib/permissions.ts`, `lib/auth.ts`, central matrix `lib/rbac.ts`).
+- ✅ New tables `module_registry`, `org_module`, `audit_log`; migrated entitlements; promoted
+  `oxford@gmail.com` to `super_admin`.
+- ✅ **Super Admin module console** (`/dashboard/admin/modules`) — per-org module on/off grid +
+  global kill-switch, audited. Sidebar + tenant layout now read `org_module`.
+- ✅ **Backend secured**: new `backend/app/auth/` validates the forwarded session cookie against
+  the shared `session` table and enforces the matrix + module entitlement on every `/api/v1`
+  endpoint; chatbot's internal ML calls bypass via `x-internal-token`. Verified: 401 w/o cookie,
+  200 with super-admin cookie, predictions/chatbot intact.
+
+**Theme — light/dark (DONE)**
+- ✅ The **logo is a theme switch** (`components/logo-theme-toggle.tsx`) on the sidebar (all app
+  pages), public navbar, and login. Built on the existing `next-themes` provider.
+
+**Docs:** added `db.md` (database map) and `RBAC.md` (access-control plan).
+
+> ⏳ Not yet done: light mode for the bespoke neon module dashboards (hard-coded hex);
+> tenant **data** isolation (backend `students` has no `organization_id` — RBAC gates *actions*,
+> not *data* between orgs; see `db.md` §10 / `RBAC.md` §13).
+
+---
+
 ## 6. Roadmap
 
 ### 🔴 Phase 1 — Make Everything Actually Connected — ✅ COMPLETE
@@ -179,21 +232,35 @@ Converts the project from "looks done" to "works end-to-end."
 - [ ] **2.5** Env-gate or remove the "Fill demo credentials" button before any shared deploy.
 
 ### 🟢 Phase 3 — SaaS Completeness
-- [ ] **3.1** Finish packages / pricing / subscriptions / loyalty flows (server actions exist in `frontend/actionts/`; verify they're wired to admin UI).
-- [ ] **3.2** Tenant onboarding: real org provisioning (`/api/tenant/provision`), invitations, role management.
+- [x] **3.1** Packages / pricing / subscriptions / loyalty flows — server actions wired with `requireAdmin` guards.
+- [~] **3.2** Tenant onboarding: org provisioning exists (`/api/tenant/provision`); **role management DONE** (RBAC, `RBAC.md`). ⏳ invitations UI + per-tenant DB wiring (currently provisioned-but-unused) remain.
 - [ ] **3.3** Replace Google OAuth test credentials with real ones.
+
+### 🟣 Phase 3.5 — RBAC & Theme — ✅ COMPLETE (this session)
+- [x] Two-tier roles (platform + org), permission matrix, audit log.
+- [x] Super Admin module on/off console (`org_module` + global kill-switch).
+- [x] Backend auth on **every** `/api/v1` endpoint (session-cookie validation + matrix).
+- [x] Logo-based light/dark theme toggle across the app.
 
 ### 🔵 Phase 4 — Production Hardening
 - [ ] **4.1** Swap Ollama `phi3:mini` for a stronger/hosted LLM; fix Ollama Docker healthcheck (currently cosmetically "unhealthy" — no `curl` in image).
-- [ ] **4.2** Lock down CORS (currently `allow_origins=["*"]`) and add auth on ML endpoints (currently open).
+- [x] **4.2a** CORS locked to an env-driven allow-list (`CORS_ALLOW_ORIGINS`).
+- [x] **4.2b** **Auth on ML endpoints — DONE** (session-cookie + RBAC; see `RBAC.md`).
 - [ ] **4.3** Backend pytest suite + frontend e2e into CI.
 - [ ] **4.4** Deploy: backend via Docker Compose, frontend via Coolify; set `BACKEND_URL` build arg + secrets (`BETTER_AUTH_SECRET`, real DB creds).
+- [ ] **4.5** **Tenant data isolation** — add `organization_id` to backend `students` + scope queries (stop the global TRUNCATE on upload). RBAC gates actions, not data, until this lands.
+- [ ] **4.6** Consolidate fragmented schema sources (`db.md` §9); switch vector index to HNSW.
+- [ ] **4.7** Light mode for the bespoke neon module dashboards (hard-coded hex → theme tokens).
 
 ---
 
 ## 7. Recommended Next Step
 
-Start with **Phase 1.1 + 1.3**: ingest the dataset (so the chatbot is real), then wire **Grade Prediction** as the reference implementation. Once one module is cleanly connected with a shared API client, replicate the pattern across Subject, Career, and Growth Potential.
+Phases 1–3.5 are done — the app works end-to-end with auth/RBAC. The highest-value remaining
+work is **Phase 4.5 (tenant data isolation)**: add `organization_id` to the backend `students`
+table and scope every query, so uploading a CSV for one org no longer wipes/serves another's data.
+That closes the biggest architectural gap (`db.md` §10). After that: real Google OAuth (3.3),
+CI/deploy (4.3–4.4), and light-mode polish for the module dashboards (4.7).
 
 ---
 
@@ -212,3 +279,10 @@ Start with **Phase 1.1 + 1.3**: ingest the dataset (so the chatbot is real), the
 | Server actions (SaaS) | `frontend/actionts/` |
 | Tenant module pages | `frontend/app/(tenant-app)/[slug]/modules/` |
 | Login form (+ demo button) | `frontend/components/auth/email-login-form.tsx` |
+| **RBAC matrix / roles** | `frontend/lib/rbac.ts`, `frontend/lib/permissions.ts` |
+| **Backend auth (cookie + matrix)** | `backend/app/auth/{principal,deps,matrix}.py` |
+| **Super Admin module console** | `frontend/app/(dashboard)/dashboard/admin/modules/`, `frontend/actionts/admin/module-actions.ts` |
+| **CSV-mode predictions** | `backend/app/modules/csv_mode/`, `frontend/components/modules/csv-mode/`, `frontend/lib/api/csv-mode.ts` |
+| **Dataset augmentation (15 cols)** | `backend/scripts/augment_dataset.py` |
+| **Theme toggle (logo)** | `frontend/components/logo-theme-toggle.tsx` |
+| **RBAC DB schema** | `frontend/db/schema/rbac-schema.ts` |

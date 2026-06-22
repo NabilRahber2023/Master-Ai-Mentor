@@ -154,7 +154,7 @@ export default function RegisterForm({ initialPackage }: RegisterFormProps) {
                     )} />
                     <span className={cn("font-semibold", selectedPkg.color)}>{selectedPkg.name} Plan</span>
                 </div>
-                <span className="text-white font-bold">৳{selectedPkg.price}<span className="text-xs text-muted-foreground">/mo</span></span>
+                <span className="text-[var(--app-text)] font-bold">৳{selectedPkg.price}<span className="text-xs text-muted-foreground">/mo</span></span>
             </div>
 
             {/* Organization Section */}
@@ -283,7 +283,7 @@ export default function RegisterForm({ initialPackage }: RegisterFormProps) {
             <Button
                 type="submit"
                 disabled={isSubmitting || slugAvailable === false}
-                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold"
+                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-[var(--app-text)] font-semibold"
             >
                 {isSubmitting ? "Creating..." : "Create Workspace"}
             </Button>

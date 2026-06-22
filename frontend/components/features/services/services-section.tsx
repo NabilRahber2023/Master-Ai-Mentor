@@ -92,7 +92,7 @@ export default function ServicesSection() {
                         <span className="text-sm font-medium text-cyan-100">Elevate with AI</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--app-text)] mb-6 tracking-tight">
                         <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                             A-Mentor
                         </span> Features Hub

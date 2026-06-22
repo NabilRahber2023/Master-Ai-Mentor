@@ -90,7 +90,35 @@ class MCPDispatcher:
         # ============================================================
         if self._is_greeting(message):
             return self._handle_greeting(session)
-        
+
+        # ============================================================
+        # HELP / CAPABILITIES
+        # ============================================================
+        _mlow = message.lower()
+        if any(p in _mlow for p in ("what can you do", "what do you do", "how do you work",
+                                     "what are your features", "your capabilities", "help me with",
+                                     "how can you help")) or _mlow.strip() in ("help", "?"):
+            return ChatResponse(
+                session_id=session.session_id,
+                message=(
+                    "I work off your uploaded student dataset. I can:\n"
+                    "• Search a student — \"find student named Allison\"\n"
+                    "• List a cohort — \"list 10 mid-level students\", \"show top 5 high performers in CSE\"\n"
+                    "• Predict for a selected student — SGPA, career, 9-box, or subject "
+                    "(\"predict career\" or @career, @sgpa, @9box, @subject)."
+                ),
+                intent="help",
+            )
+
+        # ============================================================
+        # LIST / BROWSE STUDENTS (e.g. "list 10 mid-level students")
+        # Deterministic — runs before entity resolution so plural cohort
+        # queries don't get misread as a single-student name lookup.
+        # ============================================================
+        list_args = self._parse_list_query(message)
+        if list_args is not None:
+            return await self._handle_list_students(session, list_args)
+
         # ============================================================
         # @ MENTION CHECK (direct tool calls without LLM)
         # ============================================================
@@ -246,6 +274,76 @@ class MCPDispatcher:
             intent="greeting"
         )
     
+    def _parse_list_query(self, message: str) -> Optional[Dict[str, Any]]:
+        """
+        Detect "list/show students" style queries and extract filters.
+        Returns a filter dict (possibly empty) for a list query, or None if the
+        message is not a list query.
+        """
+        import re
+        m = message.lower()
+        # A single-student name lookup ("find student named X") is NOT a list query.
+        if "named" in m or "name is" in m or "called " in m:
+            return None
+        action = any(k in m for k in ("list", "show", "give me", "display", "top ", "how many", "browse", "who are"))
+        subject = ("student" in m) or ("performer" in m)
+        if not (action and subject):
+            return None
+
+        args: Dict[str, Any] = {}
+        if any(k in m for k in ("mid-level", "mid level", "mid ", "average", "moderate", "medium")):
+            args["category"] = "mid"
+        elif any(k in m for k in ("high", "top", "best", "excellent", "strong")):
+            args["category"] = "high"
+        elif any(k in m for k in ("low", "at-risk", "at risk", "weak", "poor", "struggling", "failing")):
+            args["category"] = "low"
+
+        nums = re.findall(r"\d+", m)
+        if nums:
+            args["limit"] = int(nums[0])
+
+        if "female" in m or "girls" in m or "women" in m:
+            args["gender"] = "F"
+        elif "male" in m or "boys" in m or "men" in m:
+            args["gender"] = "M"
+
+        for dept in ("cse", "bba", "eee", "law", "pharmacy", "civil", "architecture", "economics", "english"):
+            if dept in m:
+                args["department"] = "English" if dept == "english" else dept.upper()
+                break
+        return args
+
+    async def _handle_list_students(
+        self,
+        session: ChatSession,
+        args: Dict[str, Any]
+    ) -> ChatResponse:
+        """Run the list_students tool and return a card list."""
+        executor = get_tool_executor()
+        success, result = await executor.execute("list_students", args)
+        if not success or not result.get("students"):
+            msg = result.get("message", "No matching students found.") if isinstance(result, dict) else "No matching students found."
+            return ChatResponse(
+                session_id=session.session_id,
+                message=msg,
+                intent=IntentType.SEARCH.value,
+                tool_called="list_students",
+            )
+        summaries = [StudentSummary(**s) for s in result["students"]]
+        await self._update_session(
+            session.session_id,
+            last_intent=IntentType.SEARCH.value,
+            last_tool_called="list_students",
+        )
+        return ChatResponse(
+            session_id=session.session_id,
+            message=result.get("message", "Here are the students:"),
+            intent=IntentType.SEARCH.value,
+            tool_called="list_students",
+            students_found=summaries,
+            result=result,
+        )
+
     def _parse_module_mentions(self, message: str) -> List[str]:
         """Extract @ module mentions from message."""
         mentioned_tools = []
@@ -510,10 +608,18 @@ class MCPDispatcher:
         if intent != IntentType.UNKNOWN:
             return await self._handle_intent_fallback(session, user_message, intent)
         
-        # Otherwise, return the LLM's text response
+        # Otherwise, return the LLM's text response — never blank.
+        content = (llm_response.content or "").strip()
+        if not content:
+            content = (
+                "I can search for students, list them by performance "
+                "(e.g. \"list 10 mid-level students\"), and predict SGPA, career, "
+                "9-box position, or recommended subject for a selected student. "
+                "What would you like to do?"
+            )
         return ChatResponse(
             session_id=session.session_id,
-            message=llm_response.content,
+            message=content,
             intent=IntentType.UNKNOWN.value
         )
     
@@ -534,7 +640,7 @@ class MCPDispatcher:
         # "none", "answer"). Treat those as a request for clarification and respond
         # helpfully instead of surfacing a raw error, falling back to the LLM's own text.
         KNOWN_TOOLS = {
-            "search_student", "get_student",
+            "search_student", "get_student", "list_students",
             "predict_sgpa", "predict_career", "predict_9box", "predict_subject",
         }
         if tool_name not in KNOWN_TOOLS:

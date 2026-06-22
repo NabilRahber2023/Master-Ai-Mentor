@@ -14,9 +14,9 @@ import {
 
 function Kpi({ label, value, accent }: { label: string; value: string; accent?: string }) {
     return (
-        <div className="rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/60 p-4">
+        <div className="rounded-xl border border-[var(--app-border)]/20 bg-[var(--app-card)]/60 p-4">
             <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
-            <div className={`mt-1 text-2xl font-bold ${accent ?? "text-white"}`}>{value}</div>
+            <div className={`mt-1 text-2xl font-bold ${accent ?? "text-[var(--app-text)]"}`}>{value}</div>
         </div>
     );
 }
@@ -24,15 +24,15 @@ function Kpi({ label, value, accent }: { label: string; value: string; accent?: 
 function DistBars({ title, buckets }: { title: string; buckets: Bucket[] }) {
     const max = Math.max(...buckets.map((b) => b.count), 1);
     return (
-        <div className="rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/40 p-5">
-            <h3 className="mb-4 text-xs uppercase tracking-widest text-white">{title}</h3>
+        <div className="rounded-xl border border-[var(--app-border)]/20 bg-[var(--app-card)]/40 p-5">
+            <h3 className="mb-4 text-xs uppercase tracking-widest text-[var(--app-text)]">{title}</h3>
             <div className="space-y-2.5">
                 {buckets.map((b) => (
                     <div key={b.label} className="flex items-center gap-3">
                         <span className="w-40 shrink-0 truncate text-[11px] text-slate-300" title={b.label}>
                             {b.label}
                         </span>
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#101416]">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--app-bg)]">
                             <div
                                 className="h-full rounded-full bg-cyan-400"
                                 style={{ width: `${(b.count / max) * 100}%` }}
@@ -50,10 +50,10 @@ function DistBars({ title, buckets }: { title: string; buckets: Bucket[] }) {
 
 function Table({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
     return (
-        <div className="overflow-hidden rounded-xl border border-[#3b494c]/20">
+        <div className="overflow-hidden rounded-xl border border-[var(--app-border)]/20">
             <div className="max-h-[420px] overflow-y-auto">
                 <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-[#1c2022] text-slate-400">
+                    <thead className="sticky top-0 bg-[var(--app-card)] text-slate-400">
                         <tr>
                             {headers.map((h) => (
                                 <th key={h} className="px-4 py-2.5 font-medium uppercase tracking-wider text-[10px]">
@@ -62,9 +62,9 @@ function Table({ headers, rows }: { headers: string[]; rows: (string | number)[]
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#3b494c]/10">
+                    <tbody className="divide-y divide-[var(--app-border)]/10">
                         {rows.map((r, i) => (
-                            <tr key={i} className="bg-[#181c1e]/40 hover:bg-cyan-500/5">
+                            <tr key={i} className="bg-[var(--app-card2)]/40 hover:bg-cyan-500/5">
                                 {r.map((c, j) => (
                                     <td key={j} className="px-4 py-2 text-slate-200">
                                         {c}
@@ -99,7 +99,7 @@ export function BatchView({ module }: { module: CsvModule }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-[#3b494c]/20 bg-[#181c1e]/40 p-12 text-slate-400">
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-[var(--app-border)]/20 bg-[var(--app-card2)]/40 p-12 text-slate-400">
                 <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
                 Running the model across the whole cohort…
             </div>

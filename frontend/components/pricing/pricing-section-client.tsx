@@ -158,7 +158,7 @@ export default function PricingSectionClient({
                         <span className="text-sm font-medium text-cyan-100">Flexible Pricing</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--app-text)] mb-6 tracking-tight">
                         Choose Your{' '}
                         <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                             Perfect Plan
@@ -312,7 +312,7 @@ export default function PricingSectionClient({
                             <div className="relative z-10 mb-4 p-3 rounded-full bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
                                 {item.icon}
                             </div>
-                            <h4 className="text-lg font-bold text-white mb-2">{item.title}</h4>
+                            <h4 className="text-lg font-bold text-[var(--app-text)] mb-2">{item.title}</h4>
                             <p className="text-sm text-gray-400 leading-relaxed">{item.description}</p>
                         </div>
                     ))}

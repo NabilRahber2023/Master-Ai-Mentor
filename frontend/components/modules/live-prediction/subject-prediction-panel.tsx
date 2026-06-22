@@ -72,10 +72,10 @@ export function SubjectPredictionPanel({ onResult, onReset }: SubjectPredictionP
     }
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-[#161b1e] p-6">
+        <div className="rounded-2xl border border-white/10 bg-[var(--app-bg2)] p-6">
             <div className="mb-5 flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-cyan-400" />
-                <h3 className="text-lg font-semibold text-white">Live Subject Recommendation</h3>
+                <h3 className="text-lg font-semibold text-[var(--app-text)]">Live Subject Recommendation</h3>
                 <span className="ml-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-300">
                     Connected · /prediction/subject
                 </span>
@@ -106,7 +106,7 @@ export function SubjectPredictionPanel({ onResult, onReset }: SubjectPredictionP
                 <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <ResultCard title="Recommended Department">
                         <div className="flex items-baseline gap-3">
-                            <span className="text-3xl font-bold text-white">{result.recommended_department}</span>
+                            <span className="text-3xl font-bold text-[var(--app-text)]">{result.recommended_department}</span>
                         </div>
                         <p className="mt-2 text-sm text-cyan-300">
                             {Math.round(result.confidence_score * 100)}% confidence

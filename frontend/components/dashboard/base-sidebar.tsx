@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
+import { LogoThemeToggle } from "@/components/logo-theme-toggle";
 import type { ReactNode } from "react";
 
 export type NavItem = {
@@ -79,44 +80,30 @@ export function BaseSidebar({
         {customHeader ? (
           customHeader
         ) : header ? (
-          <div className="px-2 py-2">
+          <div className="px-2 py-2 flex items-center gap-3">
+            {/* Logo doubles as the light/dark theme switch */}
+            <LogoThemeToggle label={header.title} />
             <Link
               href={header.href || "/"}
-              className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent transition-colors"
+              className="flex flex-col min-w-0 flex-1 rounded-lg px-2 py-1 hover:bg-accent transition-colors"
             >
-              {header.logo && (
-                <div className="flex-shrink-0">
-                  {header.logo}
-                </div>
-              )}
-              <div className="flex flex-col min-w-0 flex-1">
-                <span
-                  className="font-semibold text-sm truncate"
-                  title={header.title}
-                >
-                  {header.title}
+              <span className="font-semibold text-sm truncate" title={header.title}>
+                {header.title}
+              </span>
+              {header.subtitle && (
+                <span className="text-xs text-muted-foreground truncate">
+                  {header.subtitle}
                 </span>
-                {header.subtitle && (
-                  <span className="text-xs text-muted-foreground truncate">
-                    {header.subtitle}
-                  </span>
-                )}
-              </div>
+              )}
             </Link>
           </div>
         ) : (
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                className="data-[slot=sidebar-menu-button]:p-1.5!"
-              >
-                <Link href="/">
-                  <p className="text-2xl font-bold">Ai Mentor</p>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <div className="px-2 py-2 flex items-center gap-3">
+            <LogoThemeToggle />
+            <Link href="/" className="text-xl font-bold">
+              AI Mentor
+            </Link>
+          </div>
         )}
       </SidebarHeader>
 

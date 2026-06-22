@@ -29,7 +29,7 @@ export function FieldShell({
 }
 
 const inputClass =
-    "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/10";
+    "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-[var(--app-text)] outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/10";
 
 export function NumberField({
     label,
@@ -106,7 +106,7 @@ export function SubmitButton({
         <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-[var(--app-text)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             {children}

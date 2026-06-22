@@ -2,10 +2,15 @@ import Link from "next/link"
 import AuthBackground from "@/components/auth/auth-background"
 import GoogleSignInButton from "@/components/auth/google-sign-in-button"
 import EmailLoginForm from "@/components/auth/email-login-form"
+import { LogoThemeToggle } from "@/components/logo-theme-toggle"
 
 export default function LoginPage() {
     return (
         <AuthBackground>
+            {/* Theme toggle (logo) */}
+            <div className="fixed top-4 right-4 z-50">
+                <LogoThemeToggle />
+            </div>
             {/* Logo & Header */}
             <div className="text-center mb-6">
                 <Link href="/" className="inline-block mb-4">

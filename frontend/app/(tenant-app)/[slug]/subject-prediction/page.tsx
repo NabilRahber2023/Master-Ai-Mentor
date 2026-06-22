@@ -125,10 +125,10 @@ export default function SubjectPredictionPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#101416] text-[#e0e3e6] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="flex flex-col min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
       
       {/* Top Header Breadcrumbs Wrapper */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[#3b494c]/10 px-6 bg-[#101416] sticky top-0 z-50">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[var(--app-border)]/10 px-6 bg-[var(--app-bg)] sticky top-0 z-50">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb>
@@ -165,7 +165,7 @@ export default function SubjectPredictionPage() {
 
         {/* Fresh state: nothing shows until the user runs a prediction */}
         {!livePrediction && (
-          <section className="rounded-xl border border-dashed border-[#3b494c]/30 bg-[#181c1e]/40 p-12 text-center">
+          <section className="rounded-xl border border-dashed border-[var(--app-border)]/30 bg-[var(--app-card2)]/40 p-12 text-center">
             <p className="text-sm text-slate-400">
               Enter student attributes above and click{" "}
               <span className="font-semibold text-cyan-300">Recommend Subject</span> to populate
@@ -181,7 +181,7 @@ export default function SubjectPredictionPage() {
               <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
                 Live Recommendation
               </span>
-              <span className="text-2xl font-bold text-white">{livePrediction.recommended_department}</span>
+              <span className="text-2xl font-bold text-[var(--app-text)]">{livePrediction.recommended_department}</span>
               <span className="font-mono text-xs text-cyan-300">
                 {Math.round(livePrediction.confidence_score * 100)}% confidence
               </span>
@@ -199,8 +199,8 @@ export default function SubjectPredictionPage() {
 
         {/* Impact Factors — real SHAP contributions from the subject model */}
         {livePrediction && livePrediction.contributing_factors.length > 0 && (
-          <section className="rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/60 p-5">
-            <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
+          <section className="rounded-xl border border-[var(--app-border)]/20 bg-[var(--app-card)]/60 p-5">
+            <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
             <p className="text-[11px] text-slate-400 mb-4">Variables driving the recommendation</p>
             <div className="space-y-4">
               {(() => {
@@ -223,7 +223,7 @@ export default function SubjectPredictionPage() {
                           </span>
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-[var(--app-surface2)]/50 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
                           style={{ width: `${pct}%` }}
@@ -246,9 +246,9 @@ export default function SubjectPredictionPage() {
         <div className="lg:col-span-8 space-y-8">
           
           {/* Main Title Banner */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-[#3b494c]/15 pb-4 gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-[var(--app-border)]/15 pb-4 gap-4">
             <div>
-              <h1 className="text-3xl font-headline font-bold text-white tracking-tighter uppercase drop-shadow-[0_0_12px_rgba(195,245,255,0.1)]">
+              <h1 className="text-3xl font-headline font-bold text-[var(--app-text)] tracking-tighter uppercase drop-shadow-[0_0_12px_rgba(195,245,255,0.1)]">
                 Subject Intelligence Matrix
               </h1>
               <p className="text-[10px] text-slate-400 font-headline uppercase tracking-[0.2em] mt-1">
@@ -258,10 +258,10 @@ export default function SubjectPredictionPage() {
             
             {/* Search & Actions inside matrix page top */}
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="flex items-center bg-[#1c2022] rounded px-3 py-1.5 border border-[#3b494c]/20 focus-within:border-cyan-400 transition-all w-full sm:w-60 group">
+              <div className="flex items-center bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20 focus-within:border-cyan-400 transition-all w-full sm:w-60 group">
                 <Search className="text-slate-400 text-xs mr-2 group-focus-within:text-cyan-400 transition-colors w-3.5 h-3.5" />
                 <input 
-                  className="bg-transparent border-none outline-none text-[10px] text-white w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
+                  className="bg-transparent border-none outline-none text-[10px] text-[var(--app-text)] w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
                   placeholder="QUERY SUBJECTS..." 
                   type="text"
                 />
@@ -279,7 +279,7 @@ export default function SubjectPredictionPage() {
           </div>
 
           {/* Primary Hero Panel */}
-          <section className="bg-gradient-to-r from-cyan-950/15 via-[#1c2022]/40 to-teal-950/15 rounded-xl p-6 md:p-8 relative overflow-hidden border border-[#3b494c]/20 shadow-[0_0_40px_-5px_rgba(195,245,255,0.05)]">
+          <section className="bg-gradient-to-r from-cyan-950/15 via-[var(--app-card)]/40 to-teal-950/15 rounded-xl p-6 md:p-8 relative overflow-hidden border border-[var(--app-border)]/20 shadow-[0_0_40px_-5px_rgba(195,245,255,0.05)]">
             <div className="absolute inset-0 pointer-events-none opacity-5 bg-[repeating-linear-gradient(to_bottom,transparent,transparent_2px,#bac9cc_2px,#bac9cc_4px)]"></div>
             
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-6">
@@ -289,7 +289,7 @@ export default function SubjectPredictionPage() {
                   Live Prediction Active
                 </div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest font-headline">Recommended Department</p>
-                <h2 className="text-3xl font-headline font-bold text-white tracking-tight leading-none uppercase">
+                <h2 className="text-3xl font-headline font-bold text-[var(--app-text)] tracking-tight leading-none uppercase">
                   {livePrediction?.recommended_department ?? "Optimal Course Trajectory"}
                 </h2>
                 <p className="text-slate-400 text-xs leading-relaxed font-body">
@@ -301,14 +301,14 @@ export default function SubjectPredictionPage() {
                     onClick={() => setIsLocked(!isLocked)}
                     className={`px-5 py-2.5 rounded font-headline text-[10px] font-bold tracking-[0.15em] uppercase transition-all duration-300 flex items-center gap-2 ${
                       isLocked 
-                        ? "bg-teal-600 text-white" 
+                        ? "bg-teal-600 text-[var(--app-text)]" 
                         : "bg-cyan-400 text-[#101416] hover:bg-cyan-300 shadow-[0_0_15px_rgba(0,229,255,0.25)]"
                     }`}
                   >
                     <Lock className="w-3 h-3" />
                     {isLocked ? "Lock Selection" : "Lock Selection"}
                   </button>
-                  <button className="px-5 py-2.5 bg-transparent border border-[#3b494c]/30 text-cyan-400 rounded font-headline text-[10px] font-bold tracking-[0.15em] uppercase hover:bg-[#272a2d]/30 transition-colors">
+                  <button className="px-5 py-2.5 bg-transparent border border-[var(--app-border)]/30 text-cyan-400 rounded font-headline text-[10px] font-bold tracking-[0.15em] uppercase hover:bg-[var(--app-surface)]/30 transition-colors">
                     View Syllabus
                   </button>
                 </div>
@@ -333,7 +333,7 @@ export default function SubjectPredictionPage() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-headline font-bold text-white leading-none">
+                  <span className="text-3xl font-headline font-bold text-[var(--app-text)] leading-none">
                     {simulatedValues.confidence}<span className="text-sm font-semibold text-cyan-500/60">%</span>
                   </span>
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest mt-1">Confidence</span>
@@ -346,17 +346,17 @@ export default function SubjectPredictionPage() {
           {/* ANALYTICS SECTION */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             
-            <div className="bg-[#1c2022]/60 rounded-xl p-4 border border-[#3b494c]/20 flex flex-col justify-between min-h-[90px]">
+            <div className="bg-[var(--app-card)]/60 rounded-xl p-4 border border-[var(--app-border)]/20 flex flex-col justify-between min-h-[90px]">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest block font-headline">Total Projected Credits</span>
               <div className="flex justify-between items-end mt-2">
-                <span className="text-2xl font-bold text-white font-headline">18 <span className="text-xs text-slate-500 font-normal">/20</span></span>
+                <span className="text-2xl font-bold text-[var(--app-text)] font-headline">18 <span className="text-xs text-slate-500 font-normal">/20</span></span>
               </div>
-              <div className="w-full h-1 bg-[#272a2d] mt-2 rounded-full overflow-hidden">
+              <div className="w-full h-1 bg-[var(--app-surface)] mt-2 rounded-full overflow-hidden">
                 <div className="h-full bg-cyan-400 rounded-full" style={{ width: "90%" }}></div>
               </div>
             </div>
 
-            <div className="bg-[#1c2022]/60 rounded-xl p-4 border border-[#3b494c]/20 flex flex-col justify-between min-h-[90px]">
+            <div className="bg-[var(--app-card)]/60 rounded-xl p-4 border border-[var(--app-border)]/20 flex flex-col justify-between min-h-[90px]">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest block font-headline">Forecasted GPA Impact</span>
               <div className="flex items-center gap-1.5 text-cyan-400 mt-2">
                 <TrendingUp className="w-4 h-4" />
@@ -365,7 +365,7 @@ export default function SubjectPredictionPage() {
               <span className="text-[8px] text-cyan-400/60 uppercase tracking-wider mt-1 font-headline">Upward Trajectory</span>
             </div>
 
-            <div className="bg-[#1c2022]/60 rounded-xl p-4 border border-[#3b494c]/20 flex flex-col items-center justify-between min-h-[90px] relative">
+            <div className="bg-[var(--app-card)]/60 rounded-xl p-4 border border-[var(--app-border)]/20 flex flex-col items-center justify-between min-h-[90px] relative">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest block font-headline w-full text-left">System Alignment</span>
               <div className="w-10 h-10 relative mt-1">
                 <svg className="w-full h-full transform -rotate-90">
@@ -381,16 +381,16 @@ export default function SubjectPredictionPage() {
                     strokeDashoffset={2 * Math.PI * 16 * (1 - simulatedValues.alignment / 100)}
                   />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--app-text)]">
                   {simulatedValues.alignment}%
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#1c2022]/60 rounded-xl p-4 border border-[#3b494c]/20 flex flex-col justify-between min-h-[90px]">
+            <div className="bg-[var(--app-card)]/60 rounded-xl p-4 border border-[var(--app-border)]/20 flex flex-col justify-between min-h-[90px]">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest block font-headline">System Readiness</span>
               <div className="mt-2">
-                <span className="text-sm font-bold text-white font-headline block">Level 4</span>
+                <span className="text-sm font-bold text-[var(--app-text)] font-headline block">Level 4</span>
                 <span className="text-[8px] text-slate-400 uppercase block">High Capacity</span>
               </div>
               <div className="flex gap-1 mt-2">
@@ -407,8 +407,8 @@ export default function SubjectPredictionPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
             {/* Skill Topology Drift Radar Chart */}
-            <div className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 flex flex-col justify-between">
-              <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5">
+            <div className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 flex flex-col justify-between">
+              <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
                 Skill Topology Drift
               </h3>
@@ -442,7 +442,7 @@ export default function SubjectPredictionPage() {
                 <span className="absolute top-1/4 left-0 -translate-x-4 text-[8px] uppercase tracking-widest text-slate-400 font-headline">Data</span>
               </div>
 
-              <div className="flex justify-center gap-6 mt-4 text-[9px] uppercase tracking-widest border-t border-[#3b494c]/10 pt-3">
+              <div className="flex justify-center gap-6 mt-4 text-[9px] uppercase tracking-widest border-t border-[var(--app-border)]/10 pt-3">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded bg-cyan-400/20 border border-cyan-400"></span>
                   <span className="text-cyan-400 font-headline">Projected Drift</span>
@@ -455,25 +455,25 @@ export default function SubjectPredictionPage() {
             </div>
 
             {/* Semester Trajectory Graph Box */}
-            <div className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 flex flex-col justify-between">
-              <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5">
+            <div className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 flex flex-col justify-between">
+              <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
                 Semester Trajectory
               </h3>
 
               <div className="space-y-4">
-                <div className="bg-[#101416]/50 rounded-lg p-3 border border-[#3b494c]/10">
+                <div className="bg-[var(--app-bg)]/50 rounded-lg p-3 border border-[var(--app-border)]/10">
                   <span className="text-[9px] uppercase tracking-widest text-slate-400 block mb-1">Credit Load Density</span>
                   <div className="flex justify-between items-end">
-                    <span className="text-xl font-bold text-white font-headline">18 <span className="text-[10px] text-slate-500 font-normal">/20 max</span></span>
+                    <span className="text-xl font-bold text-[var(--app-text)] font-headline">18 <span className="text-[10px] text-slate-500 font-normal">/20 max</span></span>
                     <span className="text-[10px] text-teal-400 font-headline uppercase font-semibold">Optimal Load</span>
                   </div>
-                  <div className="w-full h-1 bg-[#272a2d] mt-2 rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-[var(--app-surface)] mt-2 rounded-full overflow-hidden">
                     <div className="h-full bg-teal-400 rounded-full" style={{ width: "90%" }}></div>
                   </div>
                 </div>
 
-                <div className="bg-[#101416]/50 rounded-lg p-3 border border-[#3b494c]/10">
+                <div className="bg-[var(--app-bg)]/50 rounded-lg p-3 border border-[var(--app-border)]/10">
                   <span className="text-[9px] uppercase tracking-widest text-slate-400 block mb-1">GPA Impact Delta</span>
                   <div className="flex items-baseline gap-1 text-cyan-400">
                     <TrendingUp className="w-3.5 h-3.5" />
@@ -481,10 +481,10 @@ export default function SubjectPredictionPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#101416]/50 rounded-lg p-3 border border-[#3b494c]/10 flex justify-between items-center">
+                <div className="bg-[var(--app-bg)]/50 rounded-lg p-3 border border-[var(--app-border)]/10 flex justify-between items-center">
                   <div>
                     <span className="text-[9px] uppercase tracking-widest text-slate-400 block mb-0.5">System Readiness</span>
-                    <span className="text-xs font-bold text-white font-headline">Level 4: High Capacity</span>
+                    <span className="text-xs font-bold text-[var(--app-text)] font-headline">Level 4: High Capacity</span>
                   </div>
                   <div className="flex gap-1">
                     <span className="w-1.5 h-5 bg-cyan-400 rounded-sm"></span>
@@ -500,8 +500,8 @@ export default function SubjectPredictionPage() {
 
           {/* PRIMARY TARGET MODULES */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center border-b border-[#3b494c]/10 pb-2">
-              <h3 className="text-xs text-white font-headline font-bold uppercase tracking-wider">Primary Target Modules</h3>
+            <div className="flex justify-between items-center border-b border-[var(--app-border)]/10 pb-2">
+              <h3 className="text-xs text-[var(--app-text)] font-headline font-bold uppercase tracking-wider">Primary Target Modules</h3>
               <button className="text-[9px] font-headline text-cyan-400 uppercase tracking-widest hover:text-cyan-300 transition-colors flex items-center gap-1">
                 View Matrix <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -510,7 +510,7 @@ export default function SubjectPredictionPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Card 1: Quantum Cryptography */}
-              <div className="bg-[#181c1e]/80 border border-[#3b494c]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[#1c2022]/80 transition-colors">
+              <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[var(--app-card)]/80 transition-colors">
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-[9px] text-cyan-400 font-mono tracking-wider">QCS-401</span>
@@ -518,15 +518,15 @@ export default function SubjectPredictionPage() {
                       {livePrediction ? simulatedValues.confidence : simulatedValues.cryptoMatch}% Match
                     </span>
                   </div>
-                  <h4 className="text-sm font-semibold text-white truncate mb-1">{livePrediction?.recommended_department ?? "Quantum Cryptography"}</h4>
+                  <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.recommended_department ?? "Quantum Cryptography"}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
                     Advanced theoretical frameworks for securing post-binary data systems and networks.
                   </p>
                 </div>
                 
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#3b494c]/10">
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--app-border)]/10">
                   <div className="text-[9px] text-slate-400">
-                    DIFFICULTY VECTOR: <span className="text-white font-semibold">HIGH</span>
+                    DIFFICULTY VECTOR: <span className="text-[var(--app-text)] font-semibold">HIGH</span>
                   </div>
                   <div className="flex gap-0.5">
                     <span className="w-1 h-3 bg-red-500 rounded-sm"></span>
@@ -538,7 +538,7 @@ export default function SubjectPredictionPage() {
               </div>
 
               {/* Card 2: Synthetic Bio-Data */}
-              <div className="bg-[#181c1e]/80 border border-[#3b494c]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[#1c2022]/80 transition-colors">
+              <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[var(--app-card)]/80 transition-colors">
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-[9px] text-cyan-400 font-mono tracking-wider">SBD-308</span>
@@ -546,15 +546,15 @@ export default function SubjectPredictionPage() {
                       {livePrediction?.alternative_options[0] ? Math.round(livePrediction.alternative_options[0].probability * 100) : simulatedValues.bioMatch}% Match
                     </span>
                   </div>
-                  <h4 className="text-sm font-semibold text-white truncate mb-1">{livePrediction?.alternative_options[0]?.department ?? "Synthetic Bio-Data"}</h4>
+                  <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.alternative_options[0]?.department ?? "Synthetic Bio-Data"}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
                     Data structures mapping organic computational methodologies and cellular algorithms.
                   </p>
                 </div>
                 
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#3b494c]/10">
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--app-border)]/10">
                   <div className="text-[9px] text-slate-400">
-                    DIFFICULTY VECTOR: <span className="text-white font-semibold">MEDIUM</span>
+                    DIFFICULTY VECTOR: <span className="text-[var(--app-text)] font-semibold">MEDIUM</span>
                   </div>
                   <div className="flex gap-0.5">
                     <span className="w-1 h-3 bg-yellow-500 rounded-sm"></span>
@@ -566,7 +566,7 @@ export default function SubjectPredictionPage() {
               </div>
 
               {/* Card 3: Mini Radar Diagram */}
-              <div className="bg-[#181c1e]/80 border border-[#3b494c]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] relative overflow-hidden">
+              <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] relative overflow-hidden">
                 <span className="text-[9px] text-slate-400 uppercase tracking-widest font-headline block mb-2">Skill Topography</span>
                 <div className="flex-1 flex items-center justify-center">
                   <svg className="w-24 h-24" viewBox="0 0 200 200">
@@ -588,13 +588,13 @@ export default function SubjectPredictionPage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
-              <div className="bg-[#181c1e]/60 border border-[#3b494c]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group">
+              <div className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#272a2d] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--app-surface)] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
                     <Cpu className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
+                    <h4 className="font-semibold text-sm text-[var(--app-text)] group-hover:text-cyan-400 transition-colors">
                       {livePrediction?.alternative_options[1]?.department ?? "Data Structures III"}
                     </h4>
                     <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
@@ -605,7 +605,7 @@ export default function SubjectPredictionPage() {
                 <button
                   onClick={() => toggleMatrix("DAT-303")}
                   className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-1 ${
-                    matrixList.includes("DAT-303") ? "text-teal-400" : "text-slate-400 hover:text-white"
+                    matrixList.includes("DAT-303") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
                   }`}
                 >
                   {matrixList.includes("DAT-303") ? "ADDED" : "ADD TO MATRIX"}
@@ -613,13 +613,13 @@ export default function SubjectPredictionPage() {
                 </button>
               </div>
 
-              <div className="bg-[#181c1e]/60 border border-[#3b494c]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group">
+              <div className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#272a2d] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--app-surface)] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
                     <Cpu className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
+                    <h4 className="font-semibold text-sm text-[var(--app-text)] group-hover:text-cyan-400 transition-colors">
                       {livePrediction?.alternative_options[2]?.department ?? "Hardware Architecture"}
                     </h4>
                     <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
@@ -630,7 +630,7 @@ export default function SubjectPredictionPage() {
                 <button
                   onClick={() => toggleMatrix("ARC-302")}
                   className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-1 ${
-                    matrixList.includes("ARC-302") ? "text-teal-400" : "text-slate-400 hover:text-white"
+                    matrixList.includes("ARC-302") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
                   }`}
                 >
                   {matrixList.includes("ARC-302") ? "ADDED" : "ADD TO MATRIX"}
@@ -646,8 +646,8 @@ export default function SubjectPredictionPage() {
         <div className="lg:col-span-4 space-y-8">
           
           {/* Telemetry Tuning Slider Control Box */}
-          <section className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 flex flex-col justify-between space-y-6">
-            <div className="border-b border-[#3b494c]/10 pb-3">
+          <section className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 flex flex-col justify-between space-y-6">
+            <div className="border-b border-[var(--app-border)]/10 pb-3">
               <h3 className="text-sm font-headline text-cyan-400 tracking-wider flex items-center gap-2">
                 <Sliders className="w-4 h-4" />
                 Telemetry Tuning
@@ -668,7 +668,7 @@ export default function SubjectPredictionPage() {
                   min="0.1" 
                   max="1.0" 
                   step="0.05"
-                  className="w-full accent-cyan-400 bg-[#101416] h-1 rounded-full appearance-none cursor-pointer"
+                  className="w-full accent-cyan-400 bg-[var(--app-bg)] h-1 rounded-full appearance-none cursor-pointer"
                   value={cognitiveWeight}
                   onChange={(e) => setCognitiveWeight(parseFloat(e.target.value))}
                 />
@@ -684,7 +684,7 @@ export default function SubjectPredictionPage() {
                   min="0.1" 
                   max="1.0" 
                   step="0.05"
-                  className="w-full accent-cyan-400 bg-[#101416] h-1 rounded-full appearance-none cursor-pointer"
+                  className="w-full accent-cyan-400 bg-[var(--app-bg)] h-1 rounded-full appearance-none cursor-pointer"
                   value={workloadTolerance}
                   onChange={(e) => setWorkloadTolerance(parseFloat(e.target.value))}
                 />
@@ -700,14 +700,14 @@ export default function SubjectPredictionPage() {
                   min="0.1" 
                   max="1.0" 
                   step="0.05"
-                  className="w-full accent-cyan-400 bg-[#101416] h-1 rounded-full appearance-none cursor-pointer"
+                  className="w-full accent-cyan-400 bg-[var(--app-bg)] h-1 rounded-full appearance-none cursor-pointer"
                   value={marketTrendImpact}
                   onChange={(e) => setMarketTrendImpact(parseFloat(e.target.value))}
                 />
               </div>
 
               {/* Rationale System Box */}
-              <div className="bg-[#101416]/50 rounded-lg p-4 border border-[#3b494c]/10 border-l-2 border-l-cyan-400 space-y-1">
+              <div className="bg-[var(--app-bg)]/50 rounded-lg p-4 border border-[var(--app-border)]/10 border-l-2 border-l-cyan-400 space-y-1">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-cyan-400 flex items-center gap-1 font-headline">
                   <Lightbulb className="w-3.5 h-3.5" />
                   System Rationale
@@ -724,7 +724,7 @@ export default function SubjectPredictionPage() {
                 setWorkloadTolerance(0.60);
                 setMarketTrendImpact(0.42);
               }}
-              className="w-full bg-transparent border border-[#3b494c]/30 text-slate-300 hover:border-cyan-400 hover:text-cyan-400 py-2.5 rounded font-headline text-[10px] font-bold tracking-widest uppercase transition-colors flex justify-center items-center gap-2"
+              className="w-full bg-transparent border border-[var(--app-border)]/30 text-slate-300 hover:border-cyan-400 hover:text-cyan-400 py-2.5 rounded font-headline text-[10px] font-bold tracking-widest uppercase transition-colors flex justify-center items-center gap-2"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Recalibrate
@@ -733,14 +733,14 @@ export default function SubjectPredictionPage() {
 
           {/* PRIMARY RECOMMENDATIONS */}
           <section className="space-y-6">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[#3b494c]/10 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--app-border)]/10 pb-2">
               Primary Recommendations
             </h3>
 
             <div className="space-y-4">
               
               {/* Rec Card 1 */}
-              <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 space-y-4">
+              <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
                     <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30">CORE</span>
@@ -751,7 +751,7 @@ export default function SubjectPredictionPage() {
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white mb-1.5">Advanced Quantum Algorithms</h4>
+                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">Advanced Quantum Algorithms</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
                     <strong>Why it fits:</strong> This module directly bridges your recent high performance in Linear Algebra with your stated goal of Quantum Cryptography. Historically, students with your profile achieve an A- average in this specific curriculum.
                   </p>
@@ -761,9 +761,9 @@ export default function SubjectPredictionPage() {
                   <div>
                     <div className="flex justify-between text-[9px] text-slate-400 uppercase tracking-widest mb-1.5">
                       <span>Cognitive Load / Difficulty</span>
-                      <span className="text-white font-semibold">High (4.2/5)</span>
+                      <span className="text-[var(--app-text)] font-semibold">High (4.2/5)</span>
                     </div>
-                    <div className="h-1 w-full bg-[#272a2d] rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-[var(--app-surface)] rounded-full overflow-hidden">
                       <div className="h-full bg-cyan-400 rounded-full w-[84%] shadow-[0_0_8px_rgba(0,229,255,0.4)]"></div>
                     </div>
                   </div>
@@ -774,9 +774,9 @@ export default function SubjectPredictionPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-3 border-t border-[#3b494c]/10">
+                <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-[#272a2d] flex items-center justify-center text-[8px] font-bold text-cyan-400 font-headline">AV</div>
+                    <div className="w-5 h-5 rounded-full bg-[var(--app-surface)] flex items-center justify-center text-[8px] font-bold text-cyan-400 font-headline">AV</div>
                     <span className="text-[10px] text-slate-400 font-headline">Prof. A. Vance</span>
                   </div>
                   <button className="text-[9px] text-cyan-400 font-headline uppercase font-semibold hover:text-cyan-300 transition-colors">
@@ -786,7 +786,7 @@ export default function SubjectPredictionPage() {
               </div>
 
               {/* Rec Card 2 */}
-              <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 space-y-3">
+              <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
                     <span className="px-2 py-0.5 rounded bg-yellow-950/40 text-yellow-400 border border-yellow-800/30">ELECTIVE</span>
@@ -795,19 +795,19 @@ export default function SubjectPredictionPage() {
                   <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">82%</span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white mb-1.5">AI Ethics &amp; Policy</h4>
+                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">AI Ethics &amp; Policy</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
                     Provides a necessary philosophical framework required for leadership roles in AI governance.
                   </p>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t border-[#3b494c]/10">
+                <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
                   <div className="text-[9px] text-slate-400">
                     DIFFICULTY: <span className="text-green-400">Low (2.1/5)</span>
                   </div>
                   <button 
                     onClick={() => toggleMatrix("ETH-210")}
                     className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors ${
-                      matrixList.includes("ETH-210") ? "text-teal-400" : "text-slate-400 hover:text-white"
+                      matrixList.includes("ETH-210") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
                     }`}
                   >
                     {matrixList.includes("ETH-210") ? "ADDED" : "ADD TO MATRIX"}
@@ -816,7 +816,7 @@ export default function SubjectPredictionPage() {
               </div>
 
               {/* Rec Card 3 */}
-              <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 space-y-3">
+              <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
                     <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30">CORE</span>
@@ -825,19 +825,19 @@ export default function SubjectPredictionPage() {
                   <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">89%</span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white mb-1.5">Neural Network Arch.</h4>
+                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">Neural Network Arch.</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
                     Essential prerequisite for Senior year project. Warning: Schedule conflict with QCS-401.
                   </p>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t border-[#3b494c]/10">
+                <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
                   <div className="text-[9px] text-slate-400">
                     DIFFICULTY: <span className="text-yellow-500">Med-High (3.8/5)</span>
                   </div>
                   <button 
                     onClick={() => toggleMatrix("DAT-305")}
                     className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors ${
-                      matrixList.includes("DAT-305") ? "text-teal-400" : "text-slate-400 hover:text-white"
+                      matrixList.includes("DAT-305") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
                     }`}
                   >
                     {matrixList.includes("DAT-305") ? "ADDED" : "ADD TO MATRIX"}
@@ -852,7 +852,7 @@ export default function SubjectPredictionPage() {
       )}
 
       {/* Footer copyright notice from mockup */}
-      <footer className="border-t border-[#3b494c]/10 bg-[#101416]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
+      <footer className="border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
           Matrix adapts in real-time as new performance data becomes available. Last updated: May 15, 2025 10:42 AM

@@ -165,6 +165,17 @@ export function BatchPredictionDashboard() {
         setTimeout(() => document.getElementById("bp-rx")?.scrollIntoView({ behavior: "smooth" }), 50);
     };
 
+    /* ── Click the gender card to filter the cohort (All → Male → Female) ── */
+    const selectGender = (g: "All" | "Male" | "Female") => {
+        const next = { ...filters, gender: g };
+        setFilters(next);
+        setShowPrediction(true);
+        doPredict(next);
+        if (rxOpen) doPrescriptions(next, rxTarget, rxSearch);
+        if (showForecast) doForecast(next);
+        setTimeout(() => document.getElementById("bp-prediction")?.scrollIntoView({ behavior: "smooth" }), 80);
+    };
+
     return (
         <div className="space-y-8">
             {overviewError && (
@@ -174,7 +185,7 @@ export function BatchPredictionDashboard() {
             )}
 
             {/* PAGE 1 — Dataset overview */}
-            <DatasetOverview overview={overview} />
+            <DatasetOverview overview={overview} selectedGender={filters.gender} onSelectGender={selectGender} />
 
             {/* Action buttons */}
             <div className="flex flex-wrap justify-center gap-4">
@@ -259,12 +270,20 @@ function Kpi({ label, value, accent }: { label: string; value: string; accent?: 
     return (
         <div className="rounded-lg border border-cyan-400/15 bg-[#151d1e]/60 p-4 backdrop-blur">
             <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</div>
-            <div className={`text-3xl font-extrabold leading-tight ${accent ?? "text-white"}`}>{value}</div>
+            <div className={`text-3xl font-extrabold leading-tight ${accent ?? "text-[var(--app-text)]"}`}>{value}</div>
         </div>
     );
 }
 
-function DatasetOverview({ overview }: { overview: OverviewResponse | null }) {
+function DatasetOverview({
+    overview,
+    selectedGender,
+    onSelectGender,
+}: {
+    overview: OverviewResponse | null;
+    selectedGender: string;
+    onSelectGender: (g: "All" | "Male" | "Female") => void;
+}) {
     if (!overview) {
         return (
             <div className="flex h-40 items-center justify-center rounded-xl border border-white/10 bg-[#151d1e]/40">
@@ -325,7 +344,7 @@ function DatasetOverview({ overview }: { overview: OverviewResponse | null }) {
                                         style={{ width: `${(d.avg_sgpa / maxDept) * 100}%` }}
                                     />
                                 </div>
-                                <span className="w-10 text-right text-xs font-bold text-white">
+                                <span className="w-10 text-right text-xs font-bold text-[var(--app-text)]">
                                     {d.avg_sgpa.toFixed(2)}
                                 </span>
                             </div>
@@ -334,7 +353,7 @@ function DatasetOverview({ overview }: { overview: OverviewResponse | null }) {
                 </div>
 
                 <div className="flex flex-col items-center justify-center rounded-xl border border-cyan-400/15 bg-[#151d1e]/60 p-6 lg:col-span-4">
-                    <GenderDonut gender={o.gender} />
+                    <GenderDonut gender={o.gender} selected={selectedGender} onSelect={onSelectGender} />
                 </div>
             </div>
         </div>
@@ -350,40 +369,85 @@ function Legend2({ color, label }: { color: string; label: string }) {
     );
 }
 
-function GenderDonut({ gender }: { gender: OverviewResponse["gender"] }) {
+function GenderDonut({
+    gender,
+    selected,
+    onSelect,
+}: {
+    gender: OverviewResponse["gender"];
+    selected: string;
+    onSelect: (g: "All" | "Male" | "Female") => void;
+}) {
     const total = gender.total || 1;
     const C = 2 * Math.PI * 40;
-    const maleDash = (gender.male / total) * C;
+    const MALE = CYAN;            // blue/cyan — the page's primary accent
+    const FEMALE = "#f472b6";    // soft neon pink that pairs with the cyan
+
+    const maleFrac = gender.male / total;
+    const femaleFrac = gender.female / total;
+
+    // Both colours always render; the active selection is bright, the other dims.
+    const maleOn = selected !== "Female";
+    const femaleOn = selected !== "Male";
+
+    const centerCount = selected === "Male" ? gender.male : selected === "Female" ? gender.female : total;
+    const centerLabel = selected === "Male" || selected === "Female" ? selected : "Total";
+    const centerColor = selected === "Female" ? "text-pink-300" : "text-cyan-300";
+
+    const cycleNext = () => onSelect(selected === "All" ? "Male" : selected === "Male" ? "Female" : "All");
+
+    const Btn = ({ value, dot, ring, children }: { value: "All" | "Male" | "Female"; dot: string; ring: string; children: React.ReactNode }) => (
+        <button
+            type="button"
+            onClick={() => onSelect(value)}
+            className={`flex items-center gap-2 rounded-full px-2.5 py-1 transition-colors ${
+                selected === value ? `${ring} ring-1` : "text-slate-300 hover:text-[var(--app-text)]"
+            }`}
+        >
+            <span className={`h-2 w-2 rounded-full ${dot}`} /> {children}
+        </button>
+    );
+
     return (
         <>
-            <div className="relative h-28 w-28">
+            <button
+                type="button"
+                onClick={cycleNext}
+                title="Click to cycle All → Male → Female"
+                className="relative h-28 w-28 rounded-full transition-transform hover:scale-105"
+            >
                 <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1f3a3d" strokeWidth="10" />
+                    {/* unfilled track */}
+                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--app-border)" strokeWidth="10" />
+                    {/* male arc (blue) */}
                     <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="transparent"
-                        stroke={CYAN}
-                        strokeWidth="10"
-                        strokeLinecap="round"
-                        strokeDasharray={`${maleDash} ${C}`}
-                        className="drop-shadow-[0_0_5px_rgba(0,229,255,0.6)]"
+                        cx="50" cy="50" r="40" fill="transparent" stroke={MALE} strokeWidth="10" strokeLinecap="round"
+                        strokeDasharray={`${maleFrac * C} ${C}`}
+                        opacity={maleOn ? 1 : 0.2}
+                        className="transition-all duration-300"
+                        style={{ filter: maleOn ? "drop-shadow(0 0 5px rgba(0,229,255,0.6))" : "none" }}
+                    />
+                    {/* female arc (pink) — starts where the male arc ends */}
+                    <circle
+                        cx="50" cy="50" r="40" fill="transparent" stroke={FEMALE} strokeWidth="10" strokeLinecap="round"
+                        strokeDasharray={`${femaleFrac * C} ${C}`}
+                        strokeDashoffset={`${-maleFrac * C}`}
+                        opacity={femaleOn ? 1 : 0.2}
+                        className="transition-all duration-300"
+                        style={{ filter: femaleOn ? "drop-shadow(0 0 5px rgba(244,114,182,0.6))" : "none" }}
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-extrabold text-white">{total.toLocaleString()}</span>
-                    <span className="mt-1 text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Total</span>
+                    <span className="text-3xl font-extrabold text-[var(--app-text)]">{centerCount.toLocaleString()}</span>
+                    <span className={`mt-1 text-[8px] font-extrabold uppercase tracking-widest ${centerColor}`}>{centerLabel}</span>
                 </div>
+            </button>
+            <div className="mt-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+                <Btn value="All" dot="bg-gradient-to-r from-cyan-400 to-pink-400" ring="bg-white/5 text-[var(--app-text)] ring-white/20">All {total.toLocaleString()}</Btn>
+                <Btn value="Male" dot="bg-cyan-400" ring="bg-cyan-400/15 text-cyan-200 ring-cyan-400/40">Male {gender.male}</Btn>
+                <Btn value="Female" dot="bg-pink-400" ring="bg-pink-400/15 text-pink-200 ring-pink-400/40">Female {gender.female}</Btn>
             </div>
-            <div className="mt-4 flex items-center justify-center gap-5 text-[10px] font-bold uppercase tracking-wider">
-                <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-cyan-400" /> Male {gender.male}
-                </span>
-                <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-[#1f3a3d]" /> Female {gender.female}
-                </span>
-            </div>
+            <p className="mt-2 text-[9px] text-slate-400">Click a segment to filter the cohort</p>
         </>
     );
 }
@@ -520,7 +584,7 @@ function PredictionResults({
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
-                <h2 className="text-2xl font-bold text-white">Prediction Results</h2>
+                <h2 className="text-2xl font-bold text-[var(--app-text)]">Prediction Results</h2>
                 <span className="rounded-full border border-cyan-400/20 bg-white/5 px-3 py-1 text-xs font-bold text-cyan-200">
                     {data.total.toLocaleString()} Students
                 </span>
@@ -617,14 +681,14 @@ function PredictionResults({
                             {data.students.map((s) => (
                                 <tr key={s.id} className="group transition-colors hover:bg-cyan-400/5">
                                     <td className="px-6 py-3 font-mono text-[13px] text-slate-400">{s.id}</td>
-                                    <td className="px-6 py-3 font-bold text-white group-hover:text-cyan-300">{s.name}</td>
+                                    <td className="px-6 py-3 font-bold text-[var(--app-text)] group-hover:text-cyan-300">{s.name}</td>
                                     <td className="px-6 py-3 text-slate-300">{s.dept}</td>
                                     <td className="px-6 py-3">
                                         <span className={`rounded border px-3 py-1 text-[10px] font-black uppercase ${catColor(s.category)}`}>
                                             {s.category}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-3 text-right font-mono text-[13px] text-white">{s.prev_sgpa.toFixed(2)}</td>
+                                    <td className="px-6 py-3 text-right font-mono text-[13px] text-[var(--app-text)]">{s.prev_sgpa.toFixed(2)}</td>
                                     <td className="px-6 py-3 text-right font-mono text-[13px] text-slate-300">{s.study_hrs}h</td>
                                     <td className="px-6 py-3 text-right font-mono text-[13px] text-slate-300">{s.attendance}%</td>
                                     <td className="px-6 py-3 text-right font-mono text-[13px] font-black text-cyan-300">
@@ -686,7 +750,7 @@ function KpiCard({ label, value, border, accent }: { label: string; value: strin
     return (
         <div className={`rounded-xl border border-white/10 border-l-4 ${border} bg-[#151d1e]/60 p-6`}>
             <p className="mb-2 text-xs uppercase tracking-wider text-slate-400">{label}</p>
-            <p className={`text-3xl font-bold ${accent ?? "text-white"}`}>{value}</p>
+            <p className={`text-3xl font-bold ${accent ?? "text-[var(--app-text)]"}`}>{value}</p>
         </div>
     );
 }
@@ -694,7 +758,7 @@ function KpiCard({ label, value, border, accent }: { label: string; value: strin
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <div className="rounded-xl border border-cyan-400/15 bg-[#151d1e]/60 p-6">
-            <h3 className="mb-6 border-b border-white/10 pb-3 text-xs font-bold uppercase tracking-wider text-white">
+            <h3 className="mb-6 border-b border-white/10 pb-3 text-xs font-bold uppercase tracking-wider text-[var(--app-text)]">
                 {title}
             </h3>
             {children}
@@ -745,7 +809,7 @@ function PrescriptionEngine({
                     >
                         Run <Zap className="h-4 w-4" />
                     </button>
-                    <button onClick={onClose} className="text-xs font-bold uppercase text-slate-400 hover:text-white">
+                    <button onClick={onClose} className="text-xs font-bold uppercase text-slate-400 hover:text-[var(--app-text)]">
                         Close
                     </button>
                 </div>
@@ -771,7 +835,7 @@ function PrescriptionEngine({
                             >
                                 <div className="mb-6 flex items-start justify-between">
                                     <div>
-                                        <h3 className="text-xl font-black tracking-tight text-white">{c.name}</h3>
+                                        <h3 className="text-xl font-black tracking-tight text-[var(--app-text)]">{c.name}</h3>
                                         <p className="mt-1 font-mono text-sm uppercase text-cyan-300">
                                             {c.id} // {c.dept}
                                         </p>
@@ -839,7 +903,7 @@ function ForecastView({ data, loading }: { data: ForecastResponse | null; loadin
     return (
         <div className="space-y-6">
             <header className="text-center">
-                <h1 className="text-4xl font-extrabold tracking-tight text-white">
+                <h1 className="text-4xl font-extrabold tracking-tight text-[var(--app-text)]">
                     CGPA Forecast <span className="text-cyan-300">—</span> Future Trend
                 </h1>
                 <p className="mx-auto mt-3 max-w-2xl text-slate-400">
@@ -892,7 +956,7 @@ function ForecastView({ data, loading }: { data: ForecastResponse | null; loadin
                         <CalendarDays className="h-7 w-7 text-cyan-300" />
                     </div>
                     <div>
-                        <h3 className="mb-2 text-lg font-semibold uppercase tracking-wide text-white">
+                        <h3 className="mb-2 text-lg font-semibold uppercase tracking-wide text-[var(--app-text)]">
                             Calendared Improvement Plan
                         </h3>
                         <p className="text-slate-400">
@@ -907,7 +971,7 @@ function ForecastView({ data, loading }: { data: ForecastResponse | null; loadin
             {/* Department breakdown */}
             <div className="rounded-xl border border-cyan-400/15 bg-[#151d1e]/60 p-8">
                 <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                    <h2 className="text-2xl font-bold uppercase tracking-tight text-white">
+                    <h2 className="text-2xl font-bold uppercase tracking-tight text-[var(--app-text)]">
                         Department Performance Breakdown
                     </h2>
                     <div className="flex gap-6 text-xs">
@@ -939,7 +1003,7 @@ function ForecastStat({ label, value }: { label: string; value: number }) {
     return (
         <div className="flex flex-col">
             <span className="mb-1 text-xs uppercase tracking-widest text-slate-400">{label}</span>
-            <span className="text-3xl font-bold text-white">{value.toFixed(2)}</span>
+            <span className="text-3xl font-bold text-[var(--app-text)]">{value.toFixed(2)}</span>
         </div>
     );
 }

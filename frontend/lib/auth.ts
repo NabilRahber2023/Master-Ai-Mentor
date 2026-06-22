@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { db } from "@/db/config";
 import * as schema from "@/db/schema";
-import { ac, admin as adminRole, guest } from "@/lib/permissions";
+import { ac, superAdmin, support, user as userRole, guest } from "@/lib/permissions";
 import { admin, organization } from "better-auth/plugins";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -31,9 +31,12 @@ export const auth = betterAuth({
             ac,
             roles: {
                 guest,
-                admin: adminRole,
+                user: userRole,
+                support,
+                super_admin: superAdmin,
+                admin: superAdmin, // back-compat: legacy 'admin' == super_admin
             },
-            defaultRole: "guest",
+            defaultRole: "user",
         }),
         organization({
             allowUserToCreateOrganization: true,

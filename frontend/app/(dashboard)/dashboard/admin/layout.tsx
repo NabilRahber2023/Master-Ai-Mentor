@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/dashboard/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {requireAdmin} from "@/actionts/auth/checkAuth";
 import {AdminSidebar} from "@/components/dashboard/admin-sidebar";
+import {ThemeSlider} from "@/components/theme-slider";
 
 export default async function AdminDashboardLayout({
   children,
@@ -12,6 +13,8 @@ export default async function AdminDashboardLayout({
   await requireAdmin();
 
   return (
+    <>
+    <ThemeSlider />
     <SidebarProvider
       style={
         {
@@ -32,5 +35,6 @@ export default async function AdminDashboardLayout({
         </div>
       </SidebarInset>
     </SidebarProvider>
+    </>
   );
 }

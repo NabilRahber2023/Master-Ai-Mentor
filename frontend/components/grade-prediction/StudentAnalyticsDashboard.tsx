@@ -102,15 +102,15 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
   }, [attendanceRate, studyHours, basePredicted, baseConfidence, prediction]);
 
   return (
-    <div className="w-full bg-[#101416] text-[#e0e3e6] min-h-screen font-body selection:bg-cyan-500/30 selection:text-cyan-200 space-y-8 pb-24">
+    <div className="w-full bg-[var(--app-bg)] text-[var(--app-text)] min-h-screen font-body selection:bg-cyan-500/30 selection:text-cyan-200 space-y-8 pb-24">
       
       {/* Top Bar Navigation Mockup matching layout */}
-      <header className="flex justify-between items-center w-full pb-4 border-b border-[#3b494c]/10">
+      <header className="flex justify-between items-center w-full pb-4 border-b border-[var(--app-border)]/10">
         {/* Search */}
-        <div className="flex items-center bg-[#1c2022] rounded px-4 py-2 w-64 border border-[#3b494c]/20 focus-within:border-cyan-400 transition-all group">
+        <div className="flex items-center bg-[var(--app-card)] rounded px-4 py-2 w-64 border border-[var(--app-border)]/20 focus-within:border-cyan-400 transition-all group">
           <Search className="text-slate-400 text-sm mr-2 group-focus-within:text-cyan-400 transition-colors w-4 h-4" />
           <input 
-            className="bg-transparent border-none outline-none text-xs text-white w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
+            className="bg-transparent border-none outline-none text-xs text-[var(--app-text)] w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
             placeholder="QUERY ORCHESTRA..." 
             type="text"
           />
@@ -124,7 +124,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
           <button className="text-slate-400 hover:text-cyan-400 transition-colors">
             <SettingsIcon className="w-5 h-5" />
           </button>
-          <div className="h-8 w-8 rounded-full bg-[#272a2d] border border-[#3b494c]/30 overflow-hidden cursor-pointer opacity-80 hover:opacity-100 hover:scale-95 transition-all flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-[var(--app-surface)] border border-[var(--app-border)]/30 overflow-hidden cursor-pointer opacity-80 hover:opacity-100 hover:scale-95 transition-all flex items-center justify-center">
             <span className="text-[10px] text-cyan-400 font-headline font-bold">OP</span>
           </div>
         </div>
@@ -140,7 +140,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
               {simulatedValues.risk}
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-headline font-bold text-white tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-[var(--app-text)] tracking-tight">
             Grade Prediction
           </h1>
         </div>
@@ -155,22 +155,22 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* HERO CARD: GPA Forecast Graph (8 cols) */}
-        <div className="lg:col-span-8 bg-[#272a2d]/40 backdrop-blur-md rounded-xl p-6 md:p-8 relative overflow-hidden border border-[#3b494c]/20 shadow-[0_0_40px_-5px_rgba(195,245,255,0.04)] flex flex-col justify-between min-h-[380px]">
+        <div className="lg:col-span-8 bg-[var(--app-surface)]/40 backdrop-blur-md rounded-xl p-6 md:p-8 relative overflow-hidden border border-[var(--app-border)]/20 shadow-[0_0_40px_-5px_rgba(195,245,255,0.04)] flex flex-col justify-between min-h-[380px]">
           
           <div className="absolute inset-0 pointer-events-none opacity-5 bg-[repeating-linear-gradient(to_bottom,transparent,transparent_2px,#bac9cc_2px,#bac9cc_4px)]"></div>
           
           <div className="relative z-10 flex justify-between items-start mb-6">
             <div>
               <p className="text-[10px] text-slate-400 font-headline tracking-[0.1em] uppercase mb-0.5">Trajectory</p>
-              <h3 className="text-lg md:text-xl font-bold text-white font-headline">Cumulative GPA Forecast</h3>
+              <h3 className="text-lg md:text-xl font-bold text-[var(--app-text)] font-headline">Cumulative GPA Forecast</h3>
             </div>
             
             <div className="flex gap-4">
               <div className="text-right">
                 <p className="text-[9px] text-slate-400 font-headline tracking-[0.1em] uppercase mb-0.5">Current</p>
-                <p className="text-lg font-bold text-white font-headline">{prevSemesterSgpa.toFixed(2)}</p>
+                <p className="text-lg font-bold text-[var(--app-text)] font-headline">{prevSemesterSgpa.toFixed(2)}</p>
               </div>
-              <div className="w-px h-8 bg-[#3b494c]/50"></div>
+              <div className="w-px h-8 bg-[var(--app-border)]/50"></div>
               <div className="text-right">
                 <p className="text-[9px] text-cyan-400 font-headline tracking-[0.1em] uppercase mb-0.5">Predicted</p>
                 <p className="text-lg font-bold text-cyan-400 font-headline">{simulatedValues.predicted.toFixed(2)}</p>
@@ -220,7 +220,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-4 text-[9px] text-slate-400 font-headline uppercase tracking-widest relative z-10 pt-2 border-t border-[#3b494c]/10">
+          <div className="flex justify-between items-center mt-4 text-[9px] text-slate-400 font-headline uppercase tracking-widest relative z-10 pt-2 border-t border-[var(--app-border)]/10">
             <span>Q1</span>
             <span>Q2</span>
             <span className="text-[#44d8f1]">Current</span>
@@ -230,9 +230,9 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
         </div>
 
         {/* IMPACT FACTORS (4 cols) */}
-        <div className="lg:col-span-4 bg-[#1c2022]/60 rounded-xl p-6 relative flex flex-col border border-[#3b494c]/20 justify-between">
+        <div className="lg:col-span-4 bg-[var(--app-card)]/60 rounded-xl p-6 relative flex flex-col border border-[var(--app-border)]/20 justify-between">
           <div>
-            <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
+            <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
             <p className="text-[11px] text-slate-400 mb-6">Variables driving the prediction</p>
             
             <div className="space-y-4">
@@ -258,7 +258,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                           </span>
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-[var(--app-surface2)]/50 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-300 ${positive ? "bg-cyan-400 shadow-[0_0_8px_rgba(0,229,255,0.4)]" : "bg-yellow-500"}`}
                           style={{ width: `${pct}%` }}
@@ -284,8 +284,8 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
       </div>
 
       {/* PREDICTIVE INTEL PANEL */}
-      <div className="border border-[#3b494c]/20 bg-[#1c2022]/20 rounded-xl p-6 md:p-8 space-y-6">
-        <div className="border-b border-[#3b494c]/10 pb-4">
+      <div className="border border-[var(--app-border)]/20 bg-[var(--app-card)]/20 rounded-xl p-6 md:p-8 space-y-6">
+        <div className="border-b border-[var(--app-border)]/10 pb-4">
           <h2 className="text-[10px] text-cyan-400 font-headline tracking-[0.2em] uppercase mb-1">Predictive Intel</h2>
           <p className="text-xs text-slate-400 font-headline uppercase tracking-wider">Trajectory Analysis &amp; Impact Diagnostics</p>
         </div>
@@ -293,7 +293,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           
           {/* Left Sub-card: Cumulative GPA Forecast */}
-          <div className="xl:col-span-2 bg-[#181c1e]/80 border border-[#3b494c]/15 rounded-xl p-6 relative overflow-hidden flex flex-col min-h-[300px]">
+          <div className="xl:col-span-2 bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-6 relative overflow-hidden flex flex-col min-h-[300px]">
             <div className="absolute top-0 left-0 w-full h-[1px] bg-cyan-500/10"></div>
             <div className="absolute inset-0 pointer-events-none opacity-5 bg-[repeating-linear-gradient(to_bottom,transparent,transparent_2px,#bac9cc_2px,#bac9cc_4px)]"></div>
             
@@ -301,7 +301,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
               <div>
                 <h3 className="font-headline text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cumulative GPA Forecast</h3>
                 <div className="flex items-end gap-3">
-                  <span className="font-headline text-5xl font-bold text-white">{simulatedValues.predicted2.toFixed(2)}</span>
+                  <span className="font-headline text-5xl font-bold text-[var(--app-text)]">{simulatedValues.predicted2.toFixed(2)}</span>
                   <div className={`pb-1.5 flex items-center gap-0.5 ${simulatedValues.predicted2 >= currentSgpa ? "text-cyan-400" : "text-yellow-500"}`}>
                     {simulatedValues.predicted2 >= currentSgpa ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                     <span className="font-headline text-xs font-semibold">
@@ -354,7 +354,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
           </div>
 
           {/* Right Sub-card: Primary Impact Factors */}
-          <div className="bg-[#181c1e]/80 border border-[#3b494c]/15 rounded-xl p-6 flex flex-col justify-between">
+          <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-6 flex flex-col justify-between">
             <div>
               <h3 className="font-headline text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Primary Impact Factors</h3>
               
@@ -375,7 +375,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                             {pct}%
                           </span>
                         </div>
-                        <div className="w-full h-1 bg-[#313538]/50 rounded-full overflow-hidden">
+                        <div className="w-full h-1 bg-[var(--app-surface2)]/50 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${positive ? "bg-cyan-400 shadow-[0_0_8px_rgba(0,229,255,0.6)]" : "bg-yellow-500"}`}
                             style={{ width: `${pct}%` }}
@@ -393,7 +393,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#3b494c]/10 text-[10px] text-slate-400 font-mono">
+            <div className="pt-4 border-t border-[var(--app-border)]/10 text-[10px] text-slate-400 font-mono">
               UPDATED: JUST NOW
             </div>
           </div>
@@ -401,8 +401,8 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
 
         {/* Granular Subject Diagnostics */}
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-4 border-b border-[#3b494c]/10 pb-2">
-            <h3 className="font-headline text-xs font-bold text-white uppercase tracking-wider">Granular Subject Diagnostics</h3>
+          <div className="flex justify-between items-center mb-4 border-b border-[var(--app-border)]/10 pb-2">
+            <h3 className="font-headline text-xs font-bold text-[var(--app-text)] uppercase tracking-wider">Granular Subject Diagnostics</h3>
             <button className="text-[9px] font-headline text-cyan-400 uppercase tracking-widest hover:text-cyan-300 transition-colors flex items-center gap-1">
               View Matrix <span className="text-xs">→</span>
             </button>
@@ -410,16 +410,16 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {subjectsDiagnostics.map((subject) => (
-              <div key={subject.id} className="bg-[#181c1e]/60 border border-[#3b494c]/15 rounded-xl p-4 flex flex-col justify-between hover:bg-[#1c2022]/80 transition-colors">
+              <div key={subject.id} className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 rounded-xl p-4 flex flex-col justify-between hover:bg-[var(--app-card)]/80 transition-colors">
                 <div>
-                  <h4 className="font-headline text-sm text-white font-medium truncate mb-0.5">{subject.name}</h4>
+                  <h4 className="font-headline text-sm text-[var(--app-text)] font-medium truncate mb-0.5">{subject.name}</h4>
                   <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider mb-6">{subject.code}</p>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="block text-[8px] text-slate-400 uppercase tracking-wider mb-0.5">Current</span>
-                    <span className="font-headline text-sm text-white font-bold">{subject.current}</span>
+                    <span className="font-headline text-sm text-[var(--app-text)] font-bold">{subject.current}</span>
                   </div>
                   
                   {subject.trend === "up" ? (
@@ -452,9 +452,9 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                   ]);
                 }
               }}
-              className="bg-[#272a2d]/20 border border-[#3b494c]/15 rounded-xl p-4 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-[#272a2d]/50 hover:border-cyan-500/30 transition-all group min-h-[120px]"
+              className="bg-[var(--app-surface)]/20 border border-[var(--app-border)]/15 rounded-xl p-4 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-[var(--app-surface)]/50 hover:border-cyan-500/30 transition-all group min-h-[120px]"
             >
-              <div className="w-8 h-8 rounded-full bg-[#181c1e] border border-[#3b494c]/30 flex items-center justify-center mb-2 group-hover:border-cyan-500/50 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-[var(--app-card2)] border border-[var(--app-border)]/30 flex items-center justify-center mb-2 group-hover:border-cyan-500/50 transition-colors">
                 <span className="text-slate-400 text-lg group-hover:text-cyan-400 transition-colors">+</span>
               </div>
               <span className="font-headline text-[10px] text-slate-400 uppercase tracking-widest group-hover:text-cyan-400 transition-colors">Add Subject Intel</span>
@@ -465,7 +465,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
 
       {/* SUBJECT LEVEL BREAKDOWN */}
       <div>
-        <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-2">
+        <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-2">
           <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
           Subject Level Breakdown
         </h3>
@@ -477,7 +477,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
               className={`bg-[#0b0f11]/80 rounded-xl p-5 flex flex-col justify-between border relative overflow-hidden transition-all duration-300 ${
                 subject.warning 
                   ? "border-yellow-500/20 hover:border-yellow-500/40" 
-                  : "border-[#3b494c]/10 hover:border-[#3b494c]/30 hover:bg-[#181c1e]/60"
+                  : "border-[var(--app-border)]/10 hover:border-[var(--app-border)]/30 hover:bg-[var(--app-card2)]/60"
               }`}
             >
               {subject.warning && <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>}
@@ -485,7 +485,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="text-[9px] text-slate-400 font-mono tracking-widest uppercase mb-0.5">{subject.code}</p>
-                  <h4 className="text-sm font-medium text-white">{subject.title}</h4>
+                  <h4 className="text-sm font-medium text-[var(--app-text)]">{subject.title}</h4>
                 </div>
                 <span className="text-xs font-mono text-cyan-400">⚡</span>
               </div>
@@ -516,10 +516,10 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
       <div id="simulator-section" className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
         
         {/* WHAT-IF SIMULATOR */}
-        <div className="lg:col-span-6 bg-[#272a2d]/30 border border-[#3b494c]/20 rounded-xl p-6 md:p-8 relative flex flex-col justify-between">
-          <div className="mb-6 flex justify-between items-center border-b border-[#3b494c]/10 pb-3">
+        <div className="lg:col-span-6 bg-[var(--app-surface)]/30 border border-[var(--app-border)]/20 rounded-xl p-6 md:p-8 relative flex flex-col justify-between">
+          <div className="mb-6 flex justify-between items-center border-b border-[var(--app-border)]/10 pb-3">
             <div>
-              <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">What-If Simulator</h3>
+              <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-0.5">What-If Simulator</h3>
               <p className="text-[11px] text-slate-400">Adjust variables to see impact</p>
             </div>
             <span className="text-cyan-400 text-xs font-mono">⚡ LIVE</span>
@@ -532,7 +532,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                 <span className="text-cyan-400 font-bold">{attendanceRate}%</span>
               </div>
               <input 
-                className="w-full accent-cyan-400 bg-[#181c1e] h-1.5 rounded-lg appearance-none cursor-pointer" 
+                className="w-full accent-cyan-400 bg-[var(--app-card2)] h-1.5 rounded-lg appearance-none cursor-pointer" 
                 max="100" 
                 min="50" 
                 type="range" 
@@ -547,7 +547,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                 <span className="text-cyan-400 font-bold">{studyHours} hrs</span>
               </div>
               <input 
-                className="w-full accent-cyan-400 bg-[#181c1e] h-1.5 rounded-lg appearance-none cursor-pointer" 
+                className="w-full accent-cyan-400 bg-[var(--app-card2)] h-1.5 rounded-lg appearance-none cursor-pointer" 
                 max="40" 
                 min="0" 
                 type="range" 
@@ -572,10 +572,10 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
         </div>
 
         {/* MODEL PARAMETERS */}
-        <div className="lg:col-span-6 bg-[#181c1e]/60 border border-[#3b494c]/20 rounded-xl p-6 md:p-8 flex flex-col justify-between">
-          <div className="mb-6 flex justify-between items-center border-b border-[#3b494c]/10 pb-3">
+        <div className="lg:col-span-6 bg-[var(--app-card2)]/60 border border-[var(--app-border)]/20 rounded-xl p-6 md:p-8 flex flex-col justify-between">
+          <div className="mb-6 flex justify-between items-center border-b border-[var(--app-border)]/10 pb-3">
             <div>
-              <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">Model Parameters</h3>
+              <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-0.5">Model Parameters</h3>
               <p className="text-[11px] text-slate-400">Baseline inputs for prediction</p>
             </div>
             <button 
@@ -588,90 +588,90 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
           </div>
 
           <div className="grid grid-cols-2 gap-4 flex-1">
-            <div className="bg-[#272a2d]/30 p-3 rounded-lg border border-[#3b494c]/10">
+            <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
               <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">SSC GPA</p>
               {editingParams ? (
                 <input 
                   type="number" 
                   step="0.01" 
-                  className="bg-[#101416] border border-[#3b494c]/30 text-white text-xs p-1 rounded w-full"
+                  className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
                   value={sscGpa} 
                   onChange={(e) => setSscGpa(Number(e.target.value))}
                 />
               ) : (
-                <p className="text-xs font-bold text-white">{sscGpa.toFixed(2)}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{sscGpa.toFixed(2)}</p>
               )}
             </div>
 
-            <div className="bg-[#272a2d]/30 p-3 rounded-lg border border-[#3b494c]/10">
+            <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
               <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">HSC GPA</p>
               {editingParams ? (
                 <input 
                   type="number" 
                   step="0.01" 
-                  className="bg-[#101416] border border-[#3b494c]/30 text-white text-xs p-1 rounded w-full"
+                  className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
                   value={hscGpa} 
                   onChange={(e) => setHscGpa(Number(e.target.value))}
                 />
               ) : (
-                <p className="text-xs font-bold text-white">{hscGpa.toFixed(2)}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{hscGpa.toFixed(2)}</p>
               )}
             </div>
 
-            <div className="bg-[#272a2d]/30 p-3 rounded-lg border border-[#3b494c]/10">
+            <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
               <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Family Income</p>
               {editingParams ? (
                 <input 
                   type="text" 
-                  className="bg-[#101416] border border-[#3b494c]/30 text-white text-xs p-1 rounded w-full"
+                  className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
                   value={familyIncome} 
                   onChange={(e) => setFamilyIncome(e.target.value)}
                 />
               ) : (
-                <p className="text-xs font-bold text-white">{familyIncome}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{familyIncome}</p>
               )}
             </div>
 
-            <div className="bg-[#272a2d]/30 p-3 rounded-lg border border-[#3b494c]/10">
+            <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
               <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Scholarship</p>
               {editingParams ? (
                 <input 
                   type="text" 
-                  className="bg-[#101416] border border-[#3b494c]/30 text-white text-xs p-1 rounded w-full"
+                  className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
                   value={scholarship} 
                   onChange={(e) => setScholarship(e.target.value)}
                 />
               ) : (
-                <p className="text-xs font-bold text-white">{scholarship}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{scholarship}</p>
               )}
             </div>
 
-            <div className="bg-[#272a2d]/30 p-3 rounded-lg border border-[#3b494c]/10">
+            <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
               <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Distance from Uni</p>
               {editingParams ? (
                 <input 
                   type="text" 
-                  className="bg-[#101416] border border-[#3b494c]/30 text-white text-xs p-1 rounded w-full"
+                  className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
                   value={distanceFromUni} 
                   onChange={(e) => setDistanceFromUni(e.target.value)}
                 />
               ) : (
-                <p className="text-xs font-bold text-white">{distanceFromUni}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{distanceFromUni}</p>
               )}
             </div>
 
-            <div className="bg-[#272a2d]/30 p-3 rounded-lg border border-[#3b494c]/10">
+            <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
               <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Previous Semester</p>
               {editingParams ? (
                 <input 
                   type="number" 
                   step="0.01" 
-                  className="bg-[#101416] border border-[#3b494c]/30 text-white text-xs p-1 rounded w-full"
+                  className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
                   value={prevSemesterSgpa} 
                   onChange={(e) => setPrevSemesterSgpa(Number(e.target.value))}
                 />
               ) : (
-                <p className="text-xs font-bold text-white">{prevSemesterSgpa.toFixed(2)} SGPA</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{prevSemesterSgpa.toFixed(2)} SGPA</p>
               )}
             </div>
           </div>

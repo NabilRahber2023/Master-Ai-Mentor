@@ -36,7 +36,7 @@ const FeatureCard = React.forwardRef<HTMLDivElement, {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight group-hover:text-cyan-100 transition-colors">
+                <h3 className="text-3xl md:text-4xl font-bold text-[var(--app-text)] mb-2 tracking-tight group-hover:text-cyan-100 transition-colors">
                     {title}
                 </h3>
 
@@ -140,7 +140,7 @@ export default function SaaSFeaturesSection() {
                         <span className="text-sm font-medium text-cyan-100">Platform Advantages</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--app-text)] mb-6 tracking-tight">
                         Built for{' '}
                         <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                             Modern Education
@@ -165,15 +165,15 @@ export default function SaaSFeaturesSection() {
                 {/* Bottom CTA Section */}
                 <div className="mt-16 md:mt-20 text-center">
                     <div className="inline-block p-8 md:p-10 rounded-2xl bg-gradient-to-br from-cyan-950/30 via-gray-950/50 to-gray-950 border border-cyan-500/20">
-                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                        <h3 className="text-2xl md:text-3xl font-bold text-[var(--app-text)] mb-3">
                             Ready to Transform Your Institution?
                         </h3>
                         <p className="text-gray-400 text-base md:text-lg mb-6 max-w-2xl mx-auto">
                             Join forward-thinking universities leveraging AI to unlock student potential
                         </p>
                         <button className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/50">
-                            <span className="text-white font-semibold text-base md:text-lg">Get Started Today</span>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white group-hover:translate-x-1 transition-transform">
+                            <span className="text-[var(--app-text)] font-semibold text-base md:text-lg">Get Started Today</span>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[var(--app-text)] group-hover:translate-x-1 transition-transform">
                                 <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </button>

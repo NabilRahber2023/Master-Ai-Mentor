@@ -12,7 +12,7 @@ import {
 import { CareerPredictionPanel } from "@/components/modules/live-prediction/career-prediction-panel";
 import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
 import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
-import type { CareerPredictionResponse } from "@/lib/api/predictions";
+import type { CareerPredictionResponse, CareerPredictionRequest } from "@/lib/api/predictions";
 import {
   Radar,
   RadarChart, 
@@ -66,6 +66,57 @@ interface LearningModule {
   completed: boolean;
 }
 
+// ── Derivation helpers: turn the live career prediction + its inputs into every
+//    section's data, so the whole dashboard updates from each prediction. ──────
+interface CareerSkills {
+  prog: number; math: number; comm: number; crea: number; prob: number;
+  lead: number; resi: number; pub: number; cgpa: number; intern: number;
+  proj: number; extra: number;
+}
+
+const clampN = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const pct10 = (v: number) => Math.round(clampN(v, 0, 10) * 10);
+
+function skillsFromInputs(inp: CareerPredictionRequest | null): CareerSkills {
+  return {
+    prog: inp?.Programming_Skill ?? 5,
+    math: inp?.Math_Skill ?? 5,
+    comm: inp?.Communication_Skill ?? 5,
+    crea: inp?.Creativity_Score ?? 5,
+    prob: inp?.Problem_Solving ?? 5,
+    lead: inp?.Leadership_Score ?? 5,
+    resi: inp?.Research_Interest ?? 5,
+    pub: inp?.Public_Speaking ?? 5,
+    cgpa: inp?.CGPA ?? 3,
+    intern: inp?.Internship_Experience_Months ?? 0,
+    proj: inp?.Projects_Completed ?? 0,
+    extra: inp?.Extracurriculars ?? 0,
+  };
+}
+
+function competenciesFromSkills(s: CareerSkills): Competency[] {
+  const mk = (name: string, cur: number): Competency => ({
+    name, current: cur, target: Math.min(100, cur + 18), critical: cur < 50,
+  });
+  return [
+    mk("Algorithmic Complexity", pct10(s.prog)),
+    mk("Distributed Systems", pct10((s.prob + s.prog) / 2)),
+    mk("Machine Learning Ops", pct10((s.resi + s.math) / 2)),
+    mk("System Design", pct10((s.prog + s.prob) / 2)),
+  ];
+}
+
+function learningFromSkills(s: CareerSkills): LearningModule[] {
+  const axes = [
+    { v: pct10((s.prog + s.prob) / 2), mod: { name: "Advanced System Design", duration: "4-6 Weeks", desc: "Deepen architectural thinking and scalability concepts" } },
+    { v: pct10(s.comm), mod: { name: "Technical Communication & Influence", duration: "3-4 Weeks", desc: "Sharpen written and verbal communication for technical leadership" } },
+    { v: pct10(s.lead), mod: { name: "Technical Leadership", duration: "3-4 Weeks", desc: "Mentorship, team scaling, and technical decision making" } },
+    { v: pct10(s.prob), mod: { name: "Advanced Problem Solving & DSA", duration: "5-7 Weeks", desc: "Master algorithms and complex problem decomposition" } },
+    { v: pct10((s.resi + s.math) / 2), mod: { name: "Applied ML & Research Methods", duration: "6-8 Weeks", desc: "Model building, evaluation, and research rigor" } },
+  ];
+  return axes.sort((a, b) => a.v - b.v).slice(0, 4).map((a) => ({ ...a.mod, completed: false }));
+}
+
 export default function CareerGuidancePage() {
   // Competency state (connected to sliders)
   const [competencies, setCompetencies] = useState<Competency[]>([
@@ -94,11 +145,26 @@ export default function CareerGuidancePage() {
 
   // Input source: manual form vs. uploaded CSV.
   const [mode, setMode] = useState<"manual" | "csv">("manual");
-  // Live ML evaluation result that drives the page when present.
+  // Live ML evaluation result + the inputs it was computed from. Together these
+  // drive every section of the dashboard below.
   const [livePrediction, setLivePrediction] = useState<CareerPredictionResponse | null>(null);
-  const handleLiveResult = (result: CareerPredictionResponse) => {
+  const [liveInputs, setLiveInputs] = useState<CareerPredictionRequest | null>(null);
+
+  const handleLiveResult = (result: CareerPredictionResponse, inputs?: CareerPredictionRequest) => {
     setLivePrediction(result);
     setSelectedCareer(result.predicted_career);
+    const inp = inputs ?? null;
+    setLiveInputs(inp);
+    // Seed the interactive panels (competency sliders + learning path) from the
+    // real prediction inputs so they reflect this candidate, not static demo data.
+    const skills = skillsFromInputs(inp);
+    setCompetencies(competenciesFromSkills(skills));
+    setLearningModules(learningFromSkills(skills));
+  };
+
+  const handleLiveReset = () => {
+    setLivePrediction(null);
+    setLiveInputs(null);
   };
 
   // Handle slide updates
@@ -112,35 +178,32 @@ export default function CareerGuidancePage() {
     setCompetencies(updated);
   };
 
-  // Recalculate everything dynamically based on Competencies
+  // Everything below is derived from the live prediction + the inputs it ran on,
+  // so every section refreshes with each new prediction.
   const careerEngineData = useMemo(() => {
-    const alg = competencies[0].current;
-    const dist = competencies[1].current;
-    const mlo = competencies[2].current;
-    const sys = competencies[3].current;
+    const s = skillsFromInputs(liveInputs);
+    const conf = livePrediction ? livePrediction.confidence_score : 0;
+    const clampPct = (v: number) => Math.max(5, Math.min(99, Math.round(v)));
 
-    // Matches
-    const seMatch = Math.min(99, Math.round((alg * 0.4) + (sys * 0.3) + (dist * 0.2) + 20));
-    const dsMatch = Math.min(99, Math.round((alg * 0.35) + (dist * 0.35) + (sys * 0.1) + 20));
-    const prodMatch = Math.min(99, Math.round((sys * 0.4) + (alg * 0.2) + 20));
-    const cloudMatch = Math.min(99, Math.round((dist * 0.45) + (sys * 0.25) + 15));
+    // Industry alignment matrix — derived from the actual skill vector.
+    const seMatch = clampPct(s.prog * 5 + s.prob * 3 + Math.min(s.proj, 10) + 10);
+    const dsMatch = clampPct(s.math * 5 + s.prog * 2.5 + s.resi * 2 + 8);
+    const prodMatch = clampPct(s.comm * 5 + s.lead * 3 + s.crea * 2 + 8);
+    const cloudMatch = clampPct(s.prog * 4 + s.prob * 2 + s.intern * 3 + 8);
 
-    // Telemetry values
-    // Career readiness reflects the live model confidence when available.
-    const careerReadiness = livePrediction
-      ? Math.round(livePrediction.confidence_score * 100)
-      : Math.min(100, Math.round((alg + dist + mlo + sys) / 4 + 10));
-    const marketDemand = Math.min(99, Math.round(70 + (dist * 0.15) + (mlo * 0.15)));
-    const futureGrowth = Math.min(99, Math.round(75 + (mlo * 0.2)));
-    const automationRisk = Math.max(5, Math.round(50 - (alg * 0.25) - (sys * 0.2)));
+    // Telemetry — readiness is the model confidence; the rest are skill-driven.
+    const careerReadiness = Math.round(conf * 100);
+    const marketDemand = clampPct(55 + s.prog * 2 + s.proj * 1.5 + s.resi * 0.8);
+    const futureGrowth = clampPct(58 + s.resi * 2.2 + s.math * 1.4);
+    const automationRisk = Math.max(5, Math.round(62 - s.prob * 3 - s.lead * 2 - s.crea * 1.5));
 
-    // Target recommendations — driven by the live ML prediction when available.
+    // Recommended careers — straight from the model.
     const recIcons = [Code, Compass, Briefcase, Database];
     const careers: CareerPath[] = livePrediction
       ? [
           {
             name: livePrediction.predicted_career,
-            match: Math.round(livePrediction.confidence_score * 100),
+            match: Math.round(conf * 100),
             growth: "Top Match",
             demand: "AI Predicted",
             icon: Code,
@@ -153,80 +216,76 @@ export default function CareerGuidancePage() {
             icon: recIcons[(i + 1) % recIcons.length],
           })),
         ]
-      : [
-          { name: "Staff Software Engineer", match: seMatch, growth: "High Impact", demand: "High Growth", icon: Code },
-          { name: "Solutions Architect", match: cloudMatch, growth: "High Demand", demand: "High Growth", icon: Compass },
-          { name: "Engineering Manager", match: Math.min(99, Math.round((alg + sys) / 2 + 10)), growth: "Leadership", demand: "High Impact", icon: Briefcase },
-          { name: "Data Platform Engineer", match: dsMatch, growth: "High Demand", demand: "Future Ready", icon: Database },
-        ];
+      : [];
 
-    // Radar Chart formatting
+    // Skill radar — current (from inputs) vs target.
     const radarData = [
-      { subject: "Technical Depth", A: Math.round(alg * 1.0), B: 90, fullMark: 100 },
-      { subject: "Problem Solving", A: Math.round((alg + sys) / 2), B: 85, fullMark: 100 },
-      { subject: "System Design", A: Math.round(sys * 1.0), B: 85, fullMark: 100 },
-      { subject: "Communication", A: 70, B: 75, fullMark: 100 },
-      { subject: "Leadership", A: Math.round((sys + dist) / 2.5 + 20), B: 80, fullMark: 100 },
+      { subject: "Technical Depth", A: pct10((s.prog + s.math) / 2), B: 90, fullMark: 100 },
+      { subject: "Problem Solving", A: pct10(s.prob), B: 85, fullMark: 100 },
+      { subject: "System Design", A: pct10((s.prog + s.prob) / 2), B: 85, fullMark: 100 },
+      { subject: "Communication", A: pct10(s.comm), B: 80, fullMark: 100 },
+      { subject: "Leadership", A: pct10(s.lead), B: 80, fullMark: 100 },
     ];
 
-    // Priority Gaps calculation
-    const gaps = [
-      { name: "System Design", gap: 85 - sys, status: (85 - sys > 20) ? "High" : (85 - sys > 5) ? "Medium" : "Low" },
-      { name: "Distributed Systems", gap: 80 - dist, status: (80 - dist > 25) ? "High" : (80 - dist > 10) ? "Medium" : "Low" },
-      { name: "Cloud Architecture", gap: 30, status: "Medium" },
-      { name: "DevOps Practices", gap: 20, status: "Medium" },
-      { name: "Technical Leadership", gap: 10, status: "Low" },
-    ].sort((a, b) => b.gap - a.gap);
+    // Priority gaps derived from the radar deltas.
+    const gaps = radarData
+      .map((r) => {
+        const gap = Math.max(0, r.B - r.A);
+        return { name: r.subject, gap, status: gap > 25 ? "High" : gap > 10 ? "Medium" : "Low" };
+      })
+      .sort((a, b) => b.gap - a.gap);
+
+    // Career trajectory sub-labels derived from the predicted role.
+    const role = livePrediction?.predicted_career ?? "Professional";
+    const trajectory = [
+      "FOUNDATION",
+      `Junior ${role}`,
+      `Senior ${role}`,
+      "Lead / Principal",
+    ];
+
+    // AI insight cards derived from the prediction + contributing factors.
+    const topFactor = livePrediction?.contributing_factors?.[0];
+    const topGap = gaps.find((g) => g.gap > 0);
+    const secondGap = gaps.filter((g) => g.gap > 0)[1];
+    const insights = {
+      alignment: `High alignment with ${role} roles — model confidence ${Math.round(conf * 100)}%.`,
+      velocity: topFactor
+        ? `"${topFactor.feature}" (${topFactor.value}) is the strongest driver of this prediction.`
+        : "Your strongest skills are driving this career match.",
+      advantage: `Projected future-growth index of ${futureGrowth}% places this path among durable, in-demand roles.`,
+      nextMove: topGap
+        ? `Focus on ${topGap.name}${secondGap ? ` and ${secondGap.name}` : ""} to maximize outcomes.`
+        : "Maintain your balanced profile and pursue stretch projects.",
+    };
+
+    // Industry alignment — ranked so the strongest match leads as the primary
+    // vector, reflecting the predicted career's actual domain (not always SE).
+    const aTags = ["PRIMARY VECTOR MATCH", "HIGH SYNERGY", "DEVELOPMENT REQUIRED", "SECONDARY SKILLSET"];
+    const alignment = [
+      { name: "Software Engineering", value: seMatch, icon: Code },
+      { name: "Data & Analytics", value: dsMatch, icon: Database },
+      { name: "Product & Strategy", value: prodMatch, icon: Compass },
+      { name: "Operations & Infrastructure", value: cloudMatch, icon: Shield },
+    ]
+      .sort((a, b) => b.value - a.value)
+      .map((r, i) => ({ ...r, tag: aTags[i], rank: i }));
 
     return {
-      seMatch,
-      dsMatch,
-      prodMatch,
-      cloudMatch,
-      careerReadiness,
-      marketDemand,
-      futureGrowth,
-      automationRisk,
-      careers,
-      radarData,
-      gaps,
+      seMatch, dsMatch, prodMatch, cloudMatch,
+      careerReadiness, marketDemand, futureGrowth, automationRisk,
+      careers, radarData, gaps, trajectory, insights, alignment,
     };
-  }, [competencies, livePrediction]);
+  }, [livePrediction, liveInputs]);
 
-  // Recalibrate Competencies
+  // Recalibrate competency sliders back to the values implied by the prediction inputs.
   const resetCompetencies = () => {
-    setCompetencies([
-      { name: "Algorithmic Complexity", current: 75, target: 90, critical: false },
-      { name: "Distributed Systems", current: 40, target: 80, critical: true },
-      { name: "Machine Learning Ops", current: 60, target: 70, critical: false },
-      { name: "System Design", current: 55, target: 85, critical: false },
-    ]);
+    setCompetencies(competenciesFromSkills(skillsFromInputs(liveInputs)));
   };
 
-  // Generate customized learning modules dynamically based on selected career path
+  // Regenerate the learning path from the current candidate's weakest skills.
   const handleGenerateLearningPath = () => {
-    if (selectedCareer === "Staff Software Engineer") {
-      setLearningModules([
-        { name: "Advanced System Design", duration: "4-6 Weeks", desc: "Deepen architectural thinking and scalability concepts", completed: true },
-        { name: "Distributed Systems Mastery", duration: "6-8 Weeks", desc: "Master microservices, caching, and event-driven systems", completed: false },
-        { name: "Cloud Native Architecture", duration: "4-5 Weeks", desc: "Learn Kubernetes, serverless & cloud patterns", completed: false },
-        { name: "Technical Leadership", duration: "3-4 Weeks", desc: "Mentorship, team scaling, and technical decision making", completed: false },
-      ]);
-    } else if (selectedCareer === "Solutions Architect") {
-      setLearningModules([
-        { name: "Enterprise Architecture Frameworks", duration: "5-7 Weeks", desc: "TOGAF and large-scale cloud governance design", completed: false },
-        { name: "Distributed Cache & Eventing Architectures", duration: "6-8 Weeks", desc: "Kafka, Redis, and high-throughput streaming systems", completed: false },
-        { name: "Hybrid Cloud Connectivity", duration: "3-4 Weeks", desc: "Designing secure network routes across AWS/Azure & On-Premises", completed: false },
-        { name: "FinOps & Cost Optimization", duration: "2-3 Weeks", desc: "Managing multi-million dollar cloud budgets effectively", completed: false },
-      ]);
-    } else {
-      setLearningModules([
-        { name: "Engineering Management Foundations", duration: "4-5 Weeks", desc: "Transitioning from IC to Leader roles", completed: false },
-        { name: "Agile Delivery & Scrum Leadership", duration: "3-4 Weeks", desc: "Optimizing throughput and velocity in modern squads", completed: false },
-        { name: "Conflict Resolution & Career Coaching", duration: "3-4 Weeks", desc: "Leading 1-on-1s and driving high performance cultures", completed: false },
-        { name: "Technical Strategy Mapping", duration: "4-6 Weeks", desc: "Aligning product roadmaps with system capability vectors", completed: false },
-      ]);
-    }
+    setLearningModules(learningFromSkills(skillsFromInputs(liveInputs)));
   };
 
   const toggleModuleCompletion = (idx: number) => {
@@ -236,10 +295,10 @@ export default function CareerGuidancePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#101416] text-[#e0e3e6] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="flex flex-col min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
       
       {/* Header & Breadcrumb Container */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[#3b494c]/10 px-6 bg-[#101416] sticky top-0 z-50">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[var(--app-border)]/10 px-6 bg-[var(--app-bg)] sticky top-0 z-50">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb>
@@ -258,28 +317,28 @@ export default function CareerGuidancePage() {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00daf3]/5 rounded-full blur-[130px] pointer-events-none -translate-y-1/3 translate-x-1/4"></div>
         <div className="relative z-10 flex items-center justify-between">
           <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Input source</p>
-          <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setLivePrediction(null); }} />
+          <ModeSwitch mode={mode} onChange={(m) => { setMode(m); handleLiveReset(); }} />
         </div>
 
         {mode === "manual" ? (
           <CareerPredictionPanel
             onResult={handleLiveResult}
-            onReset={() => setLivePrediction(null)}
+            onReset={handleLiveReset}
           />
         ) : (
           <div className="relative z-10">
             <CsvModePanel
               module="career"
               label="Career Guidance"
-              onSingleResult={(p) => handleLiveResult(p as CareerPredictionResponse)}
-              onSingleClear={() => setLivePrediction(null)}
+              onSingleResult={(p, inp) => handleLiveResult(p as CareerPredictionResponse, inp as CareerPredictionRequest | undefined)}
+              onSingleClear={handleLiveReset}
             />
           </div>
         )}
 
         {/* Fresh state: nothing shows until the user runs a prediction */}
         {!livePrediction && (
-          <section className="rounded-xl border border-dashed border-[#3b494c]/30 bg-[#181c1e]/40 p-12 text-center relative z-10">
+          <section className="rounded-xl border border-dashed border-[var(--app-border)]/30 bg-[var(--app-card2)]/40 p-12 text-center relative z-10">
             <p className="text-sm text-slate-400">
               Enter candidate attributes above and click{" "}
               <span className="font-semibold text-cyan-300">Predict Career</span> to populate
@@ -297,7 +356,7 @@ export default function CareerGuidancePage() {
                 <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
                   Live Prediction
                 </span>
-                <span className="text-2xl font-bold text-white">{livePrediction.predicted_career}</span>
+                <span className="text-2xl font-bold text-[var(--app-text)]">{livePrediction.predicted_career}</span>
                 <span className="font-mono text-xs text-cyan-300">
                   {Math.round(livePrediction.confidence_score * 100)}% confidence
                 </span>
@@ -314,8 +373,8 @@ export default function CareerGuidancePage() {
 
             {/* Impact Factors — real SHAP contributions from the career model */}
             {livePrediction.contributing_factors.length > 0 && (
-              <section className="rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/60 p-5 relative z-10">
-                <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
+              <section className="rounded-xl border border-[var(--app-border)]/20 bg-[var(--app-card)]/60 p-5 relative z-10">
+                <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-0.5">Impact Factors</h3>
                 <p className="text-[11px] text-slate-400 mb-4">Variables driving the career prediction</p>
                 <div className="space-y-4">
                   {(() => {
@@ -338,7 +397,7 @@ export default function CareerGuidancePage() {
                               </span>
                             </span>
                           </div>
-                          <div className="h-1.5 w-full bg-[#313538]/50 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-[var(--app-surface2)]/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
                               style={{ width: `${pct}%` }}
@@ -353,9 +412,9 @@ export default function CareerGuidancePage() {
             )}
 
         {/* Hero Top Title & Search bar row */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#3b494c]/15 pb-4 gap-4 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[var(--app-border)]/15 pb-4 gap-4 relative z-10">
           <div>
-            <h1 className="text-3xl md:text-4xl font-headline font-bold text-white tracking-tight uppercase flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-headline font-bold text-[var(--app-text)] tracking-tight uppercase flex items-center gap-3">
               {livePrediction?.predicted_career ?? "Career Horizon Analysis"}
             </h1>
             <p className="text-[10px] text-slate-400 font-headline uppercase tracking-[0.2em] mt-1">
@@ -366,10 +425,10 @@ export default function CareerGuidancePage() {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex items-center bg-[#1c2022] rounded px-3 py-1.5 border border-[#3b494c]/20 focus-within:border-cyan-400 transition-all w-full md:w-72 group">
+            <div className="flex items-center bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20 focus-within:border-cyan-400 transition-all w-full md:w-72 group">
               <Search className="text-slate-400 w-4 h-4 mr-2 group-focus-within:text-cyan-400 transition-colors" />
               <input 
-                className="bg-transparent border-none outline-none text-[11px] text-white w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
+                className="bg-transparent border-none outline-none text-[11px] text-[var(--app-text)] w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
                 placeholder="Search careers, skills, industries..." 
                 type="text"
                 value={searchQuery}
@@ -378,11 +437,11 @@ export default function CareerGuidancePage() {
             </div>
             
             <div className="flex items-center gap-2 shrink-0">
-              <button className="relative p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[#3b494c]/10 rounded bg-[#1c2022]/40">
+              <button className="relative p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[var(--app-border)]/10 rounded bg-[var(--app-card)]/40">
                 <Bell className="w-4 h-4" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <button className="p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[#3b494c]/10 rounded bg-[#1c2022]/40" onClick={resetCompetencies}>
+              <button className="p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[var(--app-border)]/10 rounded bg-[var(--app-card)]/40" onClick={resetCompetencies}>
                 <Settings className="w-4 h-4" />
               </button>
             </div>
@@ -396,7 +455,7 @@ export default function CareerGuidancePage() {
           <div className="lg:col-span-8 space-y-8">
 
             {/* 1. PROJECTED TRAJECTORY TIMELINE */}
-            <section className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 relative overflow-hidden group">
+            <section className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 relative overflow-hidden group">
               <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#00daf3]/25 to-transparent"></div>
               
               <div className="flex justify-between items-end mb-8">
@@ -407,7 +466,7 @@ export default function CareerGuidancePage() {
                   </h3>
                   <p className="text-slate-400 text-xs mt-1">Optimal pathway based on current momentum</p>
                 </div>
-                <div className="bg-[#101416]/60 px-3 py-1 rounded border border-[#3b494c]/25 flex items-center gap-2">
+                <div className="bg-[var(--app-bg)]/60 px-3 py-1 rounded border border-[var(--app-border)]/25 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
                   <span className="text-[9px] text-slate-200 uppercase tracking-widest font-semibold font-headline">TRAJECTORY: STABLE</span>
                 </div>
@@ -415,7 +474,7 @@ export default function CareerGuidancePage() {
 
               {/* Responsive Timeline Grid */}
               <div className="relative py-6">
-                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[#3b494c]/30 -translate-y-1/2 z-0"></div>
+                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[var(--app-border)]/30 -translate-y-1/2 z-0"></div>
                 <div 
                   className="absolute top-1/2 left-0 h-[1px] bg-gradient-to-r from-cyan-400 to-[#44d8f1] -translate-y-1/2 z-0 transition-all duration-500"
                   style={{ width: `${(activeTimeline / 3) * 100}%` }}
@@ -429,14 +488,14 @@ export default function CareerGuidancePage() {
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 ${
                       activeTimeline >= 0 
-                        ? "bg-[#101416] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
-                        : "bg-[#1c2022] border-[#3b494c]/50 text-slate-500"
+                        ? "bg-[var(--app-bg)] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
+                        : "bg-[var(--app-card)] border-[var(--app-border)]/50 text-slate-500"
                     } hover:scale-105`}>
                       <GraduationCap className="w-5 h-5" />
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] font-bold text-white mb-0.5 font-headline">Current State</p>
-                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">FOUNDATION</p>
+                      <p className="text-[10px] font-bold text-[var(--app-text)] mb-0.5 font-headline">Current State</p>
+                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">{careerEngineData.trajectory[0]}</p>
                     </div>
                   </div>
 
@@ -447,14 +506,14 @@ export default function CareerGuidancePage() {
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 ${
                       activeTimeline >= 1 
-                        ? "bg-[#101416] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
-                        : "bg-[#1c2022] border-[#3b494c]/50 text-slate-500"
+                        ? "bg-[var(--app-bg)] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
+                        : "bg-[var(--app-card)] border-[var(--app-border)]/50 text-slate-500"
                     } hover:scale-105`}>
                       <Code className="w-5 h-5" />
                     </div>
                     <div className="text-center">
-                      <p className={`text-[10px] font-bold mb-0.5 font-headline ${activeTimeline === 1 ? "text-cyan-400" : "text-white"}`}>+2 Years</p>
-                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">JUNIOR DEV</p>
+                      <p className={`text-[10px] font-bold mb-0.5 font-headline ${activeTimeline === 1 ? "text-cyan-400" : "text-[var(--app-text)]"}`}>+2 Years</p>
+                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">{careerEngineData.trajectory[1]}</p>
                     </div>
                   </div>
 
@@ -465,14 +524,14 @@ export default function CareerGuidancePage() {
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 ${
                       activeTimeline >= 2 
-                        ? "bg-[#101416] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
-                        : "bg-[#1c2022] border-[#3b494c]/50 text-slate-500"
+                        ? "bg-[var(--app-bg)] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
+                        : "bg-[var(--app-card)] border-[var(--app-border)]/50 text-slate-500"
                     } hover:scale-105`}>
                       <Hammer className="w-5 h-5" />
                     </div>
                     <div className="text-center">
-                      <p className={`text-[10px] font-bold mb-0.5 font-headline ${activeTimeline === 2 ? "text-cyan-400" : "text-white"}`}>+5 Years</p>
-                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">ARCHITECTURE</p>
+                      <p className={`text-[10px] font-bold mb-0.5 font-headline ${activeTimeline === 2 ? "text-cyan-400" : "text-[var(--app-text)]"}`}>+5 Years</p>
+                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">{careerEngineData.trajectory[2]}</p>
                     </div>
                   </div>
 
@@ -483,14 +542,14 @@ export default function CareerGuidancePage() {
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 ${
                       activeTimeline >= 3 
-                        ? "bg-[#101416] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
-                        : "bg-[#1c2022] border-[#3b494c]/50 text-slate-500"
+                        ? "bg-[var(--app-bg)] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.3)]" 
+                        : "bg-[var(--app-card)] border-[var(--app-border)]/50 text-slate-500"
                     } hover:scale-105`}>
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div className="text-center">
-                      <p className={`text-[10px] font-bold mb-0.5 font-headline ${activeTimeline === 3 ? "text-cyan-400" : "text-white"}`}>+10 Years</p>
-                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">LEADERSHIP</p>
+                      <p className={`text-[10px] font-bold mb-0.5 font-headline ${activeTimeline === 3 ? "text-cyan-400" : "text-[var(--app-text)]"}`}>+10 Years</p>
+                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">{careerEngineData.trajectory[3]}</p>
                     </div>
                   </div>
                 </div>
@@ -503,91 +562,41 @@ export default function CareerGuidancePage() {
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 pl-2.5 border-l-2 border-cyan-400">
                   INDUSTRY ALIGNMENT MATRIX
                 </h3>
-                <span className="text-[9px] text-slate-500 font-headline uppercase tracking-widest bg-[#1c2022] px-2 py-0.5 rounded border border-[#3b494c]/10">
+                <span className="text-[9px] text-slate-500 font-headline uppercase tracking-widest bg-[var(--app-card)] px-2 py-0.5 rounded border border-[var(--app-border)]/10">
                   LIVE SCAN ACTIVE
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Software Engineering */}
-                <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 hover:bg-[#1c2022] transition-colors relative overflow-hidden group">
-                  <div className="absolute top-0 inset-x-0 h-[2px] bg-cyan-400 shadow-[0_0_10px_rgba(0,229,255,0.5)]"></div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-[#101416] border border-[#3b494c]/20 text-cyan-400">
-                        <Code className="w-5 h-5" />
+                {careerEngineData.alignment.map((a) => {
+                  const c = [
+                    { bar: "bg-cyan-400 shadow-[0_0_10px_rgba(0,229,255,0.5)]", text: "text-cyan-400", fill: "bg-gradient-to-r from-cyan-400 to-[#44d8f1]" },
+                    { bar: "bg-teal-400 shadow-[0_0_10px_rgba(0,255,150,0.3)]", text: "text-teal-400", fill: "bg-teal-400" },
+                    { bar: "bg-yellow-500 shadow-[0_0_10px_rgba(250,200,0,0.3)]", text: "text-yellow-500", fill: "bg-yellow-500" },
+                    { bar: "bg-slate-500", text: "text-slate-400", fill: "bg-slate-500" },
+                  ][a.rank];
+                  const Icon = a.icon;
+                  return (
+                    <div key={a.name} className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 hover:bg-[var(--app-card)] transition-colors relative overflow-hidden group">
+                      <div className={`absolute top-0 inset-x-0 h-[2px] ${c.bar}`}></div>
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded bg-[var(--app-bg)] border border-[var(--app-border)]/20 ${c.text}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-headline font-bold text-sm text-[var(--app-text)]">{a.name}</h4>
+                            <span className={`text-[8px] uppercase tracking-widest font-semibold block mt-0.5 font-headline ${c.text}`}>{a.tag}</span>
+                          </div>
+                        </div>
+                        <span className={`text-3xl font-headline font-bold tracking-tighter ${c.text}`}>{a.value}%</span>
                       </div>
-                      <div>
-                        <h4 className="font-headline font-bold text-sm text-white">Software Engineering</h4>
-                        <span className="text-[8px] text-cyan-400 uppercase tracking-widest font-semibold block mt-0.5 font-headline">PRIMARY VECTOR MATCH</span>
-                      </div>
-                    </div>
-                    <span className="text-3xl font-headline font-bold text-cyan-400 tracking-tighter">{careerEngineData.seMatch}%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#101416] rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-cyan-400 to-[#44d8f1] rounded-full transition-all duration-500" style={{ width: `${careerEngineData.seMatch}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Data Architecture */}
-                <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 hover:bg-[#1c2022] transition-colors relative overflow-hidden group">
-                  <div className="absolute top-0 inset-x-0 h-[2px] bg-teal-400 shadow-[0_0_10px_rgba(0,255,150,0.3)]"></div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-[#101416] border border-[#3b494c]/20 text-teal-400">
-                        <Database className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-headline font-bold text-sm text-white">Data Architecture</h4>
-                        <span className="text-[8px] text-teal-400 uppercase tracking-widest font-semibold block mt-0.5 font-headline">HIGH SYNERGY</span>
+                      <div className="w-full h-1 bg-[var(--app-bg)] rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-500 ${c.fill}`} style={{ width: `${a.value}%` }}></div>
                       </div>
                     </div>
-                    <span className="text-3xl font-headline font-bold text-teal-400 tracking-tighter">{careerEngineData.dsMatch}%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#101416] rounded-full overflow-hidden">
-                    <div className="h-full bg-teal-400 rounded-full transition-all duration-500" style={{ width: `${careerEngineData.dsMatch}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Product Strategy */}
-                <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 hover:bg-[#1c2022] transition-colors relative overflow-hidden group">
-                  <div className="absolute top-0 inset-x-0 h-[2px] bg-yellow-500 shadow-[0_0_10px_rgba(250,200,0,0.3)]"></div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-[#101416] border border-[#3b494c]/20 text-yellow-500">
-                        <Compass className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-headline font-bold text-sm text-white">Product Strategy</h4>
-                        <span className="text-[8px] text-yellow-500 uppercase tracking-widest font-semibold block mt-0.5 font-headline">DEVELOPMENT REQUIRED</span>
-                      </div>
-                    </div>
-                    <span className="text-3xl font-headline font-bold text-yellow-500 tracking-tighter">{careerEngineData.prodMatch}%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#101416] rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500 rounded-full transition-all duration-500" style={{ width: `${careerEngineData.prodMatch}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Cloud Infrastructure */}
-                <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 hover:bg-[#1c2022] transition-colors relative overflow-hidden group">
-                  <div className="absolute top-0 inset-x-0 h-[2px] bg-slate-500"></div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-[#101416] border border-[#3b494c]/20 text-slate-400">
-                        <Shield className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-headline font-bold text-sm text-white">Cloud Infrastructure</h4>
-                        <span className="text-[8px] text-slate-400 uppercase tracking-widest font-semibold block mt-0.5 font-headline">SECONDARY SKILLSET</span>
-                      </div>
-                    </div>
-                    <span className="text-3xl font-headline font-bold text-slate-400 tracking-tighter">{careerEngineData.cloudMatch}%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#101416] rounded-full overflow-hidden">
-                    <div className="h-full bg-slate-500 rounded-full transition-all duration-500" style={{ width: `${careerEngineData.cloudMatch}%` }}></div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -595,9 +604,9 @@ export default function CareerGuidancePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               
               {/* Radar and Gap priorities */}
-              <div className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 flex flex-col justify-between">
+              <div className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5 font-bold">
+                  <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5 font-bold">
                     <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
                     SKILL GAP ANALYSIS
                   </h3>
@@ -616,7 +625,7 @@ export default function CareerGuidancePage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-4 border-t border-[#3b494c]/10">
+                <div className="space-y-3 pt-4 border-t border-[var(--app-border)]/10">
                   <div className="flex justify-between items-center text-[9px] uppercase tracking-widest text-slate-400 mb-1 font-headline font-semibold">
                     <span>TOP PRIORITY GAPS</span>
                     <span className="flex gap-2">
@@ -627,8 +636,8 @@ export default function CareerGuidancePage() {
 
                   <div className="space-y-2">
                     {careerEngineData.gaps.slice(0, 3).map((g, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-[#101416]/40 p-2 rounded border border-[#3b494c]/10">
-                        <span className="text-xs text-white font-medium">{g.name}</span>
+                      <div key={idx} className="flex justify-between items-center bg-[var(--app-bg)]/40 p-2 rounded border border-[var(--app-border)]/10">
+                        <span className="text-xs text-[var(--app-text)] font-medium">{g.name}</span>
                         <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
                           g.status === "High" ? "bg-red-950/40 text-red-400 border border-red-800/30" : "bg-yellow-950/40 text-yellow-400 border border-yellow-800/30"
                         }`}>
@@ -638,16 +647,16 @@ export default function CareerGuidancePage() {
                     ))}
                   </div>
 
-                  <button className="w-full mt-2 py-2 bg-transparent hover:bg-[#1c2022] text-[9px] font-headline font-bold text-cyan-400 uppercase tracking-widest border border-[#3b494c]/20 hover:border-cyan-400 transition-colors rounded">
+                  <button className="w-full mt-2 py-2 bg-transparent hover:bg-[var(--app-card)] text-[9px] font-headline font-bold text-cyan-400 uppercase tracking-widest border border-[var(--app-border)]/20 hover:border-cyan-400 transition-colors rounded">
                     VIEW ALL RECOMMENDATIONS
                   </button>
                 </div>
               </div>
 
               {/* Recommended Learning Path Roadmap */}
-              <div className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 flex flex-col justify-between">
+              <div className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5 font-bold">
+                  <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase mb-4 flex items-center gap-1.5 font-bold">
                     <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
                     RECOMMENDED LEARNING PATH
                   </h3>
@@ -656,20 +665,20 @@ export default function CareerGuidancePage() {
                     {learningModules.map((mod, idx) => (
                       <div 
                         key={idx} 
-                        className={`flex gap-3 cursor-pointer p-2 rounded transition-colors ${mod.completed ? "bg-teal-950/10" : "hover:bg-[#101416]/30"}`}
+                        className={`flex gap-3 cursor-pointer p-2 rounded transition-colors ${mod.completed ? "bg-teal-950/10" : "hover:bg-[var(--app-bg)]/30"}`}
                         onClick={() => toggleModuleCompletion(idx)}
                       >
                         <div className="mt-0.5">
                           {mod.completed ? (
                             <CheckCircle2 className="w-4 h-4 text-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.4)]" />
                           ) : (
-                            <Circle className="w-4 h-4 text-[#3b494c] hover:text-cyan-400" />
+                            <Circle className="w-4 h-4 text-[var(--app-border)] hover:text-cyan-400" />
                           )}
                         </div>
                         <div className="flex-1 space-y-1">
                           <div className="flex justify-between items-start">
-                            <span className="text-xs font-semibold text-white leading-tight">{mod.name}</span>
-                            <span className="px-1.5 py-0.5 rounded bg-[#101416] text-[#00daf3] text-[7px] font-bold uppercase tracking-wider font-mono border border-[#3b494c]/20">{mod.duration}</span>
+                            <span className="text-xs font-semibold text-[var(--app-text)] leading-tight">{mod.name}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-[var(--app-bg)] text-[#00daf3] text-[7px] font-bold uppercase tracking-wider font-mono border border-[var(--app-border)]/20">{mod.duration}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 leading-normal">{mod.desc}</p>
                         </div>
@@ -678,7 +687,7 @@ export default function CareerGuidancePage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-[#3b494c]/10 mt-4">
+                <div className="pt-4 border-t border-[var(--app-border)]/10 mt-4">
                   <button 
                     onClick={handleGenerateLearningPath}
                     className="w-full py-3 bg-cyan-400 text-[#101416] hover:bg-cyan-300 font-headline font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded shadow-[0_0_15px_rgba(0,229,255,0.25)] flex justify-center items-center gap-2"
@@ -695,8 +704,8 @@ export default function CareerGuidancePage() {
           <div className="lg:col-span-4 space-y-8">
 
             {/* 1. COMPETENCY TUNING PANEL (Sliders) */}
-            <section className="bg-[#1c2022]/40 rounded-xl p-6 border border-[#3b494c]/20 space-y-6">
-              <div className="border-b border-[#3b494c]/10 pb-3 flex justify-between items-center">
+            <section className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 space-y-6">
+              <div className="border-b border-[var(--app-border)]/10 pb-3 flex justify-between items-center">
                 <div>
                   <h3 className="text-sm font-headline text-cyan-400 tracking-wider flex items-center gap-2 font-bold uppercase">
                     Competency Delta
@@ -707,7 +716,7 @@ export default function CareerGuidancePage() {
               {/* Base, Current, Target Delta Indicators */}
               <div className="flex justify-end gap-4 text-[9px] uppercase tracking-widest text-slate-400 font-mono">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-1 bg-[#3b494c]"></span>
+                  <span className="w-2 h-1 bg-[var(--app-border)]"></span>
                   <span>BASE</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -730,7 +739,7 @@ export default function CareerGuidancePage() {
                       </span>
                     </div>
 
-                    <div className="relative w-full h-1.5 bg-[#101416] rounded-full">
+                    <div className="relative w-full h-1.5 bg-[var(--app-bg)] rounded-full">
                       {/* Current Progress bar */}
                       <div className="absolute top-0 left-0 h-full bg-cyan-400 rounded-l-full" style={{ width: `${comp.current}%` }}></div>
                       
@@ -775,37 +784,37 @@ export default function CareerGuidancePage() {
             </section>
 
             {/* 2. DYNAMIC READINESS METRICS */}
-            <section className="bg-[#1c2022]/40 rounded-xl p-5 border border-[#3b494c]/20 space-y-4">
+            <section className="bg-[var(--app-card)]/40 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-widest text-[#00daf3] font-headline">
                 TELEMETRY DIAGNOSTICS
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#101416]/50 p-3 rounded border border-[#3b494c]/10 flex flex-col justify-between">
+                <div className="bg-[var(--app-bg)]/50 p-3 rounded border border-[var(--app-border)]/10 flex flex-col justify-between">
                   <span className="text-[8px] text-slate-400 uppercase tracking-wider font-headline">Career Readiness</span>
-                  <span className="text-2xl font-bold font-headline text-white mt-1">{careerEngineData.careerReadiness}%</span>
+                  <span className="text-2xl font-bold font-headline text-[var(--app-text)] mt-1">{careerEngineData.careerReadiness}%</span>
                   <div className="w-full h-1 bg-slate-800 rounded-full mt-2 overflow-hidden">
                     <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${careerEngineData.careerReadiness}%` }}></div>
                   </div>
                 </div>
 
-                <div className="bg-[#101416]/50 p-3 rounded border border-[#3b494c]/10 flex flex-col justify-between">
+                <div className="bg-[var(--app-bg)]/50 p-3 rounded border border-[var(--app-border)]/10 flex flex-col justify-between">
                   <span className="text-[8px] text-slate-400 uppercase tracking-wider font-headline">Market Demand</span>
-                  <span className="text-2xl font-bold font-headline text-white mt-1">{careerEngineData.marketDemand}%</span>
+                  <span className="text-2xl font-bold font-headline text-[var(--app-text)] mt-1">{careerEngineData.marketDemand}%</span>
                   <div className="w-full h-1 bg-slate-800 rounded-full mt-2 overflow-hidden">
                     <div className="h-full bg-teal-400 rounded-full" style={{ width: `${careerEngineData.marketDemand}%` }}></div>
                   </div>
                 </div>
 
-                <div className="bg-[#101416]/50 p-3 rounded border border-[#3b494c]/10 flex flex-col justify-between">
+                <div className="bg-[var(--app-bg)]/50 p-3 rounded border border-[var(--app-border)]/10 flex flex-col justify-between">
                   <span className="text-[8px] text-slate-400 uppercase tracking-wider font-headline">Future Growth</span>
-                  <span className="text-2xl font-bold font-headline text-white mt-1">{careerEngineData.futureGrowth}%</span>
+                  <span className="text-2xl font-bold font-headline text-[var(--app-text)] mt-1">{careerEngineData.futureGrowth}%</span>
                   <div className="w-full h-1 bg-slate-800 rounded-full mt-2 overflow-hidden">
                     <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${careerEngineData.futureGrowth}%` }}></div>
                   </div>
                 </div>
 
-                <div className="bg-[#101416]/50 p-3 rounded border border-[#3b494c]/10 flex flex-col justify-between">
+                <div className="bg-[var(--app-bg)]/50 p-3 rounded border border-[var(--app-border)]/10 flex flex-col justify-between">
                   <span className="text-[8px] text-slate-400 uppercase tracking-wider font-headline">Automation Risk</span>
                   <span className="text-2xl font-bold font-headline text-red-400 mt-1">{careerEngineData.automationRisk}%</span>
                   <div className="w-full h-1 bg-slate-800 rounded-full mt-2 overflow-hidden">
@@ -818,7 +827,7 @@ export default function CareerGuidancePage() {
             {/* 3. RECOMMENDED CAREER PATHS */}
             <section className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[#3b494c]/10 pb-2 flex-1 font-headline">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--app-border)]/10 pb-2 flex-1 font-headline">
                   RECOMMENDED CAREER PATHS
                 </h3>
                 <button className="text-[8px] font-headline text-cyan-400 uppercase tracking-widest hover:text-cyan-300 transition-colors pb-2">
@@ -833,16 +842,16 @@ export default function CareerGuidancePage() {
                     onClick={() => setSelectedCareer(car.name)}
                     className={`p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                       selectedCareer === car.name 
-                        ? "bg-[#1c2022] border-cyan-400/80 shadow-[0_0_15px_rgba(0,229,255,0.15)]" 
-                        : "bg-[#1c2022]/60 border-[#3b494c]/15 hover:border-cyan-500/20"
+                        ? "bg-[var(--app-card)] border-cyan-400/80 shadow-[0_0_15px_rgba(0,229,255,0.15)]" 
+                        : "bg-[var(--app-card)]/60 border-[var(--app-border)]/15 hover:border-cyan-500/20"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${selectedCareer === car.name ? "bg-cyan-950 text-cyan-400" : "bg-[#101416] text-slate-400"}`}>
+                      <div className={`p-2 rounded-lg ${selectedCareer === car.name ? "bg-cyan-950 text-cyan-400" : "bg-[var(--app-bg)] text-slate-400"}`}>
                         <car.icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-xs text-white">{car.name}</h4>
+                        <h4 className="font-semibold text-xs text-[var(--app-text)]">{car.name}</h4>
                         <span className="text-[8px] text-slate-400 uppercase font-mono tracking-wider">
                           {car.growth} • {car.demand}
                         </span>
@@ -861,52 +870,52 @@ export default function CareerGuidancePage() {
         </div>
 
         {/* BOTTOM FULL-WIDTH: AI Career Insights cards */}
-        <section className="bg-[#1c2022]/30 border border-[#3b494c]/15 p-6 rounded-xl relative z-10 grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
-          <div className="md:col-span-1 md:border-r border-[#3b494c]/15 pr-4 flex items-center gap-3">
+        <section className="bg-[var(--app-card)]/30 border border-[var(--app-border)]/15 p-6 rounded-xl relative z-10 grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
+          <div className="md:col-span-1 md:border-r border-[var(--app-border)]/15 pr-4 flex items-center gap-3">
             <Brain className="w-7 h-7 text-[#00daf3] shadow-[0_0_12px_rgba(0,218,243,0.3)]" />
             <div>
-              <h4 className="font-headline font-bold text-xs uppercase text-white">AI CAREER INSIGHTS</h4>
+              <h4 className="font-headline font-bold text-xs uppercase text-[var(--app-text)]">AI CAREER INSIGHTS</h4>
               <p className="text-[9px] text-slate-400 mt-0.5 font-headline">Personalized career intelligence</p>
             </div>
           </div>
 
-          <div className="md:col-span-1 bg-[#101416]/40 p-3.5 rounded border border-[#3b494c]/10 flex flex-col justify-between min-h-[90px]">
+          <div className="md:col-span-1 bg-[var(--app-bg)]/40 p-3.5 rounded border border-[var(--app-border)]/10 flex flex-col justify-between min-h-[90px]">
             <div className="flex items-center gap-2 text-cyan-400 font-headline text-[10px] font-bold uppercase">
               <TrendingUp className="w-3.5 h-3.5" />
               Strong Alignment
             </div>
             <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-              You have high alignment with Software Engineering roles based on algorithms.
+              {careerEngineData.insights.alignment}
             </p>
           </div>
 
-          <div className="md:col-span-1 bg-[#101416]/40 p-3.5 rounded border border-[#3b494c]/10 flex flex-col justify-between min-h-[90px]">
+          <div className="md:col-span-1 bg-[var(--app-bg)]/40 p-3.5 rounded border border-[var(--app-border)]/10 flex flex-col justify-between min-h-[90px]">
             <div className="flex items-center gap-2 text-[#00daf3] font-headline text-[10px] font-bold uppercase">
               <Compass className="w-3.5 h-3.5" />
               Skill Velocity
             </div>
             <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-              Your technical skills are growing 18% faster than industry average.
+              {careerEngineData.insights.velocity}
             </p>
           </div>
 
-          <div className="md:col-span-1 bg-[#101416]/40 p-3.5 rounded border border-[#3b494c]/10 flex flex-col justify-between min-h-[90px]">
+          <div className="md:col-span-1 bg-[var(--app-bg)]/40 p-3.5 rounded border border-[var(--app-border)]/10 flex flex-col justify-between min-h-[90px]">
             <div className="flex items-center gap-2 text-yellow-500 font-headline text-[10px] font-bold uppercase">
               <Lightbulb className="w-3.5 h-3.5" />
               Market Advantage
             </div>
             <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-              You are in the top 27% for long-term career potential.
+              {careerEngineData.insights.advantage}
             </p>
           </div>
 
-          <div className="md:col-span-1 bg-[#101416]/40 p-3.5 rounded border border-[#3b494c]/10 flex flex-col justify-between min-h-[90px]">
+          <div className="md:col-span-1 bg-[var(--app-bg)]/40 p-3.5 rounded border border-[var(--app-border)]/10 flex flex-col justify-between min-h-[90px]">
             <div className="flex items-center gap-2 text-teal-400 font-headline text-[10px] font-bold uppercase">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Next Best Move
             </div>
             <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-              Focus on System Design & Distributed Systems to maximize outcomes.
+              {careerEngineData.insights.nextMove}
             </p>
           </div>
         </section>
@@ -916,7 +925,7 @@ export default function CareerGuidancePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#3b494c]/10 bg-[#101416]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
+      <footer className="border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
           Predictive model calibrated daily against current labor market intelligence telemetry.

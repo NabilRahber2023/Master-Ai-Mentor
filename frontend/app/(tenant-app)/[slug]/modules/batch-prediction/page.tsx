@@ -22,7 +22,7 @@ export default function BatchPredictionPage() {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
-            <div className="flex-1 space-y-8 bg-[#101416] p-6 md:p-8">
+            <div className="flex-1 space-y-8 bg-[var(--app-bg)] p-6 md:p-8">
                 <BatchPredictionDashboard />
             </div>
         </>

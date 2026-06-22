@@ -46,7 +46,7 @@ export default function UserProfileDropdown() {
                 </Link>
                 <Link
                     href="/sign-up"
-                    className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] px-4 py-2 rounded-lg text-sm transition-all duration-300"
+                    className="bg-gradient-to-r from-cyan-500 to-teal-500 text-[var(--app-text)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] px-4 py-2 rounded-lg text-sm transition-all duration-300"
                 >
                     Sign Up
                 </Link>
@@ -74,7 +74,7 @@ export default function UserProfileDropdown() {
                             src={session.user.image || undefined}
                             alt={session.user.name || "User avatar"}
                         />
-                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-teal-500 text-white text-sm font-medium">
+                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-teal-500 text-[var(--app-text)] text-sm font-medium">
                             {getInitials(session.user.name)}
                         </AvatarFallback>
                     </Avatar>

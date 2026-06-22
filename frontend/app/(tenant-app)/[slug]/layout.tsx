@@ -2,12 +2,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/config";
-import { member, organization } from "@/db/schema";
+import { member, organization, orgModule, moduleRegistry } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { TenantProvider, type TenantInfo } from "@/hooks/use-tenant";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TenantSidebar } from "@/components/dashboard/tenant-sidebar";
 import { FloatingChatbot } from "@/components/chatbot/floating-chatbot";
+import { ThemeSlider } from "@/components/theme-slider";
 
 /**
  * Tenant Layout - Wraps all tenant path-based routes (/:slug/*)
@@ -87,19 +88,23 @@ export default async function TenantLayout({
         redirect("/");
     }
 
-    // Parse org metadata for enabled modules
+    // packageId still comes from metadata; module entitlements now come from org_module.
     let packageId = "gold";
-    let enabledModules: string[] = [];
-
     if (org.metadata) {
         try {
-            const metadata = JSON.parse(org.metadata);
-            packageId = metadata.packageId || "gold";
-            enabledModules = metadata.enabledModules || [];
+            packageId = JSON.parse(org.metadata).packageId || "gold";
         } catch {
             // Invalid metadata
         }
     }
+
+    // Enabled modules = org_module rows that are enabled AND globally enabled.
+    const moduleRows = await db
+        .select({ id: orgModule.moduleId, enabled: orgModule.enabled, global: moduleRegistry.globalEnabled })
+        .from(orgModule)
+        .innerJoin(moduleRegistry, eq(orgModule.moduleId, moduleRegistry.id))
+        .where(eq(orgModule.organizationId, org.id));
+    const enabledModules = moduleRows.filter((m) => m.enabled && m.global).map((m) => m.id);
 
     // Build tenant info for context
     const tenant: TenantInfo = {
@@ -109,10 +114,12 @@ export default async function TenantLayout({
         packageId,
         enabledModules,
         userRole: membership.role,
+        platformRole: (session.user as { role?: string }).role ?? "user",
     };
 
     return (
         <TenantProvider tenant={tenant}>
+            <ThemeSlider />
             <SidebarProvider>
                 <TenantSidebar />
                 <SidebarInset>

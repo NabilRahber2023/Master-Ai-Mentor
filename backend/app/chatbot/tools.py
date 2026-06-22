@@ -119,6 +119,20 @@ TOOL_DEFINITIONS = {
             "programming_interest", "tech_score", "budget_per_semester",
             "business_interest", "creative_interest", "district"
         ]
+    },
+    "list_students": {
+        "name": "list_students",
+        "description": "List/browse students filtered by performance category (high/mid/low), department, gender, or a limit",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "high, mid, or low performers"},
+                "department": {"type": "string", "description": "Preferred department filter"},
+                "gender": {"type": "string", "description": "M or F"},
+                "limit": {"type": "integer", "description": "How many students to return (default 10)"}
+            },
+            "required": []
+        }
     }
 }
 
@@ -133,9 +147,15 @@ class ToolExecutor:
         self._http_client: Optional[httpx.AsyncClient] = None
     
     async def _get_http_client(self) -> httpx.AsyncClient:
-        """Get or create HTTP client for API calls."""
+        """Get or create HTTP client for API calls. Carries the internal service
+        token so these trusted server-to-server ML calls bypass user auth."""
         if self._http_client is None or self._http_client.is_closed:
-            self._http_client = httpx.AsyncClient(timeout=30.0)
+            import os
+            token = os.getenv("INTERNAL_API_TOKEN", "ai-mentor-internal-dev-token")
+            self._http_client = httpx.AsyncClient(
+                timeout=30.0,
+                headers={"x-internal-token": token},
+            )
         return self._http_client
     
     async def close(self):
@@ -220,6 +240,8 @@ class ToolExecutor:
                 return await self._predict_9box(arguments.get("student_id", ""))
             elif tool_name == "predict_subject":
                 return await self._predict_subject(arguments.get("student_id", ""))
+            elif tool_name == "list_students":
+                return await self._list_students(arguments)
             else:
                 return False, {
                     "error": f"Tool not implemented: {tool_name}",
@@ -294,6 +316,56 @@ class ToolExecutor:
                 "message": f"Found {len(students)} student(s)"
             }
     
+    async def _list_students(self, args: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+        """List students filtered by performance category, department, gender, limit."""
+        category = str(args.get("category") or "").lower()
+        department = args.get("department")
+        gender = args.get("gender")
+        try:
+            limit = int(args.get("limit") or 10)
+        except (TypeError, ValueError):
+            limit = 10
+        limit = max(1, min(limit, 50))
+
+        clauses: List[str] = []
+        params: Dict[str, Any] = {"limit": limit}
+        if category == "high":
+            clauses.append("current_sgpa >= 3.5")
+        elif category == "mid":
+            clauses.append("current_sgpa >= 2.5 AND current_sgpa < 3.5")
+        elif category == "low":
+            clauses.append("current_sgpa < 2.5")
+        if department:
+            clauses.append("preferred_department ILIKE :dept")
+            params["dept"] = f"%{department}%"
+        if gender in ("M", "F"):
+            clauses.append("gender = :gender")
+            params["gender"] = gender
+
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        async with async_session_maker() as session:
+            rows = (await session.execute(text(f"""
+                SELECT student_id, name, district, preferred_department, current_sgpa
+                FROM students{where}
+                ORDER BY current_sgpa DESC NULLS LAST
+                LIMIT :limit
+            """), params)).fetchall()
+
+        students = [
+            {"student_id": r[0], "name": r[1], "district": r[2],
+             "preferred_department": r[3], "current_sgpa": r[4]}
+            for r in rows
+        ]
+        label = {"high": "high-performing", "mid": "mid-level", "low": "at-risk"}.get(category, "")
+        if not students:
+            return True, {"found": False, "count": 0, "students": [],
+                          "message": "No students matched those filters."}
+        bits = f"{label} " if label else ""
+        return True, {
+            "found": True, "count": len(students), "students": students,
+            "message": f"Here are {len(students)} {bits}student(s):",
+        }
+
     async def _get_student(self, student_id: str) -> Tuple[bool, Dict[str, Any]]:
         """Get full student details by ID."""
         if not student_id:

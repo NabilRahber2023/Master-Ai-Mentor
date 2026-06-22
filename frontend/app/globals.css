@@ -108,6 +108,19 @@
   --color-5: oklch(90.7% 0.231 133);
   /* Ray/theme color used across the landing hero and services circle. */
   --ray-color: #00ffff;
+
+  /* Bespoke "cockpit" module palette — LIGHT values. The module dashboards
+     hardcode a dark palette; these tokens flip it for light mode. */
+  --app-bg: #f4f6f9;
+  --app-bg2: #ffffff;
+  --app-card: #ffffff;
+  --app-card2: #eef2f7;
+  --app-surface: #e6ebf1;
+  --app-surface2: #dde4ec;
+  --app-border: #d2dae3;
+  --app-text: #0f172a;
+  --app-text-muted: #475569;
+  --app-text-dim: #64748b;
 }
 
 .dark {
@@ -149,7 +162,29 @@
   --color-5: oklch(90.7% 0.231 133);
   /* Keep ray color available in dark mode too */
   --ray-color: #00ffff;
+
+  /* Bespoke module palette — DARK values (the original hardcoded colors). */
+  --app-bg: #101416;
+  --app-bg2: #161b1e;
+  --app-card: #1c2022;
+  --app-card2: #181c1e;
+  --app-surface: #272a2d;
+  --app-surface2: #313538;
+  --app-border: #3b494c;
+  --app-text: #e0e3e6;
+  --app-text-muted: #bac9cc;
+  --app-text-dim: #849396;
 }
+
+/* Light-mode fixups for the module dashboards: darken washed-out slate text and
+   flip subtle white overlays/borders to subtle dark so inputs stay visible. */
+html.light .text-slate-300 { color: #475569 !important; }
+html.light .text-slate-400 { color: #475569 !important; }
+html.light .text-slate-500 { color: #64748b !important; }
+html.light .bg-white\/5  { background-color: rgba(15, 23, 42, 0.04) !important; }
+html.light .bg-white\/10 { background-color: rgba(15, 23, 42, 0.06) !important; }
+html.light .border-white\/5  { border-color: rgba(15, 23, 42, 0.08) !important; }
+html.light .border-white\/10 { border-color: rgba(15, 23, 42, 0.12) !important; }
 
 @layer base {
   * {

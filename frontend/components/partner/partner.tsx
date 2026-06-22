@@ -28,7 +28,7 @@ const PartnershipCard: React.FC<PartnershipCardProps> = ({ title, benefits, butt
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
                 {/* Title */}
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8 tracking-tight text-center">
+                <h3 className="text-2xl md:text-3xl font-bold text-[var(--app-text)] mb-6 md:mb-8 tracking-tight text-center">
                     {title}
                 </h3>
 
@@ -113,7 +113,7 @@ export default function Partner() {
                         <span className="text-sm font-medium text-cyan-100">Partnership Opportunities</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--app-text)] mb-6 tracking-tight">
                         Partnership{' '}
                         <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                             Opportunities

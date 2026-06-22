@@ -5,8 +5,11 @@ import { auth } from "@/lib/auth";
 
 export type UserRole =
   | "guest"
+  | "user"
+  | "support"
   | "subscriber"
   | "admin"
+  | "super_admin"
 
 export async function getSession() {
   return await auth.api.getSession({
@@ -40,7 +43,11 @@ export async function requireRole(allowedRoles: UserRole[]) {
 }
 
 export async function requireAdmin() {
-  return requireRole(["admin"]);
+  return requireRole(["super_admin", "admin"]);
+}
+
+export async function requireSuperAdmin() {
+  return requireRole(["super_admin", "admin"]);
 }
 
 

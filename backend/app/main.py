@@ -150,20 +150,45 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Register ML Prediction Routers
-app.include_router(sgpa_router, prefix="/api/v1/prediction/sgpa")
-app.include_router(nine_box_router, prefix="/api/v1/prediction/9box")
-app.include_router(career_router, prefix="/api/v1/prediction/career")
-app.include_router(subject_router, prefix="/api/v1/prediction/subject")
-app.include_router(batch_router, prefix="/api/v1/prediction/batch")
-app.include_router(csv_mode_router, prefix="/api/v1/prediction/csv")
+# Register ML Prediction Routers — each gated by permission + module entitlement.
+from fastapi import Depends
+from app.auth.deps import require
+
+app.include_router(sgpa_router, prefix="/api/v1/prediction/sgpa",
+                   dependencies=[Depends(require("predict:single", module="grade-prediction"))])
+app.include_router(nine_box_router, prefix="/api/v1/prediction/9box",
+                   dependencies=[Depends(require("predict:single", module="growth-potential"))])
+app.include_router(career_router, prefix="/api/v1/prediction/career",
+                   dependencies=[Depends(require("predict:single", module="career-guidance"))])
+app.include_router(subject_router, prefix="/api/v1/prediction/subject",
+                   dependencies=[Depends(require("predict:single", module="subject-prediction"))])
+app.include_router(batch_router, prefix="/api/v1/prediction/batch",
+                   dependencies=[Depends(require("predict:batch", module="batch-prediction"))])
+app.include_router(csv_mode_router, prefix="/api/v1/prediction/csv",
+                   dependencies=[Depends(require("predict:single"))])
 
 # Register Chatbot Router
-app.include_router(chatbot_router, prefix="/api/v1")
+app.include_router(chatbot_router, prefix="/api/v1",
+                   dependencies=[Depends(require("chatbot:use", module="ai-chatbot"))])
 
 # Register Admin Router (CSV upload)
 from app.chatbot.admin_router import router as admin_router
-app.include_router(admin_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1",
+                   dependencies=[Depends(require("dataset:upload"))])
+
+
+@app.get("/api/v1/auth/whoami")
+async def whoami(request: Request):
+    """Debug: resolve the calling principal from the forwarded session cookie."""
+    from app.auth.principal import resolve_principal
+    p = await resolve_principal(request)
+    if not p:
+        return {"authenticated": False}
+    return {
+        "authenticated": p.is_authenticated, "is_service": p.is_service,
+        "user_id": p.user_id, "platform_role": p.platform_role,
+        "org_id": p.org_id, "org_role": p.org_role, "modules": sorted(p.modules),
+    }
 
 
 @app.get("/health")

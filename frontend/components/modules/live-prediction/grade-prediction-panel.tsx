@@ -78,10 +78,10 @@ export function GradePredictionPanel({ onResult, onReset }: GradePredictionPanel
               : "text-emerald-400";
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-[#161b1e] p-6">
+        <div className="rounded-2xl border border-white/10 bg-[var(--app-bg2)] p-6">
             <div className="mb-5 flex items-center gap-2">
                 <Activity className="h-5 w-5 text-cyan-400" />
-                <h3 className="text-lg font-semibold text-white">Live SGPA Prediction</h3>
+                <h3 className="text-lg font-semibold text-[var(--app-text)]">Live SGPA Prediction</h3>
                 <span className="ml-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-300">
                     Connected · /prediction/sgpa
                 </span>
@@ -113,7 +113,7 @@ export function GradePredictionPanel({ onResult, onReset }: GradePredictionPanel
                 <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <ResultCard title="Prediction">
                         <div className="flex items-baseline gap-3">
-                            <span className="text-4xl font-bold text-white">{result.predicted_sgpa.toFixed(2)}</span>
+                            <span className="text-4xl font-bold text-[var(--app-text)]">{result.predicted_sgpa.toFixed(2)}</span>
                             <span className="text-sm text-slate-400">predicted SGPA</span>
                         </div>
                         <p className={`mt-2 text-sm font-semibold ${riskColor}`}>{result.risk_level}</p>

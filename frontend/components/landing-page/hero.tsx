@@ -30,7 +30,7 @@ export default function Hero() {
                 <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-12 lg:gap-16 py-20">
                     {/* Text Content - Takes 40% on desktop */}
                     <div className="w-full md:w-[45%] lg:w-[40%] space-y-6 md:space-y-7">
-                        <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white drop-shadow-lg leading-tight">
+                        <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-[var(--app-text)] drop-shadow-lg leading-tight">
                             Your Personal <span className="bg-gradient-to-r from-[#00ffff] to-[#00cccc] bg-clip-text text-transparent">AI Mentor</span> for Academic Success
                         </h1>
                         <p className="text-lg sm:text-xl md:text-lg lg:text-xl text-gray-300 leading-relaxed">

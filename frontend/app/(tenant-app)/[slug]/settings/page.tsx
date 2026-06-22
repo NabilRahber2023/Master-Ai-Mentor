@@ -38,9 +38,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 const inputClass =
-  "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/10 disabled:opacity-50";
+  "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-[var(--app-text)] outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/10 disabled:opacity-50";
 
-const cardClass = "rounded-xl border border-[#3b494c]/20 bg-[#1c2022]/60 p-6";
+const cardClass = "rounded-xl border border-[var(--app-border)]/20 bg-[var(--app-card)]/60 p-6";
 
 function PrimaryButton({
   loading,
@@ -51,7 +51,7 @@ function PrimaryButton({
     <button
       {...props}
       disabled={loading || props.disabled}
-      className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-[var(--app-text)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {loading && <Loader2 className="h-4 w-4 animate-spin" />}
       {children}
@@ -190,8 +190,8 @@ export default function SettingsPage() {
     .toUpperCase();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#101416] text-[#e0e3e6] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[#3b494c]/10 px-6 bg-[#101416] sticky top-0 z-50">
+    <div className="flex flex-col min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[var(--app-border)]/10 px-6 bg-[var(--app-bg)] sticky top-0 z-50">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb>
@@ -207,7 +207,7 @@ export default function SettingsPage() {
 
       <main className="flex-1 p-6 md:p-8 max-w-5xl mx-auto w-full">
         <div className="mb-6">
-          <h1 className="text-3xl font-headline font-bold text-white tracking-tighter uppercase">Settings</h1>
+          <h1 className="text-3xl font-headline font-bold text-[var(--app-text)] tracking-tighter uppercase">Settings</h1>
           <p className="text-[10px] text-slate-400 font-headline uppercase tracking-[0.2em] mt-1">
             Account · Security · Workspace Preferences
           </p>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                   className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
                     active
                       ? "bg-cyan-500/10 text-cyan-300 border border-cyan-400/30"
-                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                      : "text-slate-400 hover:text-[var(--app-text)] hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -240,13 +240,13 @@ export default function SettingsPage() {
           <div className="space-y-6">
             {tab === "profile" && (
               <div className={cardClass}>
-                <h2 className="mb-1 text-lg font-semibold text-white">Profile</h2>
+                <h2 className="mb-1 text-lg font-semibold text-[var(--app-text)]">Profile</h2>
                 <p className="mb-5 text-sm text-slate-400">Update your personal information.</p>
                 <div className="mb-5 flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-xl font-bold text-white">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-xl font-bold text-[var(--app-text)]">
                     {initials}
                   </div>
-                  <div className="text-sm text-slate-400">Signed in as<br /><span className="text-white">{session?.user?.email ?? "—"}</span></div>
+                  <div className="text-sm text-slate-400">Signed in as<br /><span className="text-[var(--app-text)]">{session?.user?.email ?? "—"}</span></div>
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Full Name">
@@ -266,7 +266,7 @@ export default function SettingsPage() {
 
             {tab === "security" && (
               <div className={cardClass}>
-                <h2 className="mb-1 text-lg font-semibold text-white">Change Password</h2>
+                <h2 className="mb-1 text-lg font-semibold text-[var(--app-text)]">Change Password</h2>
                 <p className="mb-5 text-sm text-slate-400">Use at least 8 characters.</p>
                 <div className="grid max-w-md grid-cols-1 gap-4">
                   <Field label="Current Password">
@@ -293,7 +293,7 @@ export default function SettingsPage() {
 
             {tab === "appearance" && (
               <div className={cardClass}>
-                <h2 className="mb-1 text-lg font-semibold text-white">Appearance</h2>
+                <h2 className="mb-1 text-lg font-semibold text-[var(--app-text)]">Appearance</h2>
                 <p className="mb-5 text-sm text-slate-400">Choose your interface theme.</p>
                 <div className="grid grid-cols-3 gap-3 max-w-md">
                   {(["light", "dark", "system"] as const).map((opt) => (
@@ -319,7 +319,7 @@ export default function SettingsPage() {
 
             {tab === "notifications" && (
               <div className={cardClass}>
-                <h2 className="mb-1 text-lg font-semibold text-white">Notifications</h2>
+                <h2 className="mb-1 text-lg font-semibold text-[var(--app-text)]">Notifications</h2>
                 <p className="mb-5 text-sm text-slate-400">Control what updates you receive. Saved to this browser.</p>
                 <div className="space-y-4 max-w-lg">
                   {[
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                   ].map((row) => (
                     <div key={row.key} className="flex items-center justify-between gap-4 rounded-lg border border-white/5 bg-white/5 px-4 py-3">
                       <div className="min-w-0">
-                        <p className="text-sm text-white">{row.label}</p>
+                        <p className="text-sm text-[var(--app-text)]">{row.label}</p>
                         <p className="text-[11px] text-slate-400">{row.desc}</p>
                       </div>
                       <Toggle on={prefs[row.key]} onChange={(v) => updatePref(row.key, v)} />
@@ -341,7 +341,7 @@ export default function SettingsPage() {
 
             {tab === "organization" && (
               <div className={cardClass}>
-                <h2 className="mb-1 text-lg font-semibold text-white">Organization</h2>
+                <h2 className="mb-1 text-lg font-semibold text-[var(--app-text)]">Organization</h2>
                 <p className="mb-5 text-sm text-slate-400">Your workspace details.</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Organization"><input className={inputClass} value={tenant?.organizationName ?? "—"} disabled /></Field>
@@ -372,7 +372,7 @@ export default function SettingsPage() {
 
             {/* Sign out — always available */}
             <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
-              <h2 className="mb-1 text-lg font-semibold text-white">Session</h2>
+              <h2 className="mb-1 text-lg font-semibold text-[var(--app-text)]">Session</h2>
               <p className="mb-4 text-sm text-slate-400">Sign out of your account on this device.</p>
               <button
                 onClick={signOut}

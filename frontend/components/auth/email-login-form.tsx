@@ -147,7 +147,7 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
             <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold"
+                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-[var(--app-text)] font-semibold"
             >
                 {isSubmitting ? (
                     <>

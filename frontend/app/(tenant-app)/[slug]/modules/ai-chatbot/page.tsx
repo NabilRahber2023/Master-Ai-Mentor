@@ -339,10 +339,10 @@ export default function AiChatbotPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#101416] text-[#e0e3e6] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="flex flex-col min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
       
       {/* Header / Top breadcrumbs */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#3b494c]/10 px-6 bg-[#101416] sticky top-0 z-50">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--app-border)]/10 px-6 bg-[var(--app-bg)] sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
@@ -360,14 +360,14 @@ export default function AiChatbotPage() {
         <div className="flex items-center gap-3">
           <button 
             onClick={handleNewChat}
-            className="px-3 py-1.5 bg-transparent border border-[#3b494c]/20 hover:border-cyan-400/50 text-[10px] text-cyan-400 rounded font-headline font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-transparent border border-[var(--app-border)]/20 hover:border-cyan-400/50 text-[10px] text-cyan-400 rounded font-headline font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
           >
             <RefreshCw className="w-3 h-3" />
             New Chat
           </button>
           <button 
             onClick={handleExportChat}
-            className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors border border-[#3b494c]/10 rounded bg-[#1c2022]/40"
+            className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors border border-[var(--app-border)]/10 rounded bg-[var(--app-card)]/40"
             title="Export Chat Session"
           >
             <Download className="w-4 h-4" />
@@ -390,7 +390,7 @@ export default function AiChatbotPage() {
                 {/* System message node */}
                 {msg.sender === "system" && (
                   <div className="flex justify-center my-4">
-                    <div className="bg-[#1c2022] py-2 px-6 rounded-full border border-[#3b494c]/25 flex items-center gap-3">
+                    <div className="bg-[var(--app-card)] py-2 px-6 rounded-full border border-[var(--app-border)]/25 flex items-center gap-3">
                       <Terminal className="text-cyan-400 w-3.5 h-3.5" />
                       <span className="text-[10px] text-slate-400 font-headline uppercase tracking-widest">{msg.text}</span>
                     </div>
@@ -400,8 +400,8 @@ export default function AiChatbotPage() {
                 {/* User Message Node */}
                 {msg.sender === "user" && (
                   <div className="flex justify-end gap-3 max-w-4xl mx-auto">
-                    <div className="bg-[#1c2022]/80 border border-[#3b494c]/15 rounded-xl rounded-tr-sm p-4 max-w-[75%]">
-                      <p className="text-xs text-white leading-relaxed">{msg.text}</p>
+                    <div className="bg-[var(--app-card)]/80 border border-[var(--app-border)]/15 rounded-xl rounded-tr-sm p-4 max-w-[75%]">
+                      <p className="text-xs text-[var(--app-text)] leading-relaxed">{msg.text}</p>
                     </div>
                   </div>
                 )}
@@ -417,7 +417,7 @@ export default function AiChatbotPage() {
                       
                       {/* Text Bubble */}
                       {msg.text && (
-                        <div className="bg-[#1c2022]/40 rounded-xl rounded-tl-sm p-5 border border-[#3b494c]/25 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.2)]">
+                        <div className="bg-[var(--app-card)]/40 rounded-xl rounded-tl-sm p-5 border border-[var(--app-border)]/25 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.2)]">
                           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"></div>
                           
                           <div className="flex justify-between items-start mb-2">
@@ -438,9 +438,9 @@ export default function AiChatbotPage() {
 
                       {/* Complex predictions/visual details */}
                       {msg.resultData && (
-                        <div className="bg-[#1c2022]/40 rounded-xl p-5 border border-[#3b494c]/25 space-y-5">
-                          <div className="flex justify-between items-center border-b border-[#3b494c]/10 pb-2">
-                            <span className="text-[10px] text-white font-headline uppercase tracking-wider">{msg.resultData.title}</span>
+                        <div className="bg-[var(--app-card)]/40 rounded-xl p-5 border border-[var(--app-border)]/25 space-y-5">
+                          <div className="flex justify-between items-center border-b border-[var(--app-border)]/10 pb-2">
+                            <span className="text-[10px] text-[var(--app-text)] font-headline uppercase tracking-wider">{msg.resultData.title}</span>
                             <LineChart className="w-4 h-4 text-slate-500" />
                           </div>
 
@@ -448,7 +448,7 @@ export default function AiChatbotPage() {
                           {msg.resultData.metrics && (
                             <div className="grid grid-cols-2 gap-4">
                               {msg.resultData.metrics.map((met, idx) => (
-                                <div key={idx} className="bg-[#101416]/50 p-3.5 rounded border border-[#3b494c]/20">
+                                <div key={idx} className="bg-[var(--app-bg)]/50 p-3.5 rounded border border-[var(--app-border)]/20">
                                   <span className="text-[9px] text-slate-400 uppercase tracking-widest block font-headline">{met.label}</span>
                                   <span className={`text-2xl font-bold font-headline block mt-1 ${met.isNegative ? "text-red-400" : "text-cyan-400"}`}>{met.value}</span>
                                   <span className="text-[9px] text-slate-400 mt-1 block">{met.desc}</span>
@@ -459,7 +459,7 @@ export default function AiChatbotPage() {
 
                           {/* Render Charts if present */}
                           {msg.resultData.chartData && (
-                            <div className="h-44 w-full bg-[#101416]/50 p-2 rounded border border-[#3b494c]/20">
+                            <div className="h-44 w-full bg-[var(--app-bg)]/50 p-2 rounded border border-[var(--app-border)]/20">
                               <ResponsiveContainer width="100%" height="100%">
                                 <RechartsLine data={msg.resultData.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                   <CartesianGrid stroke="#3b494c" strokeOpacity={0.1} />
@@ -477,7 +477,7 @@ export default function AiChatbotPage() {
                           {msg.resultData.sources && (
                             <div className="flex gap-2 flex-wrap">
                               {msg.resultData.sources.map((src, idx) => (
-                                <span key={idx} className="text-[9px] bg-[#101416] text-slate-400 px-2 py-1 rounded border border-[#3b494c]/20 font-headline uppercase tracking-wider flex items-center gap-1.5">
+                                <span key={idx} className="text-[9px] bg-[var(--app-bg)] text-slate-400 px-2 py-1 rounded border border-[var(--app-border)]/20 font-headline uppercase tracking-wider flex items-center gap-1.5">
                                   {src.type === "dataset" ? <FileSpreadsheet className="w-3 h-3 text-cyan-400" /> : <Code className="w-3 h-3 text-yellow-500" />}
                                   {src.name}
                                 </span>
@@ -487,12 +487,12 @@ export default function AiChatbotPage() {
 
                           {/* Actions */}
                           {msg.resultData.actions && (
-                            <div className="flex gap-3 flex-wrap border-t border-[#3b494c]/10 pt-3">
+                            <div className="flex gap-3 flex-wrap border-t border-[var(--app-border)]/10 pt-3">
                               {msg.resultData.actions.map((act, idx) => (
                                 <button 
                                   key={idx}
                                   onClick={() => handleSendMessage(`@grade detail view ${act.action}`)}
-                                  className="px-3 py-1.5 rounded bg-transparent border border-[#3b494c]/30 text-cyan-400 hover:bg-cyan-400/5 hover:border-cyan-400 transition-colors font-headline text-[10px] uppercase tracking-wider flex items-center gap-1.5"
+                                  className="px-3 py-1.5 rounded bg-transparent border border-[var(--app-border)]/30 text-cyan-400 hover:bg-cyan-400/5 hover:border-cyan-400 transition-colors font-headline text-[10px] uppercase tracking-wider flex items-center gap-1.5"
                                 >
                                   {act.label}
                                   <ChevronRight className="w-3 h-3" />
@@ -506,7 +506,7 @@ export default function AiChatbotPage() {
 
                       {/* Disambiguation matching */}
                       {msg.type === "disambiguation" && msg.choices && (
-                        <div className="bg-[#1c2022]/40 rounded-xl p-5 border border-red-500/25 space-y-4">
+                        <div className="bg-[var(--app-card)]/40 rounded-xl p-5 border border-red-500/25 space-y-4">
                           <h4 className="text-red-400 text-xs font-headline uppercase tracking-[0.1em] flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4" />
                             Action Required: Disambiguation
@@ -517,10 +517,10 @@ export default function AiChatbotPage() {
                               <button 
                                 key={cidx}
                                 onClick={() => handleSendMessage(choice.payload)}
-                                className="w-full text-left p-3 rounded bg-[#101416]/50 hover:bg-[#1c2022] border border-[#3b494c]/20 hover:border-cyan-400/50 transition-all flex items-center justify-between group"
+                                className="w-full text-left p-3 rounded bg-[var(--app-bg)]/50 hover:bg-[var(--app-card)] border border-[var(--app-border)]/20 hover:border-cyan-400/50 transition-all flex items-center justify-between group"
                               >
                                 <div>
-                                  <span className="block text-xs font-bold text-white group-hover:text-cyan-400 transition-colors font-headline">{choice.name}</span>
+                                  <span className="block text-xs font-bold text-[var(--app-text)] group-hover:text-cyan-400 transition-colors font-headline">{choice.name}</span>
                                   <span className="block text-[9px] text-slate-400 uppercase tracking-widest mt-1">{choice.subtitle}</span>
                                 </div>
                                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400" />
@@ -544,7 +544,7 @@ export default function AiChatbotPage() {
                   <Bot className="w-4 h-4 text-cyan-400" />
                 </div>
                 <div className="space-y-4 max-w-[85%]">
-                  <div className="bg-[#1c2022]/40 rounded-xl rounded-tl-sm p-5 border border-[#3b494c]/25 relative overflow-hidden">
+                  <div className="bg-[var(--app-card)]/40 rounded-xl rounded-tl-sm p-5 border border-[var(--app-border)]/25 relative overflow-hidden">
                     {typingText ? (
                       <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                         {typingText}
@@ -566,18 +566,18 @@ export default function AiChatbotPage() {
           </div>
 
           {/* User Input & Commands Container */}
-          <div className="p-6 border-t border-[#3b494c]/10 bg-gradient-to-t from-[#101416] via-[#101416]/95 to-transparent">
+          <div className="p-6 border-t border-[var(--app-border)]/10 bg-gradient-to-t from-[var(--app-bg)] via-[var(--app-bg)]/95 to-transparent">
             <div className="max-w-4xl mx-auto space-y-3">
               
-              <div className="flex items-center bg-[#1c2022] rounded-lg border border-[#3b494c]/20 focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(0,229,255,0.15)] transition-all flex-col overflow-hidden">
+              <div className="flex items-center bg-[var(--app-card)] rounded-lg border border-[var(--app-border)]/20 focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(0,229,255,0.15)] transition-all flex-col overflow-hidden">
                 
                 {/* Command shortcuts */}
-                <div className="w-full flex items-center gap-2 px-4 py-2 border-b border-[#3b494c]/10 bg-[#101416]/40 overflow-x-auto select-none">
+                <div className="w-full flex items-center gap-2 px-4 py-2 border-b border-[var(--app-border)]/10 bg-[var(--app-bg)]/40 overflow-x-auto select-none">
                   <span className="text-[9px] text-slate-400 font-headline uppercase tracking-widest mr-2 shrink-0">Commands:</span>
                   <button onClick={() => handleCommandClick("@grade")} className="text-[10px] text-cyan-400 bg-cyan-950/40 hover:bg-cyan-950 border border-cyan-800/30 px-2.5 py-0.5 rounded-full font-headline transition-colors">@grade</button>
                   <button onClick={() => handleCommandClick("@career")} className="text-[10px] text-teal-400 bg-teal-950/40 hover:bg-teal-950 border border-teal-800/30 px-2.5 py-0.5 rounded-full font-headline transition-colors">@career</button>
                   <button onClick={() => handleCommandClick("@subject")} className="text-[10px] text-yellow-500 bg-yellow-950/40 hover:bg-yellow-950 border border-yellow-800/30 px-2.5 py-0.5 rounded-full font-headline transition-colors">@subject</button>
-                  <button onClick={() => handleCommandClick("@9box")} className="text-[10px] text-slate-300 bg-[#272a2d] hover:bg-slate-800 border border-[#3b494c]/30 px-2.5 py-0.5 rounded-full font-headline transition-colors">@9box</button>
+                  <button onClick={() => handleCommandClick("@9box")} className="text-[10px] text-slate-300 bg-[var(--app-surface)] hover:bg-slate-800 border border-[var(--app-border)]/30 px-2.5 py-0.5 rounded-full font-headline transition-colors">@9box</button>
                 </div>
 
                 {/* Input Textbox */}
@@ -591,12 +591,12 @@ export default function AiChatbotPage() {
                     }
                   }}
                   rows={2}
-                  className="w-full bg-transparent border-none text-xs text-white p-4 resize-none outline-none focus:ring-0 placeholder:text-slate-500" 
+                  className="w-full bg-transparent border-none text-xs text-[var(--app-text)] p-4 resize-none outline-none focus:ring-0 placeholder:text-slate-500" 
                   placeholder="Initialize inquiry or command..."
                 />
 
                 {/* Control elements */}
-                <div className="w-full flex justify-between items-center px-4 py-2 border-t border-[#3b494c]/10 bg-[#101416]/20">
+                <div className="w-full flex justify-between items-center px-4 py-2 border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/20">
                   <div className="flex gap-2 text-slate-500">
                     <button className="p-1.5 hover:text-cyan-400 transition-colors" title="Attach dataset">
                       <Paperclip className="w-3.5 h-3.5" />
@@ -629,10 +629,10 @@ export default function AiChatbotPage() {
         </div>
 
         {/* RIGHT PANEL: Intelligence Context Sidebar */}
-        <aside className="w-80 bg-[#101416]/50 border-l border-[#3b494c]/10 hidden lg:flex flex-col h-[calc(100vh-4rem)]">
-          <div className="h-16 flex items-center px-6 border-b border-[#3b494c]/10">
+        <aside className="w-80 bg-[var(--app-bg)]/50 border-l border-[var(--app-border)]/10 hidden lg:flex flex-col h-[calc(100vh-4rem)]">
+          <div className="h-16 flex items-center px-6 border-b border-[var(--app-border)]/10">
             <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>
-            <h3 className="font-headline text-xs font-bold uppercase tracking-[0.15em] text-white">Intelligence Context</h3>
+            <h3 className="font-headline text-xs font-bold uppercase tracking-[0.15em] text-[var(--app-text)]">Intelligence Context</h3>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
@@ -649,16 +649,16 @@ export default function AiChatbotPage() {
                       updated[idx].active = !updated[idx].active;
                       setActiveSources(updated);
                     }}
-                    className={`flex items-center justify-between p-2.5 rounded border border-[#3b494c]/10 bg-[#1c2022]/40 cursor-pointer hover:border-cyan-400/30 transition-all ${
+                    className={`flex items-center justify-between p-2.5 rounded border border-[var(--app-border)]/10 bg-[var(--app-card)]/40 cursor-pointer hover:border-cyan-400/30 transition-all ${
                       src.active ? "opacity-100" : "opacity-40"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-1 rounded bg-[#101416] text-cyan-400">
+                      <div className="p-1 rounded bg-[var(--app-bg)] text-cyan-400">
                         {src.type === "Dataset" ? <FileSpreadsheet className="w-3.5 h-3.5" /> : <Code className="w-3.5 h-3.5 text-yellow-500" />}
                       </div>
                       <div>
-                        <span className="text-xs text-white font-medium block leading-none mb-1">{src.name}</span>
+                        <span className="text-xs text-[var(--app-text)] font-medium block leading-none mb-1">{src.name}</span>
                         <span className="text-[8px] text-slate-400 uppercase tracking-widest">{src.type}</span>
                       </div>
                     </div>
@@ -673,7 +673,7 @@ export default function AiChatbotPage() {
               <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em] mb-4">Recent Memory</h4>
               <div className="space-y-2">
                 {memoryItems.map((mem, idx) => (
-                  <div key={idx} className="p-3 bg-[#1c2022]/60 rounded border border-[#3b494c]/10 hover:border-cyan-400/20 cursor-pointer transition-all">
+                  <div key={idx} className="p-3 bg-[var(--app-card)]/60 rounded border border-[var(--app-border)]/10 hover:border-cyan-400/20 cursor-pointer transition-all">
                     <p className="text-xs text-slate-300 leading-normal line-clamp-2 mb-2">{mem.query}</p>
                     <span className="text-[8px] text-[#00daf3] font-headline uppercase tracking-wider font-semibold">
                       {mem.type} • {mem.time}
@@ -684,7 +684,7 @@ export default function AiChatbotPage() {
             </div>
 
             {/* Model Utilization */}
-            <div className="bg-[#1c2022]/40 p-4 rounded-lg border border-[#3b494c]/10 space-y-4">
+            <div className="bg-[var(--app-card)]/40 p-4 rounded-lg border border-[var(--app-border)]/10 space-y-4">
               <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em]">Model Utilization</h4>
               
               <div className="space-y-3">
@@ -693,7 +693,7 @@ export default function AiChatbotPage() {
                     <span className="text-slate-300">Compute</span>
                     <span className="text-cyan-400 font-mono">{utilization.compute}%</span>
                   </div>
-                  <div className="w-full bg-[#101416] h-1 rounded-full overflow-hidden">
+                  <div className="w-full bg-[var(--app-bg)] h-1 rounded-full overflow-hidden">
                     <div className="bg-cyan-400 h-full transition-all duration-300" style={{ width: `${utilization.compute}%` }}></div>
                   </div>
                 </div>
@@ -703,7 +703,7 @@ export default function AiChatbotPage() {
                     <span className="text-slate-300">Context Window</span>
                     <span className="text-[#00daf3] font-mono">{utilization.context}%</span>
                   </div>
-                  <div className="w-full bg-[#101416] h-1 rounded-full overflow-hidden">
+                  <div className="w-full bg-[var(--app-bg)] h-1 rounded-full overflow-hidden">
                     <div className="bg-[#00daf3] h-full transition-all duration-300" style={{ width: `${utilization.context}%` }}></div>
                   </div>
                 </div>

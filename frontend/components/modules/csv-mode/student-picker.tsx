@@ -56,7 +56,7 @@ export function StudentPicker({
 
     return (
         <div ref={boxRef} className="relative w-full">
-            <div className="flex items-center gap-2 rounded-lg border border-[#3b494c]/30 bg-[#1c2022] px-3 py-2 focus-within:border-cyan-400 transition-colors">
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--app-border)]/30 bg-[var(--app-card)] px-3 py-2 focus-within:border-cyan-400 transition-colors">
                 <Search className="h-4 w-4 text-slate-400" />
                 <input
                     value={query}
@@ -68,7 +68,7 @@ export function StudentPicker({
                     placeholder={
                         selected ? `${selected.name} · ${selected.student_id}` : "Search a student by name or ID…"
                     }
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+                    className="w-full bg-transparent text-sm text-[var(--app-text)] outline-none placeholder:text-slate-500"
                 />
                 {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
@@ -86,9 +86,9 @@ export function StudentPicker({
             </div>
 
             {open && (
-                <div className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-[#3b494c]/30 bg-[#181c1e] shadow-2xl">
+                <div className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-[var(--app-border)]/30 bg-[var(--app-card2)] shadow-2xl">
                     {total !== null && (
-                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-slate-500 border-b border-[#3b494c]/20">
+                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-slate-500 border-b border-[var(--app-border)]/20">
                             {total.toLocaleString()} students in dataset
                         </div>
                     )}
@@ -106,11 +106,11 @@ export function StudentPicker({
                                 className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-cyan-500/10 transition-colors"
                             >
                                 <div className="flex items-center gap-2">
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#272a2d]">
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--app-surface)]">
                                         <User className="h-3.5 w-3.5 text-slate-300" />
                                     </div>
                                     <div>
-                                        <div className="text-xs font-medium text-white">{s.name}</div>
+                                        <div className="text-xs font-medium text-[var(--app-text)]">{s.name}</div>
                                         <div className="text-[10px] text-slate-400">
                                             {s.student_id}
                                             {s.department ? ` · ${s.department}` : ""}

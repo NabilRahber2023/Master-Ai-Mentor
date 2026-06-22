@@ -311,10 +311,10 @@ export default function GrowthPotentialPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#101416] text-[#e0e3e6] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="flex flex-col min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] font-body selection:bg-cyan-500/30 selection:text-cyan-200">
       
       {/* Top Header Breadcrumbs Wrapper */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[#3b494c]/10 px-6 bg-[#101416] sticky top-0 z-50">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[var(--app-border)]/10 px-6 bg-[var(--app-bg)] sticky top-0 z-50">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb>
@@ -353,7 +353,7 @@ export default function GrowthPotentialPage() {
               <span className="rounded-full bg-cyan-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#101416]">
                 Live Evaluation
               </span>
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-bold text-[var(--app-text)]">
                 {livePrediction.nine_box_position_label}
               </span>
               <span className="font-mono text-xs text-cyan-300">
@@ -372,7 +372,7 @@ export default function GrowthPotentialPage() {
         
         {/* Fresh state: nothing is shown until the user runs an evaluation */}
         {!livePrediction && (
-          <section className="rounded-xl border border-dashed border-[#3b494c]/30 bg-[#181c1e]/40 p-12 text-center">
+          <section className="rounded-xl border border-dashed border-[var(--app-border)]/30 bg-[var(--app-card2)]/40 p-12 text-center">
             <p className="text-sm text-slate-400">
               Enter candidate metrics above and click{" "}
               <span className="font-semibold text-cyan-300">Evaluate 9-Box Position</span> to
@@ -385,9 +385,9 @@ export default function GrowthPotentialPage() {
         {livePrediction && (
           <>
         {/* Dynamic header row with title, description, and filter toolbar */}
-        <section className="flex flex-col xl:flex-row justify-between items-start xl:items-center border-b border-[#3b494c]/15 pb-4 gap-4">
+        <section className="flex flex-col xl:flex-row justify-between items-start xl:items-center border-b border-[var(--app-border)]/15 pb-4 gap-4">
           <div>
-            <h1 className="text-3xl font-headline font-bold text-white tracking-tighter uppercase drop-shadow-[0_0_12px_rgba(195,245,255,0.1)]">
+            <h1 className="text-3xl font-headline font-bold text-[var(--app-text)] tracking-tighter uppercase drop-shadow-[0_0_12px_rgba(195,245,255,0.1)]">
               Growth Potential
             </h1>
             <p className="text-[10px] text-slate-400 font-headline uppercase tracking-[0.2em] mt-1">
@@ -398,7 +398,7 @@ export default function GrowthPotentialPage() {
           {/* Filtering and Export Tools */}
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
             {/* Department Dropdown */}
-            <div className="flex items-center gap-2 bg-[#1c2022] rounded px-3 py-1.5 border border-[#3b494c]/20">
+            <div className="flex items-center gap-2 bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20">
               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-headline">Department</span>
               <select 
                 value={selectedDept}
@@ -406,16 +406,16 @@ export default function GrowthPotentialPage() {
                   setSelectedDept(e.target.value);
                   setSelectedEmployeeId(null);
                 }}
-                className="bg-transparent border-none outline-none text-xs font-semibold text-white cursor-pointer pr-4 font-headline uppercase tracking-wider"
+                className="bg-transparent border-none outline-none text-xs font-semibold text-[var(--app-text)] cursor-pointer pr-4 font-headline uppercase tracking-wider"
               >
                 {departments.map(dept => (
-                  <option key={dept} value={dept} className="bg-[#1c2022] text-white">{dept}</option>
+                  <option key={dept} value={dept} className="bg-[var(--app-card)] text-[var(--app-text)]">{dept}</option>
                 ))}
               </select>
             </div>
 
             {/* Cohort Dropdown */}
-            <div className="flex items-center gap-2 bg-[#1c2022] rounded px-3 py-1.5 border border-[#3b494c]/20">
+            <div className="flex items-center gap-2 bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20">
               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-headline">Cohort</span>
               <select 
                 value={selectedCohort}
@@ -423,10 +423,10 @@ export default function GrowthPotentialPage() {
                   setSelectedCohort(e.target.value);
                   setSelectedEmployeeId(null);
                 }}
-                className="bg-transparent border-none outline-none text-xs font-semibold text-white cursor-pointer pr-4 font-headline uppercase tracking-wider"
+                className="bg-transparent border-none outline-none text-xs font-semibold text-[var(--app-text)] cursor-pointer pr-4 font-headline uppercase tracking-wider"
               >
                 {cohorts.map(cohort => (
-                  <option key={cohort} value={cohort} className="bg-[#1c2022] text-white">{cohort}</option>
+                  <option key={cohort} value={cohort} className="bg-[var(--app-card)] text-[var(--app-text)]">{cohort}</option>
                 ))}
               </select>
             </div>
@@ -443,7 +443,7 @@ export default function GrowthPotentialPage() {
               </button>
 
               {showExportOptions && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#1c2022] border border-[#3b494c]/30 rounded shadow-2xl z-50 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-48 bg-[var(--app-card)] border border-[var(--app-border)]/30 rounded shadow-2xl z-50 overflow-hidden">
                   <button 
                     onClick={() => handleExport("csv")}
                     className="w-full text-left px-4 py-2 text-[10px] uppercase font-bold tracking-wider hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
@@ -458,7 +458,7 @@ export default function GrowthPotentialPage() {
                   </button>
                   <button 
                     onClick={() => handleExport("report")}
-                    className="w-full text-left px-4 py-2 text-[10px] uppercase font-bold tracking-wider hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors border-t border-[#3b494c]/10"
+                    className="w-full text-left px-4 py-2 text-[10px] uppercase font-bold tracking-wider hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors border-t border-[var(--app-border)]/10"
                   >
                     Report summary
                   </button>
@@ -472,7 +472,7 @@ export default function GrowthPotentialPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Main 9-Box Grid Section */}
-          <section className="lg:col-span-8 bg-[#181c1e]/40 rounded-xl p-6 border border-[#3b494c]/20 relative flex flex-col min-h-[500px]">
+          <section className="lg:col-span-8 bg-[var(--app-card2)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 relative flex flex-col min-h-[500px]">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400/20 via-transparent to-transparent"></div>
 
             {/* Matrix Frame Container */}
@@ -481,7 +481,7 @@ export default function GrowthPotentialPage() {
               {/* Y-Axis Label */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-left flex items-center gap-2">
                 <span className="text-[10px] font-headline uppercase tracking-[0.25em] text-slate-500 font-bold">POTENTIAL</span>
-                <span className="h-0.5 w-16 bg-[#3b494c]/20"></span>
+                <span className="h-0.5 w-16 bg-[var(--app-border)]/20"></span>
               </div>
 
               {/* Y-Axis Tick Marks */}
@@ -498,10 +498,10 @@ export default function GrowthPotentialPage() {
                 {/* 1. Enigma (Low Perf, High Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Enigma"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Enigma" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -525,10 +525,10 @@ export default function GrowthPotentialPage() {
                 {/* 2. High Potential (Medium Perf, High Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("High Potential"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "High Potential" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -552,10 +552,10 @@ export default function GrowthPotentialPage() {
                 {/* 3. Star (High Perf, High Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Star"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/60 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/60 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Star" 
                       ? "border-cyan-400 bg-cyan-950/20 shadow-[0_0_20px_rgba(0,229,255,0.15)]" 
-                      : "border-[#3b494c]/20 hover:border-cyan-400/40"
+                      : "border-[var(--app-border)]/20 hover:border-cyan-400/40"
                   }`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-tr from-cyan-950/5 via-transparent to-transparent"></div>
@@ -581,10 +581,10 @@ export default function GrowthPotentialPage() {
                 {/* 4. Dilemma (Low Perf, Med Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Dilemma"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Dilemma" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -608,10 +608,10 @@ export default function GrowthPotentialPage() {
                 {/* 5. Core Player (Med Perf, Med Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Core Player"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Core Player" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -635,10 +635,10 @@ export default function GrowthPotentialPage() {
                 {/* 6. High Performer (High Perf, Med Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("High Performer"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "High Performer" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -663,10 +663,10 @@ export default function GrowthPotentialPage() {
                 {/* 7. Risk (Low Perf, Low Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Risk"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Risk" 
                       ? "border-red-500/80 bg-red-950/10 shadow-[0_0_15px_rgba(239,68,68,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-red-500/30"
+                      : "border-[var(--app-border)]/10 hover:border-red-500/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -690,10 +690,10 @@ export default function GrowthPotentialPage() {
                 {/* 8. Effective (Med Perf, Low Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Effective"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Effective" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -717,10 +717,10 @@ export default function GrowthPotentialPage() {
                 {/* 9. Solid (High Perf, Low Pot) */}
                 <div 
                   onClick={() => { setSelectedCategory("Solid"); setSelectedEmployeeId(null); }}
-                  className={`bg-[#1c2022]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`bg-[var(--app-card)]/40 rounded-lg p-3.5 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     selectedCategory === "Solid" 
                       ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_15px_rgba(0,229,255,0.08)]" 
-                      : "border-[#3b494c]/10 hover:border-cyan-400/30"
+                      : "border-[var(--app-border)]/10 hover:border-cyan-400/30"
                   }`}
                 >
                   <div className="flex justify-between items-start z-10">
@@ -752,9 +752,9 @@ export default function GrowthPotentialPage() {
 
               {/* X-Axis Label */}
               <div className="absolute bottom-[-16px] left-1/2 -translate-x-1/2 flex items-center gap-2">
-                <span className="h-0.5 w-16 bg-[#3b494c]/20"></span>
+                <span className="h-0.5 w-16 bg-[var(--app-border)]/20"></span>
                 <span className="text-[10px] font-headline uppercase tracking-[0.25em] text-slate-500 font-bold">PERFORMANCE</span>
-                <span className="h-0.5 w-16 bg-[#3b494c]/20"></span>
+                <span className="h-0.5 w-16 bg-[var(--app-border)]/20"></span>
               </div>
 
             </div>
@@ -764,7 +764,7 @@ export default function GrowthPotentialPage() {
           <aside className="lg:col-span-4 flex flex-col gap-6">
             
             {/* Top Talent Pool */}
-            <div className="bg-[#1c2022]/60 rounded-xl p-5 border border-[#3b494c]/20 relative overflow-hidden flex flex-col gap-4">
+            <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 relative overflow-hidden flex flex-col gap-4">
               <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
                 <Award className="w-24 h-24 text-cyan-400" />
               </div>
@@ -775,7 +775,7 @@ export default function GrowthPotentialPage() {
                     9-Box: {selectedCategory}
                   </span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white">Top Talent Pool</h3>
+                <h3 className="font-headline text-lg font-bold text-[var(--app-text)]">Top Talent Pool</h3>
                 <p className="text-[11px] text-slate-400 mt-1">
                   Active candidate metrics and movement indicators within the filtered cohort pool.
                 </p>
@@ -783,7 +783,7 @@ export default function GrowthPotentialPage() {
 
               {/* Core metrics */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#101416]/50 rounded p-2.5 border border-[#3b494c]/10">
+                <div className="bg-[var(--app-bg)]/50 rounded p-2.5 border border-[var(--app-border)]/10">
                   <span className="text-[8px] text-slate-400 uppercase tracking-wider block mb-0.5">Confidence Score</span>
                   <div className="flex items-end gap-1">
                     <span className="text-lg font-headline font-bold text-cyan-400">
@@ -797,7 +797,7 @@ export default function GrowthPotentialPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#101416]/50 rounded p-2.5 border border-[#3b494c]/10">
+                <div className="bg-[var(--app-bg)]/50 rounded p-2.5 border border-[var(--app-border)]/10">
                   <span className="text-[8px] text-slate-400 uppercase tracking-wider block mb-0.5">Retention Risk</span>
                   <div className="flex items-center gap-1">
                     <span className={`text-sm font-headline font-bold uppercase ${
@@ -816,7 +816,7 @@ export default function GrowthPotentialPage() {
 
               {/* Movement Trajectory */}
               <div className="space-y-2.5">
-                <h4 className="text-[9px] font-label uppercase tracking-widest text-slate-400 font-bold border-b border-[#3b494c]/10 pb-1">
+                <h4 className="text-[9px] font-label uppercase tracking-widest text-slate-400 font-bold border-b border-[var(--app-border)]/10 pb-1">
                   Movement Trajectory
                 </h4>
 
@@ -838,15 +838,15 @@ export default function GrowthPotentialPage() {
                         className={`flex items-center justify-between p-1.5 rounded cursor-pointer transition-colors ${
                           activeEmployee?.employee_id === emp.employee_id 
                             ? "bg-cyan-500/10 border border-cyan-400/20" 
-                            : "hover:bg-[#101416]/40"
+                            : "hover:bg-[var(--app-bg)]/40"
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-[#272a2d] flex items-center justify-center border border-outline-variant/20">
+                          <div className="w-6 h-6 rounded-full bg-[var(--app-surface)] flex items-center justify-center border border-outline-variant/20">
                             <User className="w-3.5 h-3.5 text-slate-300" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs text-white font-medium">{emp.employee_name}</span>
+                            <span className="text-xs text-[var(--app-text)] font-medium">{emp.employee_name}</span>
                             <span className="text-[9px] text-slate-400">{emp.role}</span>
                           </div>
                         </div>
@@ -870,8 +870,8 @@ export default function GrowthPotentialPage() {
             </div>
 
             {/* Cohort Breakdown */}
-            <div className="bg-[#1c2022]/40 rounded-xl p-5 border border-[#3b494c]/20 flex flex-col gap-3">
-              <h3 className="text-xs text-white font-headline tracking-[0.1em] uppercase border-b border-[#3b494c]/10 pb-1.5">
+            <div className="bg-[var(--app-card)]/40 rounded-xl p-5 border border-[var(--app-border)]/20 flex flex-col gap-3">
+              <h3 className="text-xs text-[var(--app-text)] font-headline tracking-[0.1em] uppercase border-b border-[var(--app-border)]/10 pb-1.5">
                 Cohort Breakdown
               </h3>
 
@@ -880,11 +880,11 @@ export default function GrowthPotentialPage() {
                 <div 
                   onClick={() => setSelectedCategory("Star")}
                   className={`p-2.5 rounded border transition-colors cursor-pointer ${
-                    selectedCategory === "Star" ? "bg-cyan-950/20 border-cyan-400" : "bg-[#101416]/30 border-[#3b494c]/10 hover:border-cyan-400/20"
+                    selectedCategory === "Star" ? "bg-cyan-950/20 border-cyan-400" : "bg-[var(--app-bg)]/30 border-[var(--app-border)]/10 hover:border-cyan-400/20"
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Star</span>
+                    <span className="text-[10px] font-bold text-[var(--app-text)] uppercase tracking-wider">Star</span>
                     <span className="text-xs font-headline font-bold text-cyan-400">{categoryStats["Star"].percentage}%</span>
                   </div>
                   <p className="text-[9px] text-slate-400 leading-normal">
@@ -900,11 +900,11 @@ export default function GrowthPotentialPage() {
                 <div 
                   onClick={() => setSelectedCategory("High Potential")}
                   className={`p-2.5 rounded border transition-colors cursor-pointer ${
-                    selectedCategory === "High Potential" ? "bg-cyan-950/20 border-cyan-400" : "bg-[#101416]/30 border-[#3b494c]/10 hover:border-cyan-400/20"
+                    selectedCategory === "High Potential" ? "bg-cyan-950/20 border-cyan-400" : "bg-[var(--app-bg)]/30 border-[var(--app-border)]/10 hover:border-cyan-400/20"
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">High Potential</span>
+                    <span className="text-[10px] font-bold text-[var(--app-text)] uppercase tracking-wider">High Potential</span>
                     <span className="text-xs font-headline font-bold text-cyan-400">{categoryStats["High Potential"].percentage}%</span>
                   </div>
                   <p className="text-[9px] text-slate-400 leading-normal">
@@ -919,11 +919,11 @@ export default function GrowthPotentialPage() {
                 <div 
                   onClick={() => setSelectedCategory("Core Player")}
                   className={`p-2.5 rounded border transition-colors cursor-pointer ${
-                    selectedCategory === "Core Player" ? "bg-cyan-950/20 border-cyan-400" : "bg-[#101416]/30 border-[#3b494c]/10 hover:border-cyan-400/20"
+                    selectedCategory === "Core Player" ? "bg-cyan-950/20 border-cyan-400" : "bg-[var(--app-bg)]/30 border-[var(--app-border)]/10 hover:border-cyan-400/20"
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Core Player</span>
+                    <span className="text-[10px] font-bold text-[var(--app-text)] uppercase tracking-wider">Core Player</span>
                     <span className="text-xs font-headline font-bold text-cyan-400">{categoryStats["Core Player"].percentage}%</span>
                   </div>
                   <p className="text-[9px] text-slate-400 leading-normal">
@@ -938,11 +938,11 @@ export default function GrowthPotentialPage() {
                 <div 
                   onClick={() => setSelectedCategory("Risk")}
                   className={`p-2.5 rounded border transition-colors cursor-pointer ${
-                    selectedCategory === "Risk" ? "bg-red-950/20 border-red-500" : "bg-[#101416]/30 border-[#3b494c]/10 hover:border-red-500/20"
+                    selectedCategory === "Risk" ? "bg-red-950/20 border-red-500" : "bg-[var(--app-bg)]/30 border-[var(--app-border)]/10 hover:border-red-500/20"
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Risk</span>
+                    <span className="text-[10px] font-bold text-[var(--app-text)] uppercase tracking-wider">Risk</span>
                     <span className="text-xs font-headline font-bold text-red-400">{categoryStats["Risk"].percentage}%</span>
                   </div>
                   <p className="text-[9px] text-slate-400 leading-normal">
@@ -956,7 +956,7 @@ export default function GrowthPotentialPage() {
             </div>
 
             {/* AI Insights Panel */}
-            <div className="bg-[#1c2022]/40 rounded-xl p-5 border border-[#3b494c]/20 flex flex-col gap-4">
+            <div className="bg-[var(--app-card)]/40 rounded-xl p-5 border border-[var(--app-border)]/20 flex flex-col gap-4">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="text-cyan-400 w-4.5 h-4.5" />
                 <span className="text-xs font-label uppercase tracking-widest text-cyan-400 font-bold">Aetheris Insight</span>
@@ -966,7 +966,7 @@ export default function GrowthPotentialPage() {
                 <p className="italic text-slate-400">
                   "{aiInsight.text}"
                 </p>
-                <div className="border-t border-[#3b494c]/15 pt-2.5 space-y-2">
+                <div className="border-t border-[var(--app-border)]/15 pt-2.5 space-y-2">
                   <div>
                     <span className="text-[8px] font-bold uppercase tracking-wider text-cyan-400 block">Growth Recommendation</span>
                     <span className="text-[11px] text-slate-300">{aiInsight.growthRec}</span>
@@ -995,7 +995,7 @@ export default function GrowthPotentialPage() {
       </main>
 
       {/* Footer copyright notice from mockup */}
-      <footer className="border-t border-[#3b494c]/10 bg-[#101416]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
+      <footer className="border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
           Matrix adapts in real-time as new performance data becomes available. Last updated: May 15, 2025 10:42 AM

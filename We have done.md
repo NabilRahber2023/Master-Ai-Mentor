@@ -158,3 +158,73 @@ Grade 95.2% pass rate; Career 68.2% avg confidence; Growth 1,348 stars. Frontend
 fine-grained departments and several inputs are *derived* (bucketed) from coarser fields; it
 operates correctly but spreads probability thin. Sharper results would need the subject
 model's native columns added to the CSV the same way as the other 15.
+
+---
+
+## 11. Career Guidance — fully prediction-driven (NEW)
+
+Previously only the result banner, Impact Factors, and Recommended Careers reacted to the live
+prediction; the rest was static slider/mock data. Now **every section updates from each
+prediction** (manual *and* CSV single mode):
+
+* The career panel passes both the **result and its inputs** up; the page derives all sections
+  from `(prediction, inputs)` via helpers in `career-guidance/page.tsx`.
+* Driven now: **Industry Alignment Matrix** (ranked so the predicted domain leads as "primary
+  vector"), **skill radar**, **priority gaps**, **competency deltas**, **telemetry**
+  (readiness = model confidence), **learning path** (from weakest skills), **trajectory labels**
+  (Junior/Senior {predicted role}), and **AI insight cards** (from confidence + top SHAP factor).
+
+---
+
+## 12. AI Chatbot — cohort listing + help (NEW)
+
+The bot only did name-search + single-student predictions, so "list 10 mid-level students"
+returned nothing. Added:
+
+* **`list_students` tool** (`tools.py`) — SQL over `students` filtered by performance category
+  (high/mid/low), department, gender, limit.
+* **Deterministic parser + handler** (`mcp_dispatcher.py`) running before entity resolution, plus
+  a **help intent**, and a non-blank LLM fallback. Returns selectable student cards.
+* Verified: "list 10 mid-level students", "top 5 high performers in CSE", "help" all reply; name
+  search + greeting unchanged.
+
+---
+
+## 13. RBAC — two-tier access control (NEW — see `RBAC.md`)
+
+The platform had only authentication (any logged-in user could reach `/dashboard/admin`) and a
+**completely open FastAPI backend**. Implemented full role-based access control:
+
+* **Roles** — platform `super_admin` / `support` / `user`; org `owner` / `admin` / `mentor`.
+  Central matrix in `lib/rbac.ts` (mirrored in `backend/app/auth/matrix.py`).
+* **Schema** — `module_registry`, `org_module`, `audit_log`; migrated module entitlements off
+  the old `metadata.enabledModules` JSON; promoted `oxford@gmail.com` → `super_admin`.
+* **Super Admin module console** (`/dashboard/admin/modules`) — per-org module **on/off grid** +
+  global kill-switch, every toggle audited. Sidebar + tenant layout read `org_module`.
+* **Backend secured** — `backend/app/auth/` validates the forwarded Better Auth session cookie
+  against the shared `session` table and enforces the matrix + module entitlement on **every**
+  `/api/v1` endpoint. Trusted internal calls (chatbot → ML) bypass with `x-internal-token`.
+* **Verified** — 401 without cookie; 200 with super-admin cookie; predictions/chatbot/CSV intact;
+  logged-out `/dashboard/admin` → 307 /login; module-toggle round-trips into the entitled set.
+
+> Org roles `analyst`/`viewer`/`guest` were intentionally skipped for now. **Not yet done:**
+> tenant *data* isolation — backend `students` has no `organization_id`, so RBAC gates *actions*,
+> not *data*, between orgs (see `db.md` §10 / `RBAC.md` §13).
+
+---
+
+## 14. Light / Dark Theme — logo toggle (NEW)
+
+* The **AI Mentor logo is now a theme switch** (`components/logo-theme-toggle.tsx`): hover shows a
+  sun/moon, click flips the whole system between dark and light. Built on the existing
+  `next-themes` provider.
+* Placed on the shared sidebar (all tenant + admin pages), the public navbar, and the login page.
+* Switches the app shell + all shadcn-token surfaces. **Not yet:** the bespoke neon module
+  dashboards use hard-coded hex, so their interiors stay dark in light mode.
+
+---
+
+## 15. New Documentation
+
+* **`db.md`** — full database map (3 data planes, every table/column/index, diagrams, gaps).
+* **`RBAC.md`** — the access-control design and phased plan this session implemented.

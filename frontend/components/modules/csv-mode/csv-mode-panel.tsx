@@ -28,7 +28,7 @@ export function CsvModePanel<M extends CsvModule>({
 }: {
     module: M;
     label: string;
-    onSingleResult: (prediction: unknown) => void;
+    onSingleResult: (prediction: unknown, inputs?: Record<string, unknown>) => void;
     onSingleClear: () => void;
 }) {
     const [tab, setTab] = useState<"single" | "batch">("single");
@@ -48,7 +48,7 @@ export function CsvModePanel<M extends CsvModule>({
         setError(null);
         predictSingle(module, student.student_id)
             .then((res) => {
-                if (active) onSingleResult(res.prediction);
+                if (active) onSingleResult(res.prediction, res.inputs);
             })
             .catch((e) => {
                 if (active) {
@@ -74,16 +74,16 @@ export function CsvModePanel<M extends CsvModule>({
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                     <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
-                    <span className="text-sm font-semibold text-white">{label} — CSV Mode</span>
+                    <span className="text-sm font-semibold text-[var(--app-text)]">{label} — CSV Mode</span>
                     <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-emerald-300">
                         From uploaded dataset
                     </span>
                 </div>
-                <div className="inline-flex overflow-hidden rounded-lg border border-[#3b494c]/30">
+                <div className="inline-flex overflow-hidden rounded-lg border border-[var(--app-border)]/30">
                     <button
                         onClick={() => switchTab("single")}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                            tab === "single" ? "bg-cyan-400 text-[#101416]" : "bg-[#1c2022] text-slate-300 hover:text-white"
+                            tab === "single" ? "bg-cyan-400 text-[#101416]" : "bg-[var(--app-card)] text-slate-300 hover:text-[var(--app-text)]"
                         }`}
                     >
                         <User className="h-3.5 w-3.5" /> Single student
@@ -91,7 +91,7 @@ export function CsvModePanel<M extends CsvModule>({
                     <button
                         onClick={() => switchTab("batch")}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                            tab === "batch" ? "bg-cyan-400 text-[#101416]" : "bg-[#1c2022] text-slate-300 hover:text-white"
+                            tab === "batch" ? "bg-cyan-400 text-[#101416]" : "bg-[var(--app-card)] text-slate-300 hover:text-[var(--app-text)]"
                         }`}
                     >
                         <Layers className="h-3.5 w-3.5" /> Whole batch
