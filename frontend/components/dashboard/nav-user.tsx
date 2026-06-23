@@ -20,14 +20,22 @@ import {
 } from "@/components/ui/sidebar";
 import type { Session } from "@/lib/auth";
 import { authClient } from "@/lib/auth-client";
+import { useImpersonation } from "@/components/auth/impersonation";
 
 export function NavUser({ session }: { session: Session | null }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const { isImpersonating, returnToSelf } = useImpersonation();
   if (!session) {
     return null;
   }
   const handleLogOut = async () => {
+    // While impersonating, "log out" returns to the original account instead
+    // of ending the session entirely.
+    if (isImpersonating) {
+      await returnToSelf();
+      return;
+    }
     const { error } = await authClient.signOut();
     if (!error) {
       toast.success("Logged out successfully");

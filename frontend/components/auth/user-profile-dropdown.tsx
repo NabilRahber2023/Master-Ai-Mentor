@@ -14,11 +14,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogOut, Settings, User } from "lucide-react"
 import { toast } from "sonner"
+import { useImpersonation } from "@/components/auth/impersonation"
 
 export default function UserProfileDropdown() {
     const { data: session, isPending } = authClient.useSession()
+    const { isImpersonating, returnToSelf } = useImpersonation()
 
     const handleSignOut = async () => {
+        // While impersonating, "sign out" returns to the original account.
+        if (isImpersonating) {
+            await returnToSelf()
+            return
+        }
         try {
             await authClient.signOut()
             toast.success("Signed out successfully")

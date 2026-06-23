@@ -9,6 +9,24 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TenantSidebar } from "@/components/dashboard/tenant-sidebar";
 import { FloatingChatbot } from "@/components/chatbot/floating-chatbot";
 import { ThemeSlider } from "@/components/theme-slider";
+import { can, type Permission, type PlatformRole } from "@/lib/rbac";
+import { ModuleAccessDenied } from "@/components/modules/access-denied";
+import { ImpersonationBanner } from "@/components/auth/impersonation";
+
+/**
+ * Per-route → required (module entitlement, permission) map. This is the single
+ * server-side authorization gate for every tenant module page: the page UI only
+ * renders if the org is entitled to the module AND the user's role permits the
+ * action. (Backend re-checks on every API call; this just stops the UI showing.)
+ */
+const MODULE_ROUTES: { seg: string; moduleId: string; perm: Permission }[] = [
+    { seg: "/modules/grade-prediction", moduleId: "grade-prediction", perm: "predict:single" },
+    { seg: "/modules/batch-prediction", moduleId: "batch-prediction", perm: "predict:batch" },
+    { seg: "/modules/career-guidance", moduleId: "career-guidance", perm: "predict:single" },
+    { seg: "/modules/ai-chatbot", moduleId: "ai-chatbot", perm: "chatbot:use" },
+    { seg: "/modules/growth-potential", moduleId: "growth-potential", perm: "predict:single" },
+    { seg: "/subject-prediction", moduleId: "subject-prediction", perm: "predict:single" },
+];
 
 /**
  * Tenant Layout - Wraps all tenant path-based routes (/:slug/*)
@@ -106,6 +124,8 @@ export default async function TenantLayout({
         .where(eq(orgModule.organizationId, org.id));
     const enabledModules = moduleRows.filter((m) => m.enabled && m.global).map((m) => m.id);
 
+    const platformRole = (session.user as { role?: string }).role ?? "user";
+
     // Build tenant info for context
     const tenant: TenantInfo = {
         slug,
@@ -114,17 +134,43 @@ export default async function TenantLayout({
         packageId,
         enabledModules,
         userRole: membership.role,
-        platformRole: (session.user as { role?: string }).role ?? "user",
+        platformRole,
     };
+
+    // === PER-ROUTE AUTHORIZATION GUARD ===
+    // If the request targets a module page, enforce module entitlement + role
+    // permission server-side before rendering the page UI.
+    const pathname = headersList.get("x-pathname") ?? "";
+    const route = MODULE_ROUTES.find((r) => pathname.includes(r.seg));
+    let denied: { title: string; reason: string } | null = null;
+    if (route) {
+        const principal = { platformRole: platformRole as PlatformRole, orgRole: membership.role };
+        if (!enabledModules.includes(route.moduleId)) {
+            denied = {
+                title: "Module disabled",
+                reason: `The "${route.moduleId}" module is not enabled for ${org.name}. Ask a Super Admin to turn it on.`,
+            };
+        } else if (!can(principal, route.perm)) {
+            denied = {
+                title: "Insufficient permissions",
+                reason: `Your role (${membership.role}) cannot ${route.perm.replace(":", " ")}. Contact an organization admin.`,
+            };
+        }
+    }
 
     return (
         <TenantProvider tenant={tenant}>
             <ThemeSlider />
+            <ImpersonationBanner />
             <SidebarProvider>
                 <TenantSidebar />
                 <SidebarInset>
                     <main className="flex-1">
-                        {children}
+                        {denied ? (
+                            <ModuleAccessDenied title={denied.title} reason={denied.reason} homeHref={`/${slug}/home`} />
+                        ) : (
+                            children
+                        )}
                     </main>
                     <FloatingChatbot />
                 </SidebarInset>

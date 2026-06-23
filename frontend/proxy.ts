@@ -8,6 +8,12 @@ const SESSION_COOKIE_PROD = "__Secure-better-auth.session_token";
 // Organization cookie - set after login to track active org
 const ORG_COOKIE = "active-org-slug";
 
+// Platform-role cookie - set after login / impersonation for a cheap edge-side
+// role check. This is a convenience gate only; the server layout (requireAdmin)
+// re-validates against the DB and is the authoritative check.
+const ROLE_COOKIE = "platform-role";
+const ADMIN_ROLES = new Set(["super_admin", "admin"]);
+
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const ROOT_DOMAIN = process.env.ROOT_DOMAIN || "intellector.daffodilglobal.ai";
 
@@ -103,12 +109,13 @@ export function proxy(request: NextRequest) {
 
     // === AUTH ROUTES (e.g., /login, /sign-up) ===
     if (isAuthRoute) {
-        // Redirect logged-in users with an active org to their tenant home
-        if (token && activeOrgSlug) {
-            return NextResponse.redirect(
-                buildFullUrl(request, `/${activeOrgSlug}/home`)
-            );
-        }
+        // NOTE: we intentionally do NOT auto-forward logged-in users to their
+        // tenant home here. The session *cookie* may be present but invalid
+        // (e.g. the session row was wiped server-side). The tenant layout
+        // validates the session and redirects invalid ones to /login — if we
+        // bounced /login back to /:slug/home on mere cookie presence, those two
+        // redirects would ping-pong forever (ERR_TOO_MANY_REDIRECTS). Keeping
+        // /login always reachable lets a fresh login recover automatically.
         return NextResponse.next();
     }
 
@@ -127,6 +134,17 @@ export function proxy(request: NextRequest) {
     if (pathname.startsWith("/dashboard")) {
         if (!token) {
             return NextResponse.redirect(buildFullUrl(request, "/login"));
+        }
+        // Coarse, edge-side role gate for the platform admin console. The
+        // platform-role cookie is set at login/impersonation. If it's present
+        // and not an admin role, bounce to the landing page before the console
+        // even renders. If absent (older session), fall through — the server
+        // layout's requireAdmin() is the authoritative gate.
+        if (pathname.startsWith("/dashboard/admin")) {
+            const role = request.cookies.get(ROLE_COOKIE)?.value;
+            if (role && !ADMIN_ROLES.has(role)) {
+                return NextResponse.redirect(buildFullUrl(request, "/"));
+            }
         }
         return NextResponse.next();
     }
@@ -150,9 +168,11 @@ export function proxy(request: NextRequest) {
             return NextResponse.redirect(loginUrl);
         }
 
-        // Inject the slug as a header (convenience for any server code that needs it)
+        // Inject the slug + full pathname as headers so the server layout can
+        // apply a per-route (per-module) authorization guard.
         const requestHeaders = new Headers(request.headers);
         requestHeaders.set("x-tenant-slug", potentialSlug);
+        requestHeaders.set("x-pathname", pathname);
 
         return NextResponse.next({
             request: { headers: requestHeaders },

@@ -88,7 +88,7 @@ class PredictResponse(BaseModel):
 # ──────────────────────────── Prescriptions ────────────────────────────
 class PrescriptionRequest(BaseModel):
     filters: BatchFilters = Field(default_factory=BatchFilters)
-    target: str = "At risk"        # At risk | Mid
+    target: str = "At risk"        # At risk | Mid | On track
     search: str = ""
 
 

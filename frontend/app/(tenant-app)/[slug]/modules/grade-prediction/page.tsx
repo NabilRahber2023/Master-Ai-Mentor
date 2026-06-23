@@ -13,11 +13,14 @@ import { StudentAnalyticsDashboard } from "@/components/grade-prediction/Student
 import { GradePredictionPanel } from "@/components/modules/live-prediction/grade-prediction-panel";
 import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
 import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
-import type { SGPAPredictionResponse } from "@/lib/api/predictions";
+import type { SGPAPredictionResponse, SGPAPredictionInput } from "@/lib/api/predictions";
 
 export default function GradePredictionDashboardPage() {
     const [mode, setMode] = useState<"manual" | "csv">("manual");
     const [livePrediction, setLivePrediction] = useState<SGPAPredictionResponse | null>(null);
+    // The submitted inputs that produced the live prediction (manual mode only),
+    // so the dashboard's model-parameter cards reflect the user's actual values.
+    const [liveInput, setLiveInput] = useState<SGPAPredictionInput | undefined>(undefined);
 
     const riskColor = livePrediction?.risk_level?.toLowerCase().includes("high")
         ? "text-red-400"
@@ -54,15 +57,27 @@ export default function GradePredictionDashboardPage() {
 
                 {mode === "manual" ? (
                     <GradePredictionPanel
-                        onResult={setLivePrediction}
-                        onReset={() => setLivePrediction(null)}
+                        onResult={(res, input) => {
+                            setLivePrediction(res);
+                            setLiveInput(input);
+                        }}
+                        onReset={() => {
+                            setLivePrediction(null);
+                            setLiveInput(undefined);
+                        }}
                     />
                 ) : (
                     <CsvModePanel
                         module="grade"
                         label="Grade Prediction"
-                        onSingleResult={(p) => setLivePrediction(p as SGPAPredictionResponse)}
-                        onSingleClear={() => setLivePrediction(null)}
+                        onSingleResult={(p) => {
+                            setLivePrediction(p as SGPAPredictionResponse);
+                            setLiveInput(undefined);
+                        }}
+                        onSingleClear={() => {
+                            setLivePrediction(null);
+                            setLiveInput(undefined);
+                        }}
                     />
                 )}
 
@@ -104,7 +119,7 @@ export default function GradePredictionDashboardPage() {
                             )}
                         </section>
 
-                        <StudentAnalyticsDashboard prediction={livePrediction} />
+                        <StudentAnalyticsDashboard prediction={livePrediction} input={liveInput} />
                     </>
                 )}
             </div>

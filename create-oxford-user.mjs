@@ -127,6 +127,77 @@ async function createOxfordUser() {
       console.log('✅ Active subscription already exists');
     }
     
+    // ---------------------------------------------------------------
+    // Organization + membership + module entitlements.
+    // The tenant layout (/:slug/*) looks up the org by slug and checks
+    // membership; without these rows the app redirects /oxford/home → "/"
+    // and the proxy bounces it back, causing ERR_TOO_MANY_REDIRECTS.
+    // The login flow sets active-org-slug=<org.slug>, so the slug must be 'oxford'.
+    // ---------------------------------------------------------------
+    const MODULES = [
+      { id: 'grade-prediction',   name: 'Grade Prediction',   description: 'Predict student SGPA/grades',         sort: '1' },
+      { id: 'batch-prediction',   name: 'Batch Prediction',   description: 'Run predictions across all students', sort: '2' },
+      { id: 'career-guidance',    name: 'Career Guidance',    description: 'Career path recommendations',         sort: '3' },
+      { id: 'subject-prediction', name: 'Subject Prediction', description: 'Per-subject performance prediction',  sort: '4' },
+      { id: 'growth-potential',   name: 'Growth Potential',   description: '9-Box growth/potential analysis',     sort: '5' },
+      { id: 'ai-chatbot',         name: 'AI Chatbot',         description: 'Conversational student assistant',    sort: '6' },
+    ];
+
+    // Seed the module catalog (idempotent).
+    for (const m of MODULES) {
+      await client.query(
+        `INSERT INTO module_registry (id, name, description, global_enabled, sort_order)
+         VALUES ($1, $2, $3, true, $4)
+         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, global_enabled = true`,
+        [m.id, m.name, m.description, m.sort]
+      );
+    }
+    console.log('🧩 Module catalog seeded (6 modules)');
+
+    // Create the Oxford organization (slug must match the login cookie).
+    const orgSlug = 'oxford';
+    const orgCheck = await client.query(`SELECT id FROM organization WHERE slug = $1`, [orgSlug]);
+    let orgId;
+    if (orgCheck.rows.length > 0) {
+      orgId = orgCheck.rows[0].id;
+      console.log('🏢 Organization already exists:', orgSlug);
+    } else {
+      orgId = `org-${randomUUID()}`;
+      await client.query(
+        `INSERT INTO organization (id, name, slug, metadata, "created_at")
+         VALUES ($1, $2, $3, $4, NOW())`,
+        [orgId, 'Oxford Test Org', orgSlug, JSON.stringify({ packageId: 'platinum' })]
+      );
+      console.log('🏢 Organization created:', orgSlug);
+    }
+
+    // Link the user as owner of the org.
+    const memberCheck = await client.query(
+      `SELECT id FROM member WHERE organization_id = $1 AND user_id = $2`,
+      [orgId, userId]
+    );
+    if (memberCheck.rows.length === 0) {
+      await client.query(
+        `INSERT INTO member (id, organization_id, user_id, role, "created_at")
+         VALUES ($1, $2, $3, 'owner', NOW())`,
+        [`member-${randomUUID()}`, orgId, userId]
+      );
+      console.log('👤 Membership created (owner)');
+    } else {
+      console.log('👤 Membership already exists');
+    }
+
+    // Entitle the org to every module.
+    for (const m of MODULES) {
+      await client.query(
+        `INSERT INTO org_module (id, organization_id, module_id, enabled)
+         VALUES ($1, $2, $3, true)
+         ON CONFLICT (organization_id, module_id) DO UPDATE SET enabled = true`,
+        [`om-${randomUUID()}`, orgId, m.id]
+      );
+    }
+    console.log('🔓 All modules enabled for organization');
+
     console.log('\n✨ OXFORD USER CREATED AND CONFIG COMPLETED SUCCESSFULLY\n');
     await client.end();
     

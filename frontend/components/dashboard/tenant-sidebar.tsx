@@ -10,7 +10,9 @@ import {
     LayoutDashboard,
     Brain,
     Layers,
+    UserCog,
 } from "lucide-react";
+import { isSuperAdmin } from "@/lib/rbac";
 import { BaseSidebar, type NavItem } from "@/components/dashboard/base-sidebar";
 import type { Sidebar } from "@/components/ui/sidebar";
 import { useTenant } from "@/hooks/use-tenant";
@@ -81,6 +83,11 @@ export function TenantSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
     // Combine with management items
     const allNavItems = [...moduleNavItems, ...getManagementNavItems(tenant.slug, tenant.enabledModules)];
+
+    // Super Admins get a shortcut to the Role Based Login console from the tenant app.
+    if (isSuperAdmin(tenant.platformRole)) {
+        allNavItems.push({ title: "Role Based Login", url: "/dashboard/admin/roles", icon: UserCog });
+    }
 
     return (
         <BaseSidebar

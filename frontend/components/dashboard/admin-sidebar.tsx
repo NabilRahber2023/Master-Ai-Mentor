@@ -4,7 +4,8 @@ import {
     LayoutDashboardIcon,
     TruckIcon,
     DollarSign,
-    ToggleRight
+    ToggleRight,
+    UserCog
 } from "lucide-react";
 import {BaseSidebar, type NavItem} from "@/components/dashboard/base-sidebar";
 import type {Sidebar} from "@/components/ui/sidebar";
@@ -30,6 +31,11 @@ const adminNavLinks: NavItem[] = [
         title: "Modules",
         url: `${ADMIN_BASE}/modules`,
         icon: ToggleRight,
+    },
+    {
+        title: "Role Based Login",
+        url: `${ADMIN_BASE}/roles`,
+        icon: UserCog,
     },
 ];
 

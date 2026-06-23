@@ -15,15 +15,12 @@ import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { NineBoxPredictionResponse } from "@/lib/api/predictions";
 import {
   TrendingUp,
-  Download, 
-  Award, 
-  ShieldAlert, 
-  Sparkles, 
-  ChevronDown, 
-  User, 
-  Zap, 
-  AlertCircle,
-  Brain,
+  Download,
+  Award,
+  ShieldAlert,
+  Sparkles,
+  ChevronDown,
+  User,
   Check
 } from "lucide-react";
 
@@ -102,47 +99,6 @@ function deriveRetentionRisk(category: NineBoxCategory): "Low" | "Medium" | "Hig
   return "Low";
 }
 
-// Generative Mock Data
-const MOCK_EMPLOYEES: Employee[] = [
-  // Q3 2023 - Engineering
-  { employee_id: "EMP-001", employee_name: "Elena Rostova", department: "Engineering", role: "Lead Architect", performance_score: 9, potential_score: 9, engagement_score: 92, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 88, cohort: "Q3 2023" },
-  { employee_id: "EMP-002", employee_name: "Marcus Chen", department: "Engineering", role: "Senior Engineer", performance_score: 7, potential_score: 9, engagement_score: 85, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 78, cohort: "Q3 2023" },
-  { employee_id: "EMP-003", employee_name: "David Kim", department: "Engineering", role: "Frontend Dev", performance_score: 8, potential_score: 6, engagement_score: 76, retention_risk: "Medium", promotion_readiness: "1-2 Years", leadership_index: 65, cohort: "Q3 2023" },
-  { employee_id: "EMP-004", employee_name: "Sarah Jenkins", department: "Engineering", role: "QA Engineer", performance_score: 5, potential_score: 5, engagement_score: 89, retention_risk: "Low", promotion_readiness: "2+ Years", leadership_index: 54, cohort: "Q3 2023" },
-  { employee_id: "EMP-005", employee_name: "Alex Mercer", department: "Engineering", role: "Junior DevOps", performance_score: 2, potential_score: 3, engagement_score: 42, retention_risk: "High", promotion_readiness: "Not Ready", leadership_index: 22, cohort: "Q3 2023" },
-  { employee_id: "EMP-006", employee_name: "Li Wei", department: "Engineering", role: "Staff Engineer", performance_score: 9, potential_score: 5, engagement_score: 94, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 85, cohort: "Q3 2023" },
-  
-  // Q3 2023 - Product
-  { employee_id: "EMP-007", employee_name: "Sophia Martinez", department: "Product", role: "Director of Product", performance_score: 10, potential_score: 9, engagement_score: 95, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 92, cohort: "Q3 2023" },
-  { employee_id: "EMP-008", employee_name: "John Miller", department: "Product", role: "Product Manager", performance_score: 6, potential_score: 6, engagement_score: 80, retention_risk: "Medium", promotion_readiness: "1-2 Years", leadership_index: 70, cohort: "Q3 2023" },
-  { employee_id: "EMP-009", employee_name: "Emma Watson", department: "Product", role: "Associate PM", performance_score: 3, potential_score: 8, engagement_score: 88, retention_risk: "Low", promotion_readiness: "1-2 Years", leadership_index: 60, cohort: "Q3 2023" },
-  
-  // Q3 2023 - Sales & Marketing
-  { employee_id: "EMP-010", employee_name: "James Wilson", department: "Sales", role: "Account Executive", performance_score: 9, potential_score: 4, engagement_score: 81, retention_risk: "High", promotion_readiness: "1-2 Years", leadership_index: 55, cohort: "Q3 2023" },
-  { employee_id: "EMP-011", employee_name: "Chloe Bennett", department: "Marketing", role: "Growth Lead", performance_score: 8, potential_score: 8, engagement_score: 90, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 80, cohort: "Q3 2023" },
-  { employee_id: "EMP-012", employee_name: "Ryan Reynolds", department: "Marketing", role: "Creative Producer", performance_score: 5, potential_score: 7, engagement_score: 85, retention_risk: "Medium", promotion_readiness: "1-2 Years", leadership_index: 58, cohort: "Q3 2023" },
-  { employee_id: "EMP-013", employee_name: "Jordan Sparks", department: "Sales", role: "Account Director", performance_score: 6, potential_score: 5, engagement_score: 79, retention_risk: "Low", promotion_readiness: "2+ Years", leadership_index: 62, cohort: "Q3 2023" },
-
-  // Q4 2023 - Engineering
-  { employee_id: "EMP-101", employee_name: "Elena Rostova", department: "Engineering", role: "Lead Architect", performance_score: 10, potential_score: 10, engagement_score: 96, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 95, cohort: "Q4 2023" },
-  { employee_id: "EMP-102", employee_name: "Marcus Chen", department: "Engineering", role: "Principal Engineer", performance_score: 8, potential_score: 9, engagement_score: 88, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 84, cohort: "Q4 2023" },
-  { employee_id: "EMP-103", employee_name: "David Kim", department: "Engineering", role: "Frontend Dev Lead", performance_score: 9, potential_score: 7, engagement_score: 82, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 72, cohort: "Q4 2023" },
-  { employee_id: "EMP-104", employee_name: "Sarah Jenkins", department: "Engineering", role: "QA Engineer", performance_score: 6, potential_score: 5, engagement_score: 90, retention_risk: "Low", promotion_readiness: "2+ Years", leadership_index: 55, cohort: "Q4 2023" },
-  { employee_id: "EMP-105", employee_name: "Alex Mercer", department: "Engineering", role: "DevOps Engineer", performance_score: 4, potential_score: 5, engagement_score: 65, retention_risk: "Medium", promotion_readiness: "2+ Years", leadership_index: 45, cohort: "Q4 2023" },
-  { employee_id: "EMP-106", employee_name: "Li Wei", department: "Engineering", role: "Staff Engineer", performance_score: 9, potential_score: 6, engagement_score: 93, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 87, cohort: "Q4 2023" },
-  
-  // Q4 2023 - Product
-  { employee_id: "EMP-107", employee_name: "Sophia Martinez", department: "Product", role: "VP of Product", performance_score: 10, potential_score: 10, engagement_score: 98, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 98, cohort: "Q4 2023" },
-  { employee_id: "EMP-108", employee_name: "John Miller", department: "Product", role: "Senior PM", performance_score: 8, potential_score: 7, engagement_score: 84, retention_risk: "Low", promotion_readiness: "1-2 Years", leadership_index: 75, cohort: "Q4 2023" },
-  { employee_id: "EMP-109", employee_name: "Emma Watson", department: "Product", role: "PM", performance_score: 5, potential_score: 8, engagement_score: 91, retention_risk: "Low", promotion_readiness: "1-2 Years", leadership_index: 68, cohort: "Q4 2023" },
-
-  // Q1 2024 - Engineering
-  { employee_id: "EMP-201", employee_name: "Elena Rostova", department: "Engineering", role: "Lead Architect", performance_score: 10, potential_score: 10, engagement_score: 97, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 96, cohort: "Q1 2024" },
-  { employee_id: "EMP-202", employee_name: "Marcus Chen", department: "Engineering", role: "Principal Engineer", performance_score: 9, potential_score: 9, engagement_score: 91, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 88, cohort: "Q1 2024" },
-  { employee_id: "EMP-203", employee_name: "David Kim", department: "Engineering", role: "Frontend Dev Lead", performance_score: 9, potential_score: 8, engagement_score: 86, retention_risk: "Low", promotion_readiness: "Ready Now", leadership_index: 76, cohort: "Q1 2024" },
-  { employee_id: "EMP-204", employee_name: "Sarah Jenkins", department: "Engineering", role: "QA Lead", performance_score: 8, potential_score: 6, engagement_score: 92, retention_risk: "Low", promotion_readiness: "1-2 Years", leadership_index: 62, cohort: "Q1 2024" },
-  { employee_id: "EMP-205", employee_name: "Alex Mercer", department: "Engineering", role: "DevOps Engineer", performance_score: 6, potential_score: 6, engagement_score: 72, retention_risk: "Low", promotion_readiness: "1-2 Years", leadership_index: 52, cohort: "Q1 2024" },
-];
 
 export default function GrowthPotentialPage() {
   const [mode, setMode] = useState<"manual" | "csv">("manual");
@@ -170,8 +126,7 @@ export default function GrowthPotentialPage() {
   const cohorts = ["Q3 2023", "Q4 2023", "Q1 2024"];
 
   // The dashboard starts fresh: no demo employees are shown. It is driven entirely
-  // by the live 9-Box evaluation result. (MOCK_EMPLOYEES retained only for the
-  // export sample format below.)
+  // by the live 9-Box evaluation result.
   const filteredEmployees = useMemo<Employee[]>(() => [], []);
 
   // Aggregate matrix statistics
@@ -255,51 +210,8 @@ export default function GrowthPotentialPage() {
     ? deriveRetentionRisk(levelsToCategory(livePrediction.performance_level_score, livePrediction.potential_level_score))
     : null;
 
-  // Export functions
-  const handleExport = (format: "csv" | "json" | "report") => {
-    setShowExportOptions(false);
-    
-    let content = "";
-    let filename = `Growth_Potential_${selectedDept}_${selectedCohort}`;
-
-    if (format === "json") {
-      content = JSON.stringify(filteredEmployees, null, 2);
-      filename += ".json";
-    } else if (format === "csv") {
-      const headers = ["Employee ID", "Name", "Department", "Role", "Performance Score", "Potential Score", "Engagement Score", "Retention Risk", "Promotion Readiness", "Leadership Index", "Nine-Box Category"];
-      const rows = filteredEmployees.map(emp => [
-        emp.employee_id,
-        emp.employee_name,
-        emp.department,
-        emp.role,
-        emp.performance_score,
-        emp.potential_score,
-        emp.engagement_score,
-        emp.retention_risk,
-        emp.promotion_readiness,
-        emp.leadership_index,
-        getNineBoxCategory(emp.performance_score, emp.potential_score)
-      ]);
-      content = [headers.join(","), ...rows.map(r => r.map(val => `"${val}"`).join(","))].join("\n");
-      filename += ".csv";
-    } else {
-      // Report ready
-      content = `AI MENTOR - TALENT GROWTH POTENTIAL REPORT\n`;
-      content += `==========================================\n`;
-      content += `Department: ${selectedDept}\n`;
-      content += `Cohort: ${selectedCohort}\n`;
-      content += `Total Employees Evaluated: ${filteredEmployees.length}\n\n`;
-      content += `Nine-Box Breakdown:\n`;
-      Object.entries(categoryStats).forEach(([cat, stat]) => {
-        content += `- ${cat}: ${stat.count} employee(s) (${stat.percentage}%)\n`;
-      });
-      content += `\nEmployee Detail List:\n`;
-      filteredEmployees.forEach(emp => {
-        content += `[${emp.employee_id}] ${emp.employee_name} | Role: ${emp.role} | Perf: ${emp.performance_score} | Pot: ${emp.potential_score} | Category: ${getNineBoxCategory(emp.performance_score, emp.potential_score)}\n`;
-      });
-      filename += "_report.txt";
-    }
-
+  // Trigger a browser download for generated content.
+  const downloadFile = (content: string, filename: string) => {
     const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -308,6 +220,74 @@ export default function GrowthPotentialPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export the live 9-Box evaluation (the dashboard is driven by a single
+  // evaluated candidate, so exports reflect that result — never an empty roster).
+  const handleExport = (format: "csv" | "json" | "report") => {
+    setShowExportOptions(false);
+    if (!livePrediction) return;
+
+    const category = levelsToCategory(livePrediction.performance_level_score, livePrediction.potential_level_score);
+    const confidencePct = Math.round(livePrediction.confidence_score * 100);
+    const retention = deriveRetentionRisk(category);
+    const record: Record<string, string | number> = {
+      "Nine-Box Position": livePrediction.nine_box_position_label,
+      "Grid Position": livePrediction.position_in_grid,
+      Category: category,
+      "Performance Level": livePrediction.performance_level_score,
+      "Potential Level": livePrediction.potential_level_score,
+      "Confidence %": confidencePct,
+      "Retention Risk": retention,
+      Recommendation: livePrediction.descriptive_recommendation,
+    };
+
+    let content = "";
+    let filename = `Growth_Potential_${category.replace(/\s+/g, "_")}`;
+
+    if (format === "json") {
+      content = JSON.stringify(record, null, 2);
+      filename += ".json";
+    } else if (format === "csv") {
+      const headers = Object.keys(record);
+      const values = headers.map((h) => `"${String(record[h]).replace(/"/g, '""')}"`);
+      content = [headers.join(","), values.join(",")].join("\n");
+      filename += ".csv";
+    } else {
+      content =
+        `AI MENTOR - TALENT GROWTH POTENTIAL REPORT\n` +
+        `==========================================\n` +
+        Object.entries(record).map(([k, v]) => `${k}: ${v}`).join("\n") +
+        `\n`;
+      filename += "_report.txt";
+    }
+
+    downloadFile(content, filename);
+  };
+
+  // Build a concrete development action plan from the live evaluation.
+  const handleActionPlan = () => {
+    if (!livePrediction) return;
+    const category = levelsToCategory(livePrediction.performance_level_score, livePrediction.potential_level_score);
+    const retention = deriveRetentionRisk(category);
+    const retentionAction =
+      retention === "High"
+        ? "Schedule a stay interview within 2 weeks and clarify a concrete development path."
+        : retention === "Medium"
+          ? "Provide stretch assignments and bi-weekly check-ins."
+          : "Maintain engagement with growth opportunities and quarterly reviews.";
+    const plan =
+      `ACTION PLAN — ${livePrediction.nine_box_position_label} (Grid ${livePrediction.position_in_grid})\n` +
+      `=================================================\n` +
+      `Category: ${category}\n` +
+      `Performance level: ${livePrediction.performance_level_score}/2 · Potential level: ${livePrediction.potential_level_score}/2\n` +
+      `Model confidence: ${Math.round(livePrediction.confidence_score * 100)}%\n` +
+      `Retention risk: ${retention}\n\n` +
+      `1. Development focus:\n   ${livePrediction.descriptive_recommendation}\n\n` +
+      `2. Retention action:\n   ${retentionAction}\n\n` +
+      `3. Next review: 90 days — re-evaluate performance & potential.\n`;
+    downloadFile(plan, `Action_Plan_${category.replace(/\s+/g, "_")}.txt`);
   };
 
   return (
@@ -861,8 +841,8 @@ export default function GrowthPotentialPage() {
                 </div>
               </div>
 
-              <button 
-                onClick={() => alert(`Initiating action plan for ${activeEmployee ? activeEmployee.employee_name : "selected pool"}`)}
+              <button
+                onClick={handleActionPlan}
                 className="mt-2 w-full py-2.5 bg-gradient-to-r from-cyan-400 to-teal-500 text-[#101416] rounded font-headline text-[10px] font-bold tracking-widest uppercase hover:opacity-90 transition-opacity shadow-[0_0_20px_-5px_rgba(0,229,255,0.4)]"
               >
                 Initiate Action Plan
@@ -964,7 +944,7 @@ export default function GrowthPotentialPage() {
               
               <div className="space-y-3 text-xs leading-relaxed text-slate-300">
                 <p className="italic text-slate-400">
-                  "{aiInsight.text}"
+                  &quot;{aiInsight.text}&quot;
                 </p>
                 <div className="border-t border-[var(--app-border)]/15 pt-2.5 space-y-2">
                   <div>

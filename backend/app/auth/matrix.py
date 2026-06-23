@@ -3,7 +3,7 @@ Permission matrix — mirrors frontend/lib/rbac.ts. Keep the two in sync.
 
 Planes:
   platform_role  → user.role   (super_admin | support | user | guest; legacy 'admin' == super_admin)
-  org_role       → member.role  (owner | admin | mentor; legacy 'member' == mentor)
+  org_role       → member.role  (owner | admin | analyst | mentor | viewer | guest; legacy 'member' == mentor)
 A permission is granted if the platform role OR the org role grants it.
 """
 from typing import Optional
@@ -21,8 +21,14 @@ ORG_PERMS = {
               "dataset:upload", "predict:single", "predict:batch", "chatbot:use", "dashboard:view"},
     "admin": {"org:manageMembers", "org:settings",
               "dataset:upload", "predict:single", "predict:batch", "chatbot:use", "dashboard:view"},
+    # analyst — run everything (single + batch) + upload, no member management.
+    "analyst": {"dataset:upload", "predict:single", "predict:batch", "chatbot:use", "dashboard:view"},
     "mentor": {"predict:single", "chatbot:use", "dashboard:view"},
     "member": {"predict:single", "chatbot:use", "dashboard:view"},  # legacy alias of mentor
+    # viewer — read-only stakeholder: dashboards only.
+    "viewer": {"dashboard:view"},
+    # guest — pending/unapproved: no powers.
+    "guest": set(),
 }
 
 

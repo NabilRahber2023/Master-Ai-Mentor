@@ -265,6 +265,8 @@ async def get_prescriptions(req: PrescriptionRequest, limit: int = 60) -> Prescr
         clauses.append(f"{PRED} < 2.5")
     elif req.target == "Mid":
         clauses.append("current_sgpa >= 2.5 AND current_sgpa < 3.5")
+    elif req.target == "On track":
+        clauses.append(f"{PRED} >= 2.5")
 
     if req.search.strip():
         clauses.append("(LOWER(name) LIKE :search OR LOWER(student_id) LIKE :search)")

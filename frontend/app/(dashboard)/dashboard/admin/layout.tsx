@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {requireAdmin} from "@/actionts/auth/checkAuth";
 import {AdminSidebar} from "@/components/dashboard/admin-sidebar";
 import {ThemeSlider} from "@/components/theme-slider";
+import {ImpersonationBanner} from "@/components/auth/impersonation";
 
 export default async function AdminDashboardLayout({
   children,
@@ -15,6 +16,7 @@ export default async function AdminDashboardLayout({
   return (
     <>
     <ThemeSlider />
+    <ImpersonationBanner />
     <SidebarProvider
       style={
         {

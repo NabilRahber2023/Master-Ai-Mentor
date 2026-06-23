@@ -86,7 +86,7 @@ export function BatchPredictionDashboard() {
 
     // Prescription engine
     const [rxOpen, setRxOpen] = useState(false);
-    const [rxTarget, setRxTarget] = useState<"At risk" | "Mid">("At risk");
+    const [rxTarget, setRxTarget] = useState<"At risk" | "Mid" | "On track">("At risk");
     const [rxSearch, setRxSearch] = useState("");
     const [rx, setRx] = useState<PrescriptionResponse | null>(null);
     const [rxLoading, setRxLoading] = useState(false);
@@ -119,7 +119,7 @@ export function BatchPredictionDashboard() {
     }, []);
 
     const doPrescriptions = useCallback(
-        async (f: BatchFilters, target: "At risk" | "Mid", search: string) => {
+        async (f: BatchFilters, target: "At risk" | "Mid" | "On track", search: string) => {
             setRxLoading(true);
             try {
                 setRx(await fetchPrescriptions(f, target, search));
@@ -157,7 +157,7 @@ export function BatchPredictionDashboard() {
         if (showForecast) doForecast(filters);
     };
 
-    const openRx = (target: "At risk" | "Mid") => {
+    const openRx = (target: "At risk" | "Mid" | "On track") => {
         setRxTarget(target);
         setRxOpen(true);
         setRxSearch("");
@@ -565,7 +565,7 @@ function PredictionResults({
 }: {
     data: PredictResponse | null;
     loading: boolean;
-    onOpenRx: (t: "At risk" | "Mid") => void;
+    onOpenRx: (t: "At risk" | "Mid" | "On track") => void;
 }) {
     const [menuOpen, setMenuOpen] = useState(false);
     if (loading && !data) {
@@ -715,7 +715,7 @@ function PredictionResults({
                             onClick={() => setMenuOpen((v) => !v)}
                             className="flex items-center gap-2 rounded-full bg-white px-8 py-2 text-xs font-bold text-black transition-all hover:bg-cyan-300"
                         >
-                            <Sparkles className="h-4 w-4" /> Predict With AI <ChevronDown className="h-4 w-4" />
+                            <Sparkles className="h-4 w-4" /> Prescribe With AI <ChevronDown className="h-4 w-4" />
                         </button>
                         {menuOpen && (
                             <div className="absolute bottom-full right-0 mb-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-[#242b2d] shadow-2xl">
@@ -726,7 +726,7 @@ function PredictionResults({
                                     }}
                                     className="block w-full px-6 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-200 hover:bg-cyan-400 hover:text-black"
                                 >
-                                    Predict for mid level
+                                    Prescribe for mid level
                                 </button>
                                 <button
                                     onClick={() => {
@@ -735,7 +735,16 @@ function PredictionResults({
                                     }}
                                     className="block w-full px-6 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-200 hover:bg-cyan-400 hover:text-black"
                                 >
-                                    Predict for at-risk
+                                    Prescribe for at-risk
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        onOpenRx("On track");
+                                    }}
+                                    className="block w-full px-6 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-200 hover:bg-cyan-400 hover:text-black"
+                                >
+                                    Prescribe for on track
                                 </button>
                             </div>
                         )}

@@ -14,13 +14,17 @@ export function ThemeSlider() {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
 
-    const isDark = (resolvedTheme ?? theme) === "dark";
+    // Until mounted, the theme isn't known on the client (and the server can't
+    // know it either), so render a theme-neutral state that matches the SSR
+    // output. After mount we switch to the real resolved theme. This avoids a
+    // hydration mismatch on the icon colors / switch state.
+    const isDark = mounted && (resolvedTheme ?? theme) === "dark";
 
     return (
         <div className="fixed top-3 right-3 z-[60] flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1.5 shadow-md backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <Sun className={`h-4 w-4 ${!isDark ? "text-amber-500" : "text-muted-foreground"}`} />
+            <Sun className={`h-4 w-4 ${mounted && !isDark ? "text-amber-500" : "text-muted-foreground"}`} />
             <Switch
-                checked={mounted ? isDark : false}
+                checked={isDark}
                 onCheckedChange={(v) => setTheme(v ? "dark" : "light")}
                 aria-label="Toggle light or dark mode"
             />

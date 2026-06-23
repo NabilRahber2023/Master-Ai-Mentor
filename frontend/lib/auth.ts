@@ -37,6 +37,10 @@ export const auth = betterAuth({
                 admin: superAdmin, // back-compat: legacy 'admin' == super_admin
             },
             defaultRole: "user",
+            // Which platform roles are treated as administrators by the admin
+            // plugin (gating impersonation, user management, etc.). Without this
+            // a 'super_admin' user would not be recognised as an admin.
+            adminRoles: ["admin", "super_admin"],
         }),
         organization({
             allowUserToCreateOrganization: true,
@@ -66,14 +70,16 @@ export const auth = betterAuth({
                 }
             }
 
-            // Clear org cookie on sign-out
+            // Clear org + platform-role cookies on sign-out
             if (ctx.path.startsWith("/sign-out")) {
-                ctx.setCookie("active-org-slug", "", {
-                    path: "/",
-                    maxAge: 0,
-                    sameSite: "lax",
-                    secure: isProduction,
-                });
+                for (const name of ["active-org-slug", "platform-role"]) {
+                    ctx.setCookie(name, "", {
+                        path: "/",
+                        maxAge: 0,
+                        sameSite: "lax",
+                        secure: isProduction,
+                    });
+                }
             }
         }),
     },

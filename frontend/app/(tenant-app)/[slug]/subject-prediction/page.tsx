@@ -14,21 +14,17 @@ import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
 import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { SubjectPredictionResponse } from "@/lib/api/predictions";
 import {
-  Brain,
-  Search, 
-  Bell, 
-  Settings, 
-  Sliders, 
-  Cpu, 
-  Plus, 
-  Lock, 
-  Lightbulb, 
-  RefreshCw, 
-  TrendingUp, 
-  TrendingDown, 
-  Check, 
-  ChevronRight,
-  BookOpen
+  Search,
+  Bell,
+  Settings,
+  Sliders,
+  Cpu,
+  Plus,
+  Lock,
+  Lightbulb,
+  RefreshCw,
+  TrendingUp,
+  ChevronRight
 } from "lucide-react";
 
 export default function SubjectPredictionPage() {
@@ -46,31 +42,52 @@ export default function SubjectPredictionPage() {
   // Live ML evaluation result that drives the page when present.
   const [livePrediction, setLivePrediction] = useState<SubjectPredictionResponse | null>(null);
 
-  // Dynamic state simulation
+  // Dynamic state simulation. When a live prediction is present every figure is
+  // derived from the actual model output (confidence + alternative probabilities
+  // + contributing factors); the sliders only drive the pre-prediction preview.
   const simulatedValues = useMemo(() => {
+    const conf01 = livePrediction?.confidence_score ?? 0;
+    const alt0 = livePrediction?.alternative_options?.[0]?.probability ?? 0;
+    const alt1 = livePrediction?.alternative_options?.[1]?.probability ?? 0;
+
     // Confidence: use the live model confidence when available, else slider sim.
     const confidence = livePrediction
-      ? Math.round(livePrediction.confidence_score * 100)
+      ? Math.round(conf01 * 100)
       : Math.min(99, Math.max(70, Math.round(92 + (cognitiveWeight - 0.85) * 8 - (workloadTolerance - 0.6) * 5 + (marketTrendImpact - 0.42) * 6)));
-    
-    // GPA impact
-    const gpaImpact = Number((0.45 + (cognitiveWeight - 0.85) * 0.15 + (marketTrendImpact - 0.42) * 0.10).toFixed(2));
-    
-    // Alignment percentage
-    const alignment = Math.min(100, Math.max(60, Math.round(98 + (cognitiveWeight - 0.85) * 4 - (1 - workloadTolerance) * 10)));
-    
-    // Match rates for cards
-    const cryptoMatch = Math.min(99, Math.max(75, Math.round(94 + (cognitiveWeight - 0.85) * 6)));
-    const bioMatch = Math.min(99, Math.max(70, Math.round(88 + (marketTrendImpact - 0.42) * 12)));
-    const structuresMatch = Math.min(99, Math.max(65, Math.round(84 - (workloadTolerance - 0.6) * 10)));
-    const archMatch = Math.min(99, Math.max(60, Math.round(79 + (cognitiveWeight - 0.85) * 8)));
 
-    // Rationale description updates
+    // GPA impact scales with the model's confidence in the recommendation.
+    const gpaImpact = livePrediction
+      ? Number((0.2 + conf01 * 0.6).toFixed(2))
+      : Number((0.45 + (cognitiveWeight - 0.85) * 0.15 + (marketTrendImpact - 0.42) * 0.10).toFixed(2));
+
+    // Alignment: how decisively the top pick beats the runner-up.
+    const alignment = livePrediction
+      ? Math.min(100, Math.max(55, Math.round(confidence - alt0 * 100 * 0.3 + 6)))
+      : Math.min(100, Math.max(60, Math.round(98 + (cognitiveWeight - 0.85) * 4 - (1 - workloadTolerance) * 10)));
+
+    // Projected credit load (12–20) scales with confidence.
+    const credits = livePrediction ? Math.min(20, Math.max(12, Math.round(12 + conf01 * 8))) : 18;
+    const readinessLevel = confidence >= 85 ? 5 : confidence >= 70 ? 4 : confidence >= 55 ? 3 : 2;
+    const readinessLabel = confidence >= 85 ? "Peak Capacity" : confidence >= 70 ? "High Capacity" : confidence >= 55 ? "Moderate Capacity" : "Developing";
+
+    // Match rates — fall back to the alternative-path probabilities.
+    const cryptoMatch = livePrediction ? confidence : Math.min(99, Math.max(75, Math.round(94 + (cognitiveWeight - 0.85) * 6)));
+    const bioMatch = livePrediction ? Math.round(alt0 * 100) : Math.min(99, Math.max(70, Math.round(88 + (marketTrendImpact - 0.42) * 12)));
+    const structuresMatch = livePrediction ? Math.round(alt1 * 100) : Math.min(99, Math.max(65, Math.round(84 - (workloadTolerance - 0.6) * 10)));
+    const archMatch = livePrediction ? Math.round((livePrediction.alternative_options?.[2]?.probability ?? 0) * 100) : Math.min(99, Math.max(60, Math.round(79 + (cognitiveWeight - 0.85) * 8)));
+
+    // Rationale — built from the actual recommendation.
     let rationale = "Optimal configuration maintained. Performance vector and cognitive load parameters are balanced.";
-    if (workloadTolerance < 0.50) {
-      rationale = "Lowering Workload Tolerance below 0.50 shifts the primary recommendation to 'Hardware Architecture' to preserve system stability, despite a minor drop in GPA Delta projection.";
+    if (livePrediction) {
+      const alt = livePrediction.alternative_options?.[0];
+      const driver = livePrediction.contributing_factors?.[0]?.feature;
+      rationale = `The model recommends ${livePrediction.recommended_department} at ${confidence}% confidence`
+        + (alt ? `, ahead of ${alt.department} (${Math.round(alt.probability * 100)}%)` : "")
+        + (driver ? `. The strongest driver of this fit is ${driver}.` : ".");
+    } else if (workloadTolerance < 0.50) {
+      rationale = "Lowering Workload Tolerance below 0.50 prioritizes stability-oriented tracks, despite a minor drop in GPA Delta projection.";
     } else if (marketTrendImpact > 0.70) {
-      rationale = "High Market Trend Impact prioritizes cutting-edge vectors such as Quantum Cryptography and Synthetic Bio-Data to capitalize on emerging technological shifts.";
+      rationale = "High Market Trend Impact prioritizes cutting-edge vectors to capitalize on emerging technological shifts.";
     } else if (cognitiveWeight > 0.90) {
       rationale = "Peak Cognitive Aptitude Weight indicates high capacity for dense algorithm tracks, scaling the difficulty curve up for maximum GPA efficiency.";
     }
@@ -79,23 +96,30 @@ export default function SubjectPredictionPage() {
       confidence,
       gpaImpact,
       alignment,
+      credits,
+      readinessLevel,
+      readinessLabel,
       cryptoMatch,
       bioMatch,
       structuresMatch,
       archMatch,
-      rationale
+      rationale,
     };
   }, [cognitiveWeight, workloadTolerance, marketTrendImpact, livePrediction]);
 
-  // Map radar coordinate updates dynamically based on current slider values
+  // Radar coordinates — driven by the live prediction (confidence + alternative
+  // probabilities) when present, else by the preview sliders.
   const getRadarPoints = () => {
+    const base = livePrediction ? livePrediction.confidence_score : cognitiveWeight;
+    const a0 = livePrediction ? (livePrediction.alternative_options?.[0]?.probability ?? 0) : workloadTolerance;
+    const a1 = livePrediction ? (livePrediction.alternative_options?.[1]?.probability ?? 0) : marketTrendImpact;
     // center is 100, 100. max radius is 80.
     // categories: Logic, Theory, Systems, Ethics, Data
-    const logic = 40 + cognitiveWeight * 40;
-    const theory = 50 + cognitiveWeight * 30;
-    const systems = 30 + workloadTolerance * 50;
-    const ethics = 70 - workloadTolerance * 30;
-    const data = 40 + marketTrendImpact * 20 + cognitiveWeight * 20;
+    const logic = 40 + base * 40;
+    const theory = 50 + base * 30;
+    const systems = 30 + (1 - a0) * 50;
+    const ethics = 70 - a0 * 30;
+    const data = 40 + a1 * 20 + base * 20;
 
     const p1 = [100, 100 - logic]; // 0 deg
     const p2 = [100 + theory * Math.sin(Math.PI/2.5), 100 - theory * Math.cos(Math.PI/2.5)];
@@ -293,7 +317,12 @@ export default function SubjectPredictionPage() {
                   {livePrediction?.recommended_department ?? "Optimal Course Trajectory"}
                 </h2>
                 <p className="text-slate-400 text-xs leading-relaxed font-body">
-                  Based on your historical performance vector and cognitive load analysis, this pathway represents the optimal subject sequence to maximize your academic potential for Semester 04.
+                  Based on your submitted profile, the model ranks{" "}
+                  <span className="text-cyan-300 font-semibold">{livePrediction?.recommended_department ?? "this department"}</span>{" "}
+                  as your strongest-fit pathway at {simulatedValues.confidence}% confidence
+                  {livePrediction && livePrediction.alternative_options.length > 0
+                    ? `, with ${livePrediction.alternative_options.length} alternative path${livePrediction.alternative_options.length > 1 ? "s" : ""} below.`
+                    : "."}
                 </p>
                 
                 <div className="flex gap-3 pt-2">
@@ -349,10 +378,10 @@ export default function SubjectPredictionPage() {
             <div className="bg-[var(--app-card)]/60 rounded-xl p-4 border border-[var(--app-border)]/20 flex flex-col justify-between min-h-[90px]">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest block font-headline">Total Projected Credits</span>
               <div className="flex justify-between items-end mt-2">
-                <span className="text-2xl font-bold text-[var(--app-text)] font-headline">18 <span className="text-xs text-slate-500 font-normal">/20</span></span>
+                <span className="text-2xl font-bold text-[var(--app-text)] font-headline">{simulatedValues.credits} <span className="text-xs text-slate-500 font-normal">/20</span></span>
               </div>
               <div className="w-full h-1 bg-[var(--app-surface)] mt-2 rounded-full overflow-hidden">
-                <div className="h-full bg-cyan-400 rounded-full" style={{ width: "90%" }}></div>
+                <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${(simulatedValues.credits / 20) * 100}%` }}></div>
               </div>
             </div>
 
@@ -390,15 +419,13 @@ export default function SubjectPredictionPage() {
             <div className="bg-[var(--app-card)]/60 rounded-xl p-4 border border-[var(--app-border)]/20 flex flex-col justify-between min-h-[90px]">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest block font-headline">System Readiness</span>
               <div className="mt-2">
-                <span className="text-sm font-bold text-[var(--app-text)] font-headline block">Level 4</span>
-                <span className="text-[8px] text-slate-400 uppercase block">High Capacity</span>
+                <span className="text-sm font-bold text-[var(--app-text)] font-headline block">Level {simulatedValues.readinessLevel}</span>
+                <span className="text-[8px] text-slate-400 uppercase block">{simulatedValues.readinessLabel}</span>
               </div>
               <div className="flex gap-1 mt-2">
-                <span className="w-1.5 h-4 bg-cyan-400 rounded-sm"></span>
-                <span className="w-1.5 h-4 bg-cyan-400 rounded-sm"></span>
-                <span className="w-1.5 h-4 bg-cyan-400 rounded-sm"></span>
-                <span className="w-1.5 h-4 bg-cyan-400 rounded-sm"></span>
-                <span className="w-1.5 h-4 bg-slate-800 rounded-sm"></span>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <span key={i} className={`w-1.5 h-4 rounded-sm ${i <= simulatedValues.readinessLevel ? "bg-cyan-400" : "bg-slate-800"}`}></span>
+                ))}
               </div>
             </div>
           </div>
@@ -465,11 +492,11 @@ export default function SubjectPredictionPage() {
                 <div className="bg-[var(--app-bg)]/50 rounded-lg p-3 border border-[var(--app-border)]/10">
                   <span className="text-[9px] uppercase tracking-widest text-slate-400 block mb-1">Credit Load Density</span>
                   <div className="flex justify-between items-end">
-                    <span className="text-xl font-bold text-[var(--app-text)] font-headline">18 <span className="text-[10px] text-slate-500 font-normal">/20 max</span></span>
-                    <span className="text-[10px] text-teal-400 font-headline uppercase font-semibold">Optimal Load</span>
+                    <span className="text-xl font-bold text-[var(--app-text)] font-headline">{simulatedValues.credits} <span className="text-[10px] text-slate-500 font-normal">/20 max</span></span>
+                    <span className="text-[10px] text-teal-400 font-headline uppercase font-semibold">{simulatedValues.credits >= 18 ? "Optimal Load" : simulatedValues.credits >= 15 ? "Balanced Load" : "Light Load"}</span>
                   </div>
                   <div className="w-full h-1 bg-[var(--app-surface)] mt-2 rounded-full overflow-hidden">
-                    <div className="h-full bg-teal-400 rounded-full" style={{ width: "90%" }}></div>
+                    <div className="h-full bg-teal-400 rounded-full" style={{ width: `${(simulatedValues.credits / 20) * 100}%` }}></div>
                   </div>
                 </div>
 
@@ -484,14 +511,12 @@ export default function SubjectPredictionPage() {
                 <div className="bg-[var(--app-bg)]/50 rounded-lg p-3 border border-[var(--app-border)]/10 flex justify-between items-center">
                   <div>
                     <span className="text-[9px] uppercase tracking-widest text-slate-400 block mb-0.5">System Readiness</span>
-                    <span className="text-xs font-bold text-[var(--app-text)] font-headline">Level 4: High Capacity</span>
+                    <span className="text-xs font-bold text-[var(--app-text)] font-headline">Level {simulatedValues.readinessLevel}: {simulatedValues.readinessLabel}</span>
                   </div>
                   <div className="flex gap-1">
-                    <span className="w-1.5 h-5 bg-cyan-400 rounded-sm"></span>
-                    <span className="w-1.5 h-5 bg-cyan-400 rounded-sm"></span>
-                    <span className="w-1.5 h-5 bg-cyan-400 rounded-sm"></span>
-                    <span className="w-1.5 h-5 bg-cyan-400 rounded-sm"></span>
-                    <span className="w-1.5 h-5 bg-slate-800 rounded-sm"></span>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <span key={i} className={`w-1.5 h-5 rounded-sm ${i <= simulatedValues.readinessLevel ? "bg-cyan-400" : "bg-slate-800"}`}></span>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -520,7 +545,7 @@ export default function SubjectPredictionPage() {
                   </div>
                   <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.recommended_department ?? "Quantum Cryptography"}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
-                    Advanced theoretical frameworks for securing post-binary data systems and networks.
+                    Top-ranked department for your profile — the model&apos;s primary recommendation.
                   </p>
                 </div>
                 
@@ -548,7 +573,7 @@ export default function SubjectPredictionPage() {
                   </div>
                   <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.alternative_options[0]?.department ?? "Synthetic Bio-Data"}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
-                    Data structures mapping organic computational methodologies and cellular algorithms.
+                    Closest alternative department to your top recommendation.
                   </p>
                 </div>
                 
@@ -751,9 +776,10 @@ export default function SubjectPredictionPage() {
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">Advanced Quantum Algorithms</h4>
+                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">{livePrediction?.recommended_department ?? "Recommended Department"}</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    <strong>Why it fits:</strong> This module directly bridges your recent high performance in Linear Algebra with your stated goal of Quantum Cryptography. Historically, students with your profile achieve an A- average in this specific curriculum.
+                    <strong>Why it fits:</strong> {livePrediction?.recommended_department ?? "This department"} is the model&apos;s top match for your profile at {simulatedValues.confidence}% confidence
+                    {livePrediction?.contributing_factors?.[0] ? `, driven most by ${livePrediction.contributing_factors[0].feature}.` : "."}
                   </p>
                 </div>
                 
@@ -792,12 +818,14 @@ export default function SubjectPredictionPage() {
                     <span className="px-2 py-0.5 rounded bg-yellow-950/40 text-yellow-400 border border-yellow-800/30">ELECTIVE</span>
                     <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">ETH-210</span>
                   </div>
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">82%</span>
+                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
+                    {livePrediction?.alternative_options?.[0] ? Math.round(livePrediction.alternative_options[0].probability * 100) : simulatedValues.bioMatch}%
+                  </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">AI Ethics &amp; Policy</h4>
+                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">{livePrediction?.alternative_options?.[0]?.department ?? "Alternative Path"}</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Provides a necessary philosophical framework required for leadership roles in AI governance.
+                    A strong secondary fit for your profile, ranked just below the top recommendation.
                   </p>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
@@ -822,12 +850,14 @@ export default function SubjectPredictionPage() {
                     <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30">CORE</span>
                     <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">DAT-305</span>
                   </div>
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">89%</span>
+                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
+                    {livePrediction?.alternative_options?.[1] ? Math.round(livePrediction.alternative_options[1].probability * 100) : simulatedValues.structuresMatch}%
+                  </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">Neural Network Arch.</h4>
+                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">{livePrediction?.alternative_options?.[1]?.department ?? "Alternative Path"}</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Essential prerequisite for Senior year project. Warning: Schedule conflict with QCS-401.
+                    A viable third option worth considering alongside your top two matches.
                   </p>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
@@ -855,7 +885,7 @@ export default function SubjectPredictionPage() {
       <footer className="border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
-          Matrix adapts in real-time as new performance data becomes available. Last updated: May 15, 2025 10:42 AM
+          Matrix adapts in real-time as new performance data becomes available.
         </div>
         <div>
           MCP ORCHESTRA SYSTEM V1.0.4

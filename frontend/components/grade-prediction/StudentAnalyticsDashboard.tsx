@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  GraduationCap,
   Search,
   Bell,
   Settings as SettingsIcon,
@@ -12,11 +11,15 @@ import {
   Edit2,
   Info
 } from "lucide-react";
-import type { SGPAPredictionResponse } from "@/lib/api/predictions";
+import type { SGPAPredictionResponse, SGPAPredictionInput } from "@/lib/api/predictions";
 
 interface StudentAnalyticsDashboardProps {
   /** Live SGPA prediction result. The dashboard renders against this. */
   prediction: SGPAPredictionResponse;
+  /** The submitted inputs that produced the prediction (manual mode). Optional:
+   *  CSV mode supplies only the prediction, so every cell falls back to the
+   *  values echoed inside the prediction's contributing factors. */
+  input?: SGPAPredictionInput;
 }
 
 // Pull the original numeric value of a contributing factor by feature name.
@@ -27,45 +30,53 @@ function factorValue(prediction: SGPAPredictionResponse, feature: string): numbe
   return f && typeof f.value === "number" ? f.value : null;
 }
 
-// Initial Subject configurations
-const INITIAL_SUBJECTS_DIAGNOSTICS = [
-  { id: 1, name: "Advanced Cryptography", code: "CS-401", current: "B+", forecast: "A-", trend: "up" },
-  { id: 2, name: "Neural Network Arch", code: "AI-350", current: "A", forecast: "A", trend: "stable" },
-  { id: 3, name: "Quantum Mechanics", code: "PHYS-502", current: "B-", forecast: "C+", trend: "down" },
-];
-
-const INITIAL_SUBJECTS_BREAKDOWN = [
-  { code: "CS 401", title: "Advanced Algorithms", historical: "B+", predicted: "A-", icon: "code" },
-  { code: "MATH 350", title: "Linear Algebra", historical: "A", predicted: "A", icon: "calculate" },
-  { code: "PHYS 201", title: "Quantum Mechanics", historical: "C+", predicted: "C", icon: "science", warning: true },
-];
-
-export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashboardProps) {
+export function StudentAnalyticsDashboard({ prediction, input }: StudentAnalyticsDashboardProps) {
+  // ── The "subject" cards have no per-subject model output, so we drive them
+  //    entirely from the real contributing factors (feature, submitted value,
+  //    SHAP impact) so every card refreshes with each prediction instead of
+  //    showing fixed demo courses. ────────────────────────────────────────────
+  const factorCards = useMemo(() => {
+    const factors = prediction.contributing_factors;
+    const maxImpact = Math.max(...factors.map((f) => Math.abs(f.impact_score)), 0.0001);
+    return factors.map((f, i) => {
+      const strength = Math.abs(f.impact_score) / maxImpact;
+      const trend: "up" | "stable" | "down" = strength >= 0.66 ? "up" : strength >= 0.33 ? "stable" : "down";
+      const valueText = typeof f.value === "number" ? Number(f.value).toFixed(2) : String(f.value);
+      return {
+        id: i + 1,
+        name: f.feature,
+        code: `IMPACT ${f.impact_score.toFixed(3)}`,
+        value: valueText,
+        impactPct: Math.round(strength * 100),
+        trend,
+        warning: trend === "down",
+      };
+    });
+  }, [prediction]);
   // Baseline (current) SGPA comes straight from the prediction inputs.
   const currentSgpa = factorValue(prediction, "Previous SGPA") ?? prediction.predicted_sgpa;
   const basePredicted = prediction.predicted_sgpa;
 
-  // Simulator Tuning States — seeded from the prediction so "what-if" starts at the
-  // real attendance/study-hours values used for the prediction.
+  // Simulator Tuning States — seeded from the user's actual submitted inputs (or
+  // the values echoed in the prediction's contributing factors) so "what-if"
+  // starts exactly where this prediction was made.
   const [attendanceRate, setAttendanceRate] = useState<number>(
-    () => Math.round(factorValue(prediction, "Attendance Rate") ?? 92),
+    () => Math.round(input?.Attendance_Rate ?? factorValue(prediction, "Attendance Rate") ?? 92),
   );
   const [studyHours, setStudyHours] = useState<number>(
-    () => Math.round((factorValue(prediction, "Study Hours Per Day") ?? 4) * 4),
+    () => Math.round((input?.Study_Hours_Per_Day ?? factorValue(prediction, "Study Hours Per Day") ?? 4) * 4),
   );
   const [simulationActive, setSimulationActive] = useState(false);
 
-  // Editable Model Baseline Parameters
-  const [sscGpa, setSscGpa] = useState<number>(() => factorValue(prediction, "SSC GPA") ?? 4.8);
-  const [hscGpa, setHscGpa] = useState<number>(() => factorValue(prediction, "HSC GPA") ?? 4.92);
-  const [familyIncome, setFamilyIncome] = useState<string>("Tier 2");
-  const [scholarship, setScholarship] = useState<string>("Merit Based");
-  const [distanceFromUni, setDistanceFromUni] = useState<string>("12 km");
-  const [prevSemesterSgpa, setPrevSemesterSgpa] = useState<number>(() => currentSgpa);
+  // Editable Model Baseline Parameters — every value comes from the actual input
+  // (manual mode) or the prediction's contributing factors (CSV mode).
+  const [sscGpa, setSscGpa] = useState<number>(() => input?.SSC_GPA ?? factorValue(prediction, "SSC GPA") ?? currentSgpa);
+  const [hscGpa, setHscGpa] = useState<number>(() => input?.HSC_GPA ?? factorValue(prediction, "HSC GPA") ?? currentSgpa);
+  const [familyIncome, setFamilyIncome] = useState<number>(() => input?.Family_Income_BDT ?? factorValue(prediction, "Family Income") ?? 0);
+  const [partTimeHours, setPartTimeHours] = useState<number>(() => input?.Part_Time_Hours ?? factorValue(prediction, "Part-Time Hours") ?? 0);
+  const [participation, setParticipation] = useState<string>(() => input?.Active_Participation ?? "—");
+  const [prevSemesterSgpa, setPrevSemesterSgpa] = useState<number>(() => input?.Previous_SGPA ?? currentSgpa);
   const [editingParams, setEditingParams] = useState(false);
-
-  // Diagnostics states
-  const [subjectsDiagnostics, setSubjectsDiagnostics] = useState(INITIAL_SUBJECTS_DIAGNOSTICS);
 
   // Confidence is derived from the risk band the model assigned (regression model
   // has no native probability). Clearly explainable mapping.
@@ -87,16 +98,11 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
 
     const primaryConfidence = Math.min(99.9, Math.max(50.0, baseConfidence + attImpact * 5 + studyImpact * 4));
 
-    const cryptoGpa = Math.min(4.0, predicted);
-    const quantumGpa = Math.min(4.0, Math.max(0, predicted - 1.4));
-
     return {
       predicted,
       confidence: primaryConfidence.toFixed(1),
       risk: prediction.risk_level,
       riskColor: predicted >= 3.5 ? "text-cyan-400 bg-cyan-950/40 border-cyan-800/30" : predicted >= 3.0 ? "text-yellow-400 bg-yellow-950/40 border-yellow-800/30" : "text-red-400 bg-red-950/40 border-red-800/30",
-      cryptoForecast: cryptoGpa >= 3.85 ? "A" : cryptoGpa >= 3.5 ? "A-" : cryptoGpa >= 3.15 ? "B+" : "B",
-      quantumForecast: quantumGpa >= 3.15 ? "B" : quantumGpa >= 2.85 ? "B-" : quantumGpa >= 2.5 ? "C+" : "C",
       predicted2: predicted,
     };
   }, [attendanceRate, studyHours, basePredicted, baseConfidence, prediction]);
@@ -394,7 +400,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
             </div>
 
             <div className="pt-4 border-t border-[var(--app-border)]/10 text-[10px] text-slate-400 font-mono">
-              UPDATED: JUST NOW
+              SGPA {basePredicted.toFixed(2)} · {prediction.risk_level.toUpperCase()} · {prediction.contributing_factors.length} FACTORS
             </div>
           </div>
         </div>
@@ -409,7 +415,7 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {subjectsDiagnostics.map((subject) => (
+            {factorCards.map((subject) => (
               <div key={subject.id} className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 rounded-xl p-4 flex flex-col justify-between hover:bg-[var(--app-card)]/80 transition-colors">
                 <div>
                   <h4 className="font-headline text-sm text-[var(--app-text)] font-medium truncate mb-0.5">{subject.name}</h4>
@@ -418,10 +424,10 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
 
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="block text-[8px] text-slate-400 uppercase tracking-wider mb-0.5">Current</span>
-                    <span className="font-headline text-sm text-[var(--app-text)] font-bold">{subject.current}</span>
+                    <span className="block text-[8px] text-slate-400 uppercase tracking-wider mb-0.5">Value</span>
+                    <span className="font-headline text-sm text-[var(--app-text)] font-bold">{subject.value}</span>
                   </div>
-                  
+
                   {subject.trend === "up" ? (
                     <TrendingUp className="w-4 h-4 text-cyan-400" />
                   ) : subject.trend === "down" ? (
@@ -431,34 +437,14 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                   )}
 
                   <div className="text-right">
-                    <span className="block text-[8px] text-cyan-400 uppercase tracking-wider mb-0.5 font-headline">Forecast</span>
+                    <span className="block text-[8px] text-cyan-400 uppercase tracking-wider mb-0.5 font-headline">Impact</span>
                     <span className={`font-headline text-sm font-bold ${subject.trend === "down" ? "text-yellow-500" : "text-cyan-400"}`}>
-                      {subject.id === 1 ? simulatedValues.cryptoForecast : subject.id === 3 ? simulatedValues.quantumForecast : subject.forecast}
+                      {subject.impactPct}%
                     </span>
                   </div>
                 </div>
               </div>
             ))}
-
-            {/* Add subject diagnostics mockup card */}
-            <div 
-              onClick={() => {
-                const name = prompt("Enter new subject name:");
-                const code = prompt("Enter subject code (e.g., CSE-302):");
-                if (name && code) {
-                  setSubjectsDiagnostics([
-                    ...subjectsDiagnostics,
-                    { id: Date.now(), name, code, current: "B", forecast: "B+", trend: "up" }
-                  ]);
-                }
-              }}
-              className="bg-[var(--app-surface)]/20 border border-[var(--app-border)]/15 rounded-xl p-4 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-[var(--app-surface)]/50 hover:border-cyan-500/30 transition-all group min-h-[120px]"
-            >
-              <div className="w-8 h-8 rounded-full bg-[var(--app-card2)] border border-[var(--app-border)]/30 flex items-center justify-center mb-2 group-hover:border-cyan-500/50 transition-colors">
-                <span className="text-slate-400 text-lg group-hover:text-cyan-400 transition-colors">+</span>
-              </div>
-              <span className="font-headline text-[10px] text-slate-400 uppercase tracking-widest group-hover:text-cyan-400 transition-colors">Add Subject Intel</span>
-            </div>
           </div>
         </div>
       </div>
@@ -471,29 +457,29 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {INITIAL_SUBJECTS_BREAKDOWN.map((subject) => (
-            <div 
-              key={subject.code} 
+          {factorCards.map((subject) => (
+            <div
+              key={subject.id}
               className={`bg-[#0b0f11]/80 rounded-xl p-5 flex flex-col justify-between border relative overflow-hidden transition-all duration-300 ${
-                subject.warning 
-                  ? "border-yellow-500/20 hover:border-yellow-500/40" 
+                subject.warning
+                  ? "border-yellow-500/20 hover:border-yellow-500/40"
                   : "border-[var(--app-border)]/10 hover:border-[var(--app-border)]/30 hover:bg-[var(--app-card2)]/60"
               }`}
             >
               {subject.warning && <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>}
-              
+
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="text-[9px] text-slate-400 font-mono tracking-widest uppercase mb-0.5">{subject.code}</p>
-                  <h4 className="text-sm font-medium text-[var(--app-text)]">{subject.title}</h4>
+                  <h4 className="text-sm font-medium text-[var(--app-text)]">{subject.name}</h4>
                 </div>
                 <span className="text-xs font-mono text-cyan-400">⚡</span>
               </div>
 
               <div className="flex justify-between items-end mt-4">
                 <div>
-                  <p className="text-[8px] text-slate-400 uppercase tracking-wider mb-0.5">Historical</p>
-                  <p className="text-base text-slate-300 font-headline">{subject.historical}</p>
+                  <p className="text-[8px] text-slate-400 uppercase tracking-wider mb-0.5">Value</p>
+                  <p className="text-base text-slate-300 font-headline">{subject.value}</p>
                 </div>
 
                 <div className="flex flex-col items-center justify-center px-4">
@@ -501,9 +487,9 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
                 </div>
 
                 <div className="text-right">
-                  <p className={`text-[8px] uppercase tracking-wider mb-0.5 ${subject.warning ? "text-yellow-500" : "text-cyan-400"}`}>Predicted</p>
+                  <p className={`text-[8px] uppercase tracking-wider mb-0.5 ${subject.warning ? "text-yellow-500" : "text-cyan-400"}`}>Impact</p>
                   <p className={`text-lg font-bold font-headline drop-shadow-[0_0_8px_rgba(0,229,255,0.4)] ${subject.warning ? "text-yellow-500" : "text-cyan-400"}`}>
-                    {subject.code === "CS 401" ? simulatedValues.cryptoForecast : subject.code === "PHYS 201" ? simulatedValues.quantumForecast : subject.predicted}
+                    {subject.impactPct}%
                   </p>
                 </div>
               </div>
@@ -619,44 +605,44 @@ export function StudentAnalyticsDashboard({ prediction }: StudentAnalyticsDashbo
             </div>
 
             <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
-              <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Family Income</p>
+              <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Family Income (BDT)</p>
               {editingParams ? (
-                <input 
-                  type="text" 
+                <input
+                  type="number"
                   className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
-                  value={familyIncome} 
-                  onChange={(e) => setFamilyIncome(e.target.value)}
+                  value={familyIncome}
+                  onChange={(e) => setFamilyIncome(Number(e.target.value))}
                 />
               ) : (
-                <p className="text-xs font-bold text-[var(--app-text)]">{familyIncome}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{familyIncome.toLocaleString()}</p>
               )}
             </div>
 
             <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
-              <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Scholarship</p>
+              <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Part-Time Hrs/Wk</p>
               {editingParams ? (
-                <input 
-                  type="text" 
+                <input
+                  type="number"
                   className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
-                  value={scholarship} 
-                  onChange={(e) => setScholarship(e.target.value)}
+                  value={partTimeHours}
+                  onChange={(e) => setPartTimeHours(Number(e.target.value))}
                 />
               ) : (
-                <p className="text-xs font-bold text-[var(--app-text)]">{scholarship}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{partTimeHours}</p>
               )}
             </div>
 
             <div className="bg-[var(--app-surface)]/30 p-3 rounded-lg border border-[var(--app-border)]/10">
-              <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Distance from Uni</p>
+              <p className="text-[9px] text-slate-400 font-headline tracking-widest uppercase mb-1">Active Participation</p>
               {editingParams ? (
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className="bg-[var(--app-bg)] border border-[var(--app-border)]/30 text-[var(--app-text)] text-xs p-1 rounded w-full"
-                  value={distanceFromUni} 
-                  onChange={(e) => setDistanceFromUni(e.target.value)}
+                  value={participation}
+                  onChange={(e) => setParticipation(e.target.value)}
                 />
               ) : (
-                <p className="text-xs font-bold text-[var(--app-text)]">{distanceFromUni}</p>
+                <p className="text-xs font-bold text-[var(--app-text)]">{participation}</p>
               )}
             </div>
 

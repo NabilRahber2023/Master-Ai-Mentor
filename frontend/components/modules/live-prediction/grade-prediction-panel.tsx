@@ -37,7 +37,7 @@ const DEFAULTS: SGPAPredictionInput = {
 };
 
 interface GradePredictionPanelProps {
-    onResult?: (result: SGPAPredictionResponse) => void;
+    onResult?: (result: SGPAPredictionResponse, input: SGPAPredictionInput) => void;
     onReset?: () => void;
 }
 
@@ -61,7 +61,7 @@ export function GradePredictionPanel({ onResult, onReset }: GradePredictionPanel
         try {
             const res = await predictSGPA(form);
             setResult(res);
-            onResult?.(res);
+            onResult?.(res, form);
         } catch (err) {
             setError(err instanceof ApiError ? err.message : "Prediction failed");
             setResult(null);

@@ -67,6 +67,16 @@ cd frontend && npm install && npm run db:push
 cd .. && npm install && node create-oxford-user.mjs
 ```
 
+### 6b. Seed RBAC demo roles (powers the "Role Based Login" page)
+Promotes `oxford@gmail.com` to **super_admin** and creates one demo user per role
+(`rbac-<role>@demo.local`, password `Demo@12345#`) as members of the oxford org.
+Idempotent. Required for the Super-Admin **Role Based Login** console
+(`/dashboard/admin/roles`), where one click impersonates any role and the banner /
+logout returns you to your own account.
+```bash
+node create-rbac-demo-users.mjs
+```
+
 ## 7. Frontend dev server
 ```bash
 cd frontend && npm run dev    # http://localhost:3000

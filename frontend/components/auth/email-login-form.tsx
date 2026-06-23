@@ -43,6 +43,12 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
                     throw new Error(result.error.message || "Invalid email or password");
                 }
 
+                // Set the platform-role cookie for the middleware's coarse admin gate.
+                const platformRole = (result.data?.user as { role?: string } | undefined)?.role;
+                if (platformRole) {
+                    document.cookie = `platform-role=${platformRole}; path=/; max-age=${60 * 60 * 24 * 7}`;
+                }
+
                 // Fetch user's organizations
                 const orgsResult = await authClient.organization.list();
 

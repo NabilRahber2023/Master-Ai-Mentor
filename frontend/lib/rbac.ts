@@ -42,7 +42,9 @@ export type Permission =
   | "dashboard:view";
 
 export type PlatformRole = "super_admin" | "support" | "user" | "guest" | "admin";
-export type OrgRole = "owner" | "admin" | "mentor" | "member" | string | null;
+export type OrgRole =
+  | "owner" | "admin" | "analyst" | "mentor" | "viewer" | "member" | "guest"
+  | string | null;
 
 export interface Principal {
   userId?: string;
@@ -77,8 +79,16 @@ const ORG_PERMS: Record<string, Permission[]> = {
     "org:manageMembers", "org:settings",
     "dataset:upload", "predict:single", "predict:batch", "chatbot:use", "dashboard:view",
   ],
+  // analyst — power analyst: run everything (single + batch) + upload, no member mgmt.
+  analyst: [
+    "dataset:upload", "predict:single", "predict:batch", "chatbot:use", "dashboard:view",
+  ],
   mentor: ["predict:single", "chatbot:use", "dashboard:view"],
   member: ["predict:single", "chatbot:use", "dashboard:view"], // legacy alias of mentor
+  // viewer — read-only stakeholder: dashboards only, cannot run/upload.
+  viewer: ["dashboard:view"],
+  // guest — pending/unapproved: no powers.
+  guest: [],
 };
 
 export function isSuperAdmin(platformRole?: string | null): boolean {
@@ -101,6 +111,47 @@ export function can(p: Principal | null | undefined, perm: Permission): boolean 
 /** Map a module id to the permission required to *run* it. */
 export function modulePermission(moduleId: string): Permission {
   return moduleId === "batch-prediction" ? "predict:batch" : "predict:single";
+}
+
+/** Every permission in the matrix, in display order. */
+export const ALL_PERMISSIONS: Permission[] = [
+  "platform:packages", "platform:orgs", "platform:users", "platform:impersonate",
+  "modules:toggle", "audit:read",
+  "org:manageMembers", "org:settings", "org:billing",
+  "dataset:upload", "predict:single", "predict:batch", "chatbot:use", "dashboard:view",
+];
+
+/** Human-readable labels for permissions (for the RBAC visualization page). */
+export const PERMISSION_LABELS: Record<Permission, string> = {
+  "platform:packages": "Manage packages & pricing",
+  "platform:orgs": "Create / suspend organizations",
+  "platform:users": "Manage any user / ban",
+  "platform:impersonate": "Impersonate users",
+  "modules:toggle": "Toggle modules per org",
+  "audit:read": "View audit log",
+  "org:manageMembers": "Manage members & invites",
+  "org:settings": "Edit org settings",
+  "org:billing": "View billing / subscription",
+  "dataset:upload": "Upload / replace dataset",
+  "predict:single": "Run single prediction",
+  "predict:batch": "Run batch / cohort prediction",
+  "chatbot:use": "Use AI chatbot",
+  "dashboard:view": "View dashboards / results",
+};
+
+/**
+ * Effective permission set for a (platformRole, orgRole) pair — the union of
+ * both planes (super_admin gets everything). Used by the Role-Based Login page.
+ */
+export function effectivePermissions(
+  platformRole: PlatformRole,
+  orgRole?: OrgRole,
+): Permission[] {
+  if (isSuperAdmin(platformRole)) return [...ALL_PERMISSIONS];
+  const set = new Set<Permission>();
+  for (const p of PLATFORM_PERMS[platformRole] ?? []) set.add(p);
+  if (orgRole) for (const p of ORG_PERMS[orgRole] ?? []) set.add(p);
+  return ALL_PERMISSIONS.filter((p) => set.has(p));
 }
 
 /** Which permission backs each FastAPI endpoint group (mirrored on backend). */
