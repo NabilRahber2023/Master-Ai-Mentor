@@ -42,8 +42,9 @@ function OrbitingItem({
     }, [initialAngle, duration])
 
     const radians = (angle * Math.PI) / 180
-    const x = Math.cos(radians) * radius
-    const y = Math.sin(radians) * radius
+    // Round so the SSR transform string matches the first client render exactly.
+    const x = Math.round(Math.cos(radians) * radius * 1e4) / 1e4
+    const y = Math.round(Math.sin(radians) * radius * 1e4) / 1e4
 
     const rotation = counterRotate ? 0 : angle + rotationOffset
 

@@ -1,3 +1,7 @@
+// Round trig results so server and client render identical coordinate strings
+// (prevents float last-digit hydration mismatches).
+const r4 = (n: number) => Math.round(n * 1e4) / 1e4;
+
 export default function AccessibilityIcon() {
     return (
         <svg
@@ -48,8 +52,8 @@ export default function AccessibilityIcon() {
             {/* Connection Signals */}
             <g opacity="0.6">
                 {[0, 90, 180, 270].map((angle, i) => {
-                    const x = 100 + 75 * Math.cos((angle * Math.PI) / 180);
-                    const y = 100 + 75 * Math.sin((angle * Math.PI) / 180);
+                    const x = r4(100 + 75 * Math.cos((angle * Math.PI) / 180));
+                    const y = r4(100 + 75 * Math.sin((angle * Math.PI) / 180));
                     return (
                         <g key={i}>
                             <circle cx={x} cy={y} r="4" fill="url(#signalGrad)">

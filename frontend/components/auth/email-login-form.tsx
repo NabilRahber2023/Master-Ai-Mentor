@@ -3,26 +3,43 @@
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, Eye, EyeOff } from "lucide-react";
 
 interface EmailLoginFormProps {
     redirectTo?: string;
+    /** Credentials the "Auto Fill Credentials" button populates (role portal). */
+    prefillEmail?: string;
+    prefillPassword?: string;
+    /** Fired after a successful sign-in, before the redirect (e.g. close a modal). */
+    onSuccess?: () => void;
 }
 
-// Demo account seeded in the local database (see "We have done.md")
+// Default demo account seeded in the local database (see "We have done.md").
 const DEMO_CREDENTIALS = {
     email: "oxford@gmail.com",
     password: "@oxford123#",
 };
 
-export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLoginFormProps) {
+export default function EmailLoginForm({
+    redirectTo = "/dashboard",
+    prefillEmail,
+    prefillPassword,
+    onSuccess,
+}: EmailLoginFormProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+
+    // When a role is selected we autofill that role's credentials; otherwise the
+    // dev-only button fills the default demo account.
+    const fill = prefillEmail && prefillPassword ? { email: prefillEmail, password: prefillPassword } : DEMO_CREDENTIALS;
+    const showAutoFill = Boolean(prefillEmail) || process.env.NODE_ENV !== "production";
 
     const form = useForm({
         defaultValues: {
@@ -34,6 +51,7 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
             setError(null);
 
             try {
+                // Production auth pipeline — identical for every role.
                 const result = await authClient.signIn.email({
                     email: value.email,
                     password: value.password,
@@ -48,6 +66,9 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
                 if (platformRole) {
                     document.cookie = `platform-role=${platformRole}; path=/; max-age=${60 * 60 * 24 * 7}`;
                 }
+
+                toast.success("Signed in successfully");
+                onSuccess?.();
 
                 // Fetch user's organizations
                 const orgsResult = await authClient.organization.list();
@@ -73,7 +94,9 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
                     router.refresh();
                 }
             } catch (err) {
-                setError(err instanceof Error ? err.message : "Login failed");
+                const message = err instanceof Error ? err.message : "Login failed";
+                setError(message);
+                toast.error(message);
             } finally {
                 setIsSubmitting(false);
             }
@@ -89,20 +112,20 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
             }}
             className="space-y-4"
         >
-            {/* Quick fill demo credentials — development only */}
-            {process.env.NODE_ENV !== "production" && (
+            {/* Auto Fill Credentials — fills the fields; login still goes through real auth. */}
+            {showAutoFill && (
                 <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
-                        form.setFieldValue("email", DEMO_CREDENTIALS.email);
-                        form.setFieldValue("password", DEMO_CREDENTIALS.password);
+                        form.setFieldValue("email", fill.email);
+                        form.setFieldValue("password", fill.password);
                         setError(null);
                     }}
                     className="w-full border-cyan-500/40 bg-cyan-500/5 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
                 >
                     <Wand2 className="w-4 h-4 mr-2" />
-                    Fill demo credentials
+                    Auto Fill Credentials
                 </Button>
             )}
 
@@ -129,15 +152,25 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
                 {(field) => (
                     <div className="space-y-1.5">
                         <Label htmlFor="password" className="text-sm">Password</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            className="bg-background/50 border-white/20"
-                            autoComplete="current-password"
-                        />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                value={field.state.value}
+                                onChange={(e) => field.handleChange(e.target.value)}
+                                className="bg-background/50 border-white/20 pr-10"
+                                autoComplete="current-password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((v) => !v)}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
                     </div>
                 )}
             </form.Field>
@@ -161,7 +194,7 @@ export default function EmailLoginForm({ redirectTo = "/dashboard" }: EmailLogin
                         Signing in...
                     </>
                 ) : (
-                    "Sign In"
+                    "Login"
                 )}
             </Button>
         </form>

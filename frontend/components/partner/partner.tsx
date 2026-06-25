@@ -19,6 +19,7 @@ const PartnershipCard: React.FC<PartnershipCardProps> = ({ title, benefits, butt
                 "relative flex flex-col overflow-hidden rounded-3xl border border-cyan-500/20 p-8 md:p-10",
                 "bg-gradient-to-br from-cyan-950/20 via-gray-950/60 to-gray-950",
                 "group hover:border-cyan-400/50 transition-all duration-500 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]",
+                "hover:translate-x-3",
                 className
             )}
         >

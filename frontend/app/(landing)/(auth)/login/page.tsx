@@ -1,12 +1,12 @@
 import Link from "next/link"
 import AuthBackground from "@/components/auth/auth-background"
+import RoleAccessPortal from "@/components/auth/role-access-portal"
 import GoogleSignInButton from "@/components/auth/google-sign-in-button"
-import EmailLoginForm from "@/components/auth/email-login-form"
 import { LogoThemeToggle } from "@/components/logo-theme-toggle"
 
 export default function LoginPage() {
     return (
-        <AuthBackground>
+        <AuthBackground maxWidth="max-w-5xl">
             {/* Theme toggle (logo) */}
             <div className="fixed top-4 right-4 z-50">
                 <LogoThemeToggle />
@@ -19,15 +19,15 @@ export default function LoginPage() {
                     </h1>
                 </Link>
                 <h2 className="text-xl font-semibold text-foreground mb-1">
-                    Welcome Back
+                    Role Access Portal
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                    Sign in to your account
+                    Choose a role to sign in — each card opens the standard login.
                 </p>
             </div>
 
-            {/* Email/Password Form */}
-            <EmailLoginForm />
+            {/* Role cards → login modal (real authentication) */}
+            <RoleAccessPortal />
 
             {/* Divider */}
             <div className="relative my-5">
@@ -42,22 +42,12 @@ export default function LoginPage() {
             </div>
 
             {/* Google Sign In Button */}
-            <GoogleSignInButton />
-
-            {/* Terms */}
-            <p className="text-center text-xs text-muted-foreground mt-4">
-                By continuing, you agree to our{" "}
-                <Link href="/terms" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                    Terms
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                    Privacy Policy
-                </Link>
-            </p>
+            <div className="mx-auto max-w-md">
+                <GoogleSignInButton />
+            </div>
 
             {/* Sign Up Link */}
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
                     Don&apos;t have an account?{" "}
                     <Link

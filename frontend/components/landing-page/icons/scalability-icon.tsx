@@ -1,3 +1,7 @@
+// Round trig results to a fixed precision so the server and client render the
+// exact same coordinate strings (avoids float last-digit hydration mismatches).
+const r4 = (n: number) => Math.round(n * 1e4) / 1e4;
+
 export default function ScalabilityIcon() {
     return (
         <svg
@@ -20,8 +24,8 @@ export default function ScalabilityIcon() {
             {/* Inner Ring - 6 nodes */}
             <g className="animate-[spin_20s_linear_infinite]" style={{ transformOrigin: '100px 100px' }}>
                 {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-                    const x = 100 + 40 * Math.cos((angle * Math.PI) / 180);
-                    const y = 100 + 40 * Math.sin((angle * Math.PI) / 180);
+                    const x = r4(100 + 40 * Math.cos((angle * Math.PI) / 180));
+                    const y = r4(100 + 40 * Math.sin((angle * Math.PI) / 180));
                     return (
                         <g key={i}>
                             <line
@@ -42,8 +46,8 @@ export default function ScalabilityIcon() {
             {/* Outer Ring - 12 nodes */}
             <g className="animate-[spin_30s_linear_infinite_reverse]" style={{ transformOrigin: '100px 100px' }}>
                 {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => {
-                    const x = 100 + 70 * Math.cos((angle * Math.PI) / 180);
-                    const y = 100 + 70 * Math.sin((angle * Math.PI) / 180);
+                    const x = r4(100 + 70 * Math.cos((angle * Math.PI) / 180));
+                    const y = r4(100 + 70 * Math.sin((angle * Math.PI) / 180));
                     return (
                         <g key={i}>
                             <line
