@@ -7,6 +7,272 @@
 ---
 
 ## Project Overview
+==================================================
+PHASE 7 — CREATE VISUAL SYSTEM DOCUMENTATION
+============================================
+
+After all development, testing, bug fixing, validation, optimization, and feature improvements are completed, create a documentation file:
+
+SYSTEM_WORK.md
+
+PURPOSE
+
+A new software developer should be able to open this file and understand:
+
+* What the system does
+* How the system works
+* How data flows through the system
+* How frontend and backend communicate
+* How prediction modules work
+* How routing works
+* How APIs work
+* How database connections work
+* How charts and analytics work
+* How the entire application is structured
+
+IMPORTANT
+
+* Analyze the actual codebase.
+* Document the real implementation.
+* Do not use placeholder documentation.
+* Documentation must match the final code after all fixes.
+* Keep the documentation concise and visual.
+* Avoid large walls of text.
+* Prioritize diagrams, flowcharts, tables, screenshots, and visuals.
+
+==================================================
+SYSTEM_WORK.md STRUCTURE
+========================
+
+# Project Overview
+
+Provide a short summary of:
+
+* Project purpose
+* Core features
+* Main modules
+* User workflow
+
+# System Architecture
+
+Create a Mermaid architecture diagram showing:
+
+User
+→ Frontend
+→ API Layer
+→ Backend Services
+→ Database
+→ Prediction Engine
+
+Show how all major systems interact.
+
+# Folder Structure
+
+Provide a simplified project tree showing:
+
+* Frontend
+* Backend
+* Database
+* Assets
+* Configurations
+* Shared Components
+* Utilities
+
+Explain each major folder in one short sentence.
+
+# User Journey Flow
+
+Create a flowchart showing:
+
+User
+→ Input Form
+→ Validation
+→ API Request
+→ Backend Processing
+→ Prediction Engine
+→ Response
+→ State Update
+→ Cards
+→ Charts
+→ Insights
+→ Recommendations
+
+# Routing Map
+
+Create a visual routing diagram showing:
+
+* All pages
+* Parent-child routes
+* Navigation relationships
+
+Also provide a small route table:
+
+| Route | Page | Purpose |
+
+# API Documentation
+
+Create a compact table:
+
+| Endpoint | Method | Purpose | Consumer |
+
+Document all major APIs actually used by the project.
+
+# Database Documentation
+
+Document:
+
+* Database technology
+* Connection flow
+* Main tables
+* Relationships
+
+Create an ER Diagram using Mermaid.
+
+# Prediction Modules
+
+For every prediction module:
+
+* Grade Prediction
+* Subject Prediction
+* Career Prediction
+* Growth Potential
+* Any additional prediction module
+
+Provide:
+
+| Module | Inputs | Output | Charts | Recommendations |
+
+Create a Prediction Flow Diagram showing how prediction data moves through the system.
+
+# Frontend Architecture
+
+Create a visual component hierarchy diagram showing:
+
+Pages
+→ Components
+→ Shared Components
+→ Services
+→ API Layer
+
+# Backend Architecture
+
+Create a service flow diagram showing:
+
+Routes
+→ Controllers
+→ Services
+→ Models
+→ Database
+
+# Dynamic Data Flow
+
+Create a diagram showing:
+
+Input Data
+→ Validation
+→ API Request
+→ Backend Processing
+→ Prediction Response
+→ State Management
+→ UI Cards
+→ Charts
+→ Insights
+→ Recommendations
+
+# Charts & Analytics
+
+Provide a short table:
+
+| Chart | Data Source | Trigger |
+
+Show how charts get updated dynamically.
+
+# Authentication Flow
+
+If authentication exists:
+
+Create a visual flow diagram for:
+
+Login
+→ Authentication
+→ Session/Token
+→ Protected Routes
+→ Logout
+
+# Configuration
+
+Create a small table:
+
+| Variable | Purpose |
+
+Only document actual variables used.
+
+# Error Handling
+
+Provide a short diagram showing:
+
+Frontend Error
+→ API Error
+→ Validation Error
+→ User Feedback
+
+# Dependency Map
+
+Create a module dependency diagram showing:
+
+Pages
+→ Components
+→ Services
+→ APIs
+→ Database
+
+# Screenshots & Visuals
+
+Automatically generate and save screenshots of:
+
+* Dashboard
+* Grade Prediction
+* Subject Prediction
+* Career Prediction
+* Growth Potential
+* Analytics Pages
+* Major Result Screens
+
+Store screenshots inside:
+
+/docs/screenshots
+
+Reference them inside SYSTEM_WORK.md.
+
+Include:
+
+* Project logo
+* Major UI screenshots
+* Key workflow visuals
+
+# Final System Summary
+
+Provide a concise one-page summary explaining:
+
+* How the system is built
+* How requests move through the system
+* How predictions are generated
+* How results are rendered
+* How data flows through the application
+
+==================================================
+FINAL REQUIREMENTS 
+==================
+
+* Documentation must be generated from the actual codebase.
+* Keep documentation concise.
+* Prefer visuals over paragraphs.
+* Use Mermaid diagrams wherever possible.
+* Use flowcharts instead of long explanations.
+* Use tables instead of large text blocks.
+* Use screenshots to explain UI workflows.
+* The final SYSTEM_WORK.md should allow a new developer to understand the complete project within 10–15 minutes.
+* Create the file automatically and save it in the project root.
 
 | | |
 |---|---|
@@ -403,6 +669,272 @@ Captured under [`docs/screenshots/`](docs/screenshots/) (see its README for the 
 ```markdown
 ![Grade Prediction](docs/screenshots/grade-prediction.png)
 ```
+==================================================
+PHASE 7 — CREATE VISUAL SYSTEM DOCUMENTATION
+============================================
+
+After all development, testing, bug fixing, validation, optimization, and feature improvements are completed, create a documentation file:
+
+SYSTEM_WORK.md
+
+PURPOSE
+
+A new software developer should be able to open this file and understand:
+
+* What the system does
+* How the system works
+* How data flows through the system
+* How frontend and backend communicate
+* How prediction modules work
+* How routing works
+* How APIs work
+* How database connections work
+* How charts and analytics work
+* How the entire application is structured
+
+IMPORTANT
+
+* Analyze the actual codebase.
+* Document the real implementation.
+* Do not use placeholder documentation.
+* Documentation must match the final code after all fixes.
+* Keep the documentation concise and visual.
+* Avoid large walls of text.
+* Prioritize diagrams, flowcharts, tables, screenshots, and visuals.
+
+==================================================
+SYSTEM_WORK.md STRUCTURE
+========================
+
+# Project Overview
+
+Provide a short summary of:
+
+* Project purpose
+* Core features
+* Main modules
+* User workflow
+
+# System Architecture
+
+Create a Mermaid architecture diagram showing:
+
+User
+→ Frontend
+→ API Layer
+→ Backend Services
+→ Database
+→ Prediction Engine
+
+Show how all major systems interact.
+
+# Folder Structure
+
+Provide a simplified project tree showing:
+
+* Frontend
+* Backend
+* Database
+* Assets
+* Configurations
+* Shared Components
+* Utilities
+
+Explain each major folder in one short sentence.
+
+# User Journey Flow
+
+Create a flowchart showing:
+
+User
+→ Input Form
+→ Validation
+→ API Request
+→ Backend Processing
+→ Prediction Engine
+→ Response
+→ State Update
+→ Cards
+→ Charts
+→ Insights
+→ Recommendations
+
+# Routing Map
+
+Create a visual routing diagram showing:
+
+* All pages
+* Parent-child routes
+* Navigation relationships
+
+Also provide a small route table:
+
+| Route | Page | Purpose |
+
+# API Documentation
+
+Create a compact table:
+
+| Endpoint | Method | Purpose | Consumer |
+
+Document all major APIs actually used by the project.
+
+# Database Documentation
+
+Document:
+
+* Database technology
+* Connection flow
+* Main tables
+* Relationships
+
+Create an ER Diagram using Mermaid.
+
+# Prediction Modules
+
+For every prediction module:
+
+* Grade Prediction
+* Subject Prediction
+* Career Prediction
+* Growth Potential
+* Any additional prediction module
+
+Provide:
+
+| Module | Inputs | Output | Charts | Recommendations |
+
+Create a Prediction Flow Diagram showing how prediction data moves through the system.
+
+# Frontend Architecture
+
+Create a visual component hierarchy diagram showing:
+
+Pages
+→ Components
+→ Shared Components
+→ Services
+→ API Layer
+
+# Backend Architecture
+
+Create a service flow diagram showing:
+
+Routes
+→ Controllers
+→ Services
+→ Models
+→ Database
+
+# Dynamic Data Flow
+
+Create a diagram showing:
+
+Input Data
+→ Validation
+→ API Request
+→ Backend Processing
+→ Prediction Response
+→ State Management
+→ UI Cards
+→ Charts
+→ Insights
+→ Recommendations
+
+# Charts & Analytics
+
+Provide a short table:
+
+| Chart | Data Source | Trigger |
+
+Show how charts get updated dynamically.
+
+# Authentication Flow
+
+If authentication exists:
+
+Create a visual flow diagram for:
+
+Login
+→ Authentication
+→ Session/Token
+→ Protected Routes
+→ Logout
+
+# Configuration
+
+Create a small table:
+
+| Variable | Purpose |
+
+Only document actual variables used.
+
+# Error Handling
+
+Provide a short diagram showing:
+
+Frontend Error
+→ API Error
+→ Validation Error
+→ User Feedback
+
+# Dependency Map
+
+Create a module dependency diagram showing:
+
+Pages
+→ Components
+→ Services
+→ APIs
+→ Database
+
+# Screenshots & Visuals
+
+Automatically generate and save screenshots of:
+
+* Dashboard
+* Grade Prediction
+* Subject Prediction
+* Career Prediction
+* Growth Potential
+* Analytics Pages
+* Major Result Screens
+
+Store screenshots inside:
+
+/docs/screenshots
+
+Reference them inside SYSTEM_WORK.md.
+
+Include:
+
+* Project logo
+* Major UI screenshots
+* Key workflow visuals
+
+# Final System Summary
+
+Provide a concise one-page summary explaining:
+
+* How the system is built
+* How requests move through the system
+* How predictions are generated
+* How results are rendered
+* How data flows through the application
+
+==================================================
+FINAL REQUIREMENTS
+==================
+
+* Documentation must be generated from the actual codebase.
+* Keep documentation concise.
+* Prefer visuals over paragraphs.
+* Use Mermaid diagrams wherever possible.
+* Use flowcharts instead of long explanations.
+* Use tables instead of large text blocks.
+* Use screenshots to explain UI workflows.
+* The final SYSTEM_WORK.md should allow a new developer to understand the complete project within 10–15 minutes.
+* Create the file automatically and save it in the project root.
 
 ---
 
