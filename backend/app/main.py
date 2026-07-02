@@ -177,18 +177,25 @@ app.include_router(admin_router, prefix="/api/v1",
                    dependencies=[Depends(require("dataset:upload"))])
 
 
-@app.get("/api/v1/auth/whoami")
-async def whoami(request: Request):
-    """Debug: resolve the calling principal from the forwarded session cookie."""
-    from app.auth.principal import resolve_principal
-    p = await resolve_principal(request)
-    if not p:
-        return {"authenticated": False}
-    return {
-        "authenticated": p.is_authenticated, "is_service": p.is_service,
-        "user_id": p.user_id, "platform_role": p.platform_role,
-        "org_id": p.org_id, "org_role": p.org_role, "modules": sorted(p.modules),
-    }
+# Debug endpoint — leaks principal details, so it is disabled by default and only
+# registered when ENABLE_DEBUG_ENDPOINTS is truthy (dev/troubleshooting only).
+def _debug_endpoints_enabled() -> bool:
+    return os.getenv("ENABLE_DEBUG_ENDPOINTS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+if _debug_endpoints_enabled():
+    @app.get("/api/v1/auth/whoami")
+    async def whoami(request: Request):
+        """Debug: resolve the calling principal from the forwarded session cookie."""
+        from app.auth.principal import resolve_principal
+        p = await resolve_principal(request)
+        if not p:
+            return {"authenticated": False}
+        return {
+            "authenticated": p.is_authenticated, "is_service": p.is_service,
+            "user_id": p.user_id, "platform_role": p.platform_role,
+            "org_id": p.org_id, "org_role": p.org_role, "modules": sorted(p.modules),
+        }
 
 
 @app.get("/health")

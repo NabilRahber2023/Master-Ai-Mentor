@@ -9,9 +9,17 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# BACKEND_URL is baked into the Next.js rewrites at build time and must point at
+# the backend reachable from the running frontend container (e.g. the compose
+# service name http://api:8000). It is required — the build fails fast if unset
+# so images are never shipped silently proxying to localhost.
 ARG BACKEND_URL
-ENV BACKEND_URL=${BACKEND_URL:-http://localhost:8001}
-RUN echo "Using BACKEND_URL=${BACKEND_URL}" && pnpm build
+ENV BACKEND_URL=${BACKEND_URL}
+RUN if [ -z "$BACKEND_URL" ]; then \
+      echo "ERROR: BACKEND_URL build arg is required (e.g. --build-arg BACKEND_URL=http://api:8000)"; \
+      exit 1; \
+    fi && \
+    echo "Using BACKEND_URL=${BACKEND_URL}" && pnpm build
 
 FROM node:20-alpine AS runner
 WORKDIR /app

@@ -39,6 +39,9 @@ logs/
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but keep committable, secret-free templates
+!.env.prod.example
+!*.env.example
 
 # python
 __pycache__/

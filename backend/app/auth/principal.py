@@ -8,13 +8,13 @@ endpoints) carry an internal token instead.
 """
 import json
 import logging
-import os
 import time
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Set, Tuple
 
 from sqlalchemy import text
 
+from app.auth.internal_token import INTERNAL_API_TOKEN
 from app.chatbot.database import (
     control_session_maker,
     current_tenant_db,
@@ -22,8 +22,6 @@ from app.chatbot.database import (
 )
 
 logger = logging.getLogger(__name__)
-
-INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN", "ai-mentor-internal-dev-token")
 
 COOKIE_NAMES = (
     "better-auth.session_token",

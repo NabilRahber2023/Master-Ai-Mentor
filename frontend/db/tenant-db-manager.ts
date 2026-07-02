@@ -15,11 +15,14 @@ export function getTenantDb(tenantDbName: string) {
         return drizzle({ client: pool, schema: tenantSchema });
     }
 
-    // Create new pool for this tenant
+    // Create new pool for this tenant. `max` defaults to 10 (original behaviour)
+    // but can be lowered via TENANT_DB_POOL_MAX to bound total Postgres
+    // connections when many tenants are active (or when routing via PgBouncer).
     const connectionString = buildTenantConnectionString(tenantDbName);
+    const tenantPoolMax = Number.parseInt(process.env.TENANT_DB_POOL_MAX ?? "", 10);
     const pool = new Pool({
         connectionString,
-        max: 10, // Max connections per tenant
+        max: Number.isFinite(tenantPoolMax) && tenantPoolMax > 0 ? tenantPoolMax : 10,
         idleTimeoutMillis: 30000,
     });
 

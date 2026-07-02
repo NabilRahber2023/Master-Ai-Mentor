@@ -44,6 +44,28 @@ DATABASE_URL = os.getenv(
 )
 
 
+def _int_env(name: str, default: int) -> int:
+    """Read a positive-int tunable from the environment, falling back to the
+    original hardcoded default when unset or malformed."""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+# Connection-pool sizing. Defaults preserve the original behaviour; operators can
+# shrink these (or point DATABASE_URL at PgBouncer) to bound total Postgres
+# connections when many tenants are active. Control pool serves the shared/auth
+# database; tenant pools are created once per organization database.
+CONTROL_POOL_SIZE = _int_env("DB_CONTROL_POOL_SIZE", 10)
+CONTROL_MAX_OVERFLOW = _int_env("DB_CONTROL_MAX_OVERFLOW", 20)
+TENANT_POOL_SIZE = _int_env("DB_TENANT_POOL_SIZE", 5)
+TENANT_MAX_OVERFLOW = _int_env("DB_TENANT_MAX_OVERFLOW", 10)
+
+
 class Base(DeclarativeBase):
     """SQLAlchemy declarative base for all models."""
     pass
@@ -55,8 +77,8 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=CONTROL_POOL_SIZE,
+    max_overflow=CONTROL_MAX_OVERFLOW,
     pool_pre_ping=True
 )
 
@@ -117,8 +139,8 @@ async def ensure_tenant_ready(tenant_db_name: Optional[str]) -> None:
             tenant_engine = create_async_engine(
                 _tenant_url(tenant_db_name),
                 echo=False,
-                pool_size=5,
-                max_overflow=10,
+                pool_size=TENANT_POOL_SIZE,
+                max_overflow=TENANT_MAX_OVERFLOW,
                 pool_pre_ping=True,
             )
             _tenant_engines[tenant_db_name] = tenant_engine

@@ -150,8 +150,7 @@ class ToolExecutor:
         """Get or create HTTP client for API calls. Carries the internal service
         token so these trusted server-to-server ML calls bypass user auth."""
         if self._http_client is None or self._http_client.is_closed:
-            import os
-            token = os.getenv("INTERNAL_API_TOKEN", "ai-mentor-internal-dev-token")
+            from app.auth.internal_token import INTERNAL_API_TOKEN as token
             self._http_client = httpx.AsyncClient(
                 timeout=30.0,
                 headers={"x-internal-token": token},
