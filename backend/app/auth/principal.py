@@ -6,6 +6,8 @@ the frontend uses). The browser's session cookie is forwarded by the Next.js rew
 so we read it here. Trusted internal service calls (e.g. the chatbot calling the ML
 endpoints) carry an internal token instead.
 """
+import json
+import logging
 import os
 import time
 from dataclasses import dataclass, field
@@ -13,7 +15,13 @@ from typing import Dict, Optional, Set, Tuple
 
 from sqlalchemy import text
 
-from app.chatbot.database import async_session_maker
+from app.chatbot.database import (
+    control_session_maker,
+    current_tenant_db,
+    ensure_tenant_ready,
+)
+
+logger = logging.getLogger(__name__)
 
 INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN", "ai-mentor-internal-dev-token")
 
@@ -35,6 +43,7 @@ class Principal:
     modules: Set[str] = field(default_factory=set)  # entitled module ids
     is_service: bool = False
     is_authenticated: bool = False
+    tenant_db_name: Optional[str] = None  # dedicated tenant database, if provisioned
 
 
 def _service_principal() -> Principal:
@@ -55,7 +64,7 @@ def _extract_token(request) -> Optional[str]:
 
 
 async def _load_principal(token: str) -> Optional[Principal]:
-    async with async_session_maker() as session:
+    async with control_session_maker() as session:
         row = (await session.execute(text("""
             SELECT s.user_id, s.expires_at, u.role AS platform_role
             FROM "session" s JOIN "user" u ON u.id = s.user_id
@@ -83,6 +92,7 @@ async def _load_principal(token: str) -> Optional[Principal]:
         org_role = member["role"] if member else None
 
         modules: Set[str] = set()
+        tenant_db_name: Optional[str] = None
         if org_id:
             mod_rows = (await session.execute(text("""
                 SELECT om.module_id FROM org_module om
@@ -91,32 +101,65 @@ async def _load_principal(token: str) -> Optional[Principal]:
             """), {"oid": org_id})).fetchall()
             modules = {r[0] for r in mod_rows}
 
+            # Dedicated tenant database (set by the provisioning flow).
+            org_row = (await session.execute(text("""
+                SELECT metadata FROM organization WHERE id = :oid
+            """), {"oid": org_id})).mappings().first()
+            if org_row and org_row.get("metadata"):
+                try:
+                    meta = json.loads(org_row["metadata"])
+                    tenant_db_name = meta.get("tenantDbName") or None
+                except (ValueError, TypeError):
+                    tenant_db_name = None
+
         return Principal(
             user_id=user_id, platform_role=platform_role,
             org_id=org_id, org_role=org_role, modules=modules,
-            is_authenticated=True,
+            is_authenticated=True, tenant_db_name=tenant_db_name,
         )
+
+
+async def _activate_tenant(principal: Optional[Principal]) -> None:
+    """Publish the principal's tenant database into the request context so every
+    downstream ``async_session_maker()`` binds to the correct tenant. Warms the
+    tenant engine/schema on first use; falls back to the shared DB on failure so
+    existing (un-provisioned) organizations keep working."""
+    tenant_db_name = principal.tenant_db_name if principal else None
+    if tenant_db_name:
+        try:
+            await ensure_tenant_ready(tenant_db_name)
+        except Exception as e:  # noqa: BLE001 - never fail the request on warmup
+            logger.error(
+                "Failed to initialize tenant database %s: %s", tenant_db_name, e
+            )
+            tenant_db_name = None
+    current_tenant_db.set(tenant_db_name)
 
 
 async def resolve_principal(request) -> Optional[Principal]:
     """Return the Principal for a request, or None if unauthenticated."""
     # 1) Trusted internal service call.
     if request.headers.get("x-internal-token") == INTERNAL_API_TOKEN:
-        return _service_principal()
+        principal = _service_principal()
+        await _activate_tenant(principal)
+        return principal
 
     # 2) User session via cookie / bearer.
     token = _extract_token(request)
     if not token:
+        current_tenant_db.set(None)
         return None
 
     cached = _cache.get(token)
     now = time.monotonic()
     if cached and cached[0] > now:
+        await _activate_tenant(cached[1])
         return cached[1]
 
     principal = await _load_principal(token)
     if principal:
         _cache[token] = (now + _CACHE_TTL, principal)
+    await _activate_tenant(principal)
     return principal
 
 

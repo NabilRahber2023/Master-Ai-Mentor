@@ -9,6 +9,7 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, status, Backgrou
 from pydantic import BaseModel
 
 from app.chatbot.ingest_csv import ingest_csv
+from app.chatbot.database import current_tenant_db, ensure_tenant_ready
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +42,23 @@ router = APIRouter(
 )
 
 
-async def run_ingestion_task(file_path: str, filename: str) -> None:
+async def run_ingestion_task(file_path: str, filename: str, tenant_db_name: str = None) -> None:
     """
     Background task to run CSV ingestion.
     Logs progress, completion, and failures.
+
+    The tenant database is captured from the uploading request and re-bound here
+    explicitly, because background tasks are not guaranteed to inherit the
+    request's context var. This keeps every uploaded row inside the caller's
+    tenant database only.
     """
-    logger.info(f"[INGESTION] Starting background ingestion: {filename}")
-    
+    logger.info(f"[INGESTION] Starting background ingestion: {filename} (tenant={tenant_db_name})")
+
+    # Re-establish tenant context for this background task.
+    current_tenant_db.set(tenant_db_name)
+    if tenant_db_name:
+        await ensure_tenant_ready(tenant_db_name)
+
     try:
         rows_inserted = await ingest_csv(file_path)
         logger.info(f"[INGESTION] Completed: {filename} - {rows_inserted} rows inserted")
@@ -116,8 +127,9 @@ async def upload_csv(
             detail={"status": "error", "error": "Failed to save uploaded file"}
         )
     
-    # Schedule background ingestion
-    background_tasks.add_task(run_ingestion_task, file_path, file.filename)
+    # Schedule background ingestion, pinned to the caller's tenant database.
+    tenant_db_name = current_tenant_db.get()
+    background_tasks.add_task(run_ingestion_task, file_path, file.filename, tenant_db_name)
     
     logger.info(f"Scheduled background ingestion: {file.filename}")
     
