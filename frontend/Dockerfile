@@ -28,7 +28,8 @@ RUN if [ -z "$BACKEND_URL" ]; then \
       echo "ERROR: BACKEND_URL build arg is required (e.g. --build-arg BACKEND_URL=http://api:8000)"; \
       exit 1; \
     fi && \
-    echo "Using BACKEND_URL=${BACKEND_URL}" && pnpm build
+    echo "Using BACKEND_URL=${BACKEND_URL}" && \
+    NODE_OPTIONS="--max-old-space-size=1536" pnpm build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
