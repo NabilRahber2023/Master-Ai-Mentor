@@ -14,6 +14,10 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Drop the stray pnpm-workspace.yaml: it holds only pnpm-10 `allowBuilds` config
+# (no `packages:` field), which pnpm 9 rejects as an invalid workspace root. This
+# is not a workspace project and the file is not needed once deps are installed.
+RUN rm -f pnpm-workspace.yaml
 # BACKEND_URL is baked into the Next.js rewrites at build time and must point at
 # the backend reachable from the running frontend container (e.g. the compose
 # service name http://api:8000). It is required — the build fails fast if unset
