@@ -1,0 +1,125 @@
+# AI Mentor — AWS EC2 DEMO Docker Compose
+# ---------------------------------------------------------------------------
+# Derived from docker-compose.prod.yml for a small single-instance AWS EC2 demo.
+#   • Identical to the production stack EXCEPT the `ollama` and `ollama-pull`
+#     services are removed to fit a small instance (less RAM, faster boot).
+#   • The API still starts fine without Ollama: it only depends on postgres,
+#     and the chatbot degrades gracefully when Ollama is unreachable. All other
+#     predictions (Grade/Career/9-Box/Subject/Batch) are unaffected.
+#   • Networks, volumes, health checks, restart policies and environment
+#     variables are kept unchanged from the production file.
+#
+# Usage:
+#   1. cp .env.prod.example .env   and fill in real secrets + your domain.
+#   2. docker compose -f docker-compose.aws.yml up -d --build
+#
+# Notes:
+#   • OLLAMA_BASE_URL is intentionally left as-is; with no ollama container the
+#     chatbot simply degrades gracefully — nothing else is affected.
+#   • Only Caddy is published to the host (80/443). Postgres/API/frontend stay
+#     on the internal network and are never exposed publicly.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: ai_mentor_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-ai_mentor}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # No host port published — reachable only on the internal network.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-ai_mentor}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai_mentor_network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai_mentor_api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ai_mentor}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-phi3:mini}
+      # REQUIRED secret — grants trusted internal (super-admin) service calls.
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set a strong value in .env}
+      # Lock CORS to your public origin(s).
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:?set in .env}
+      # Debug endpoints (e.g. /api/v1/auth/whoami) stay OFF in production.
+      ENABLE_DEBUG_ENDPOINTS: "false"
+    mem_limit: ${API_MEM_LIMIT:-4g}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Production command: no --reload, single default worker. Scale workers only
+    # after setting INTERNAL_API_TOKEN (shared across workers).
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ai_mentor_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into Next.js rewrites at build time → the internal backend.
+        BACKEND_URL: http://api:8000
+    container_name: ai_mentor_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ai_mentor}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?set to your public https URL in .env}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set a strong value in .env}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      api:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai_mentor_network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ai_mentor_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set to your domain in .env}
+      TLS_EMAIL: ${TLS_EMAIL:?set for Let's Encrypt in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+    networks:
+      - ai_mentor_network
+
+networks:
+  ai_mentor_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:
+  caddy_data:
+  caddy_config:
