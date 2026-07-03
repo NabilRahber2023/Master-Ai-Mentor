@@ -22,7 +22,7 @@ const DB_CONFIG = {
   password: "postgres",
 };
 
-const ORG_SLUG = "oxford";
+const ORG_SLUG = "daffodil";
 const PASSWORD = "Demo@123";
 
 // role → (platform role on user.role, org role on member.role)

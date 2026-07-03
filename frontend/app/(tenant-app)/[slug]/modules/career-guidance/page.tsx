@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ElementType } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -21,19 +21,16 @@ import {
   PolarRadiusAxis, 
   ResponsiveContainer 
 } from "recharts";
-import { 
-  Search, 
-  Bell, 
-  Settings, 
-  TrendingUp, 
-  Code, 
-  Terminal, 
-  Database, 
-  Shield, 
-  Brain, 
-  Sparkles, 
-  ChevronRight, 
-  CheckCircle2, 
+import {
+  Search,
+  Settings,
+  TrendingUp,
+  Code,
+  Database,
+  Shield,
+  Brain,
+  Sparkles,
+  CheckCircle2,
   Circle,
   Lightbulb,
   Zap,
@@ -56,7 +53,7 @@ interface CareerPath {
   match: number;
   growth: string;
   demand: string;
-  icon: any;
+  icon: ElementType;
 }
 
 interface LearningModule {
@@ -137,8 +134,10 @@ export default function CareerGuidancePage() {
     { name: "Technical Leadership", duration: "3-4 Weeks", desc: "Mentorship, team scaling, and technical decision making", completed: false },
   ]);
 
-  // Search query
+  // Search query — filters the recommended career paths list.
   const [searchQuery, setSearchQuery] = useState("");
+  // Expand/collapse the full skill-gap list.
+  const [showAllGaps, setShowAllGaps] = useState(false);
 
   // Target recommendations selection
   const [selectedCareer, setSelectedCareer] = useState<string>("Staff Software Engineer");
@@ -437,11 +436,11 @@ export default function CareerGuidancePage() {
             </div>
             
             <div className="flex items-center gap-2 shrink-0">
-              <button className="relative p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[var(--app-border)]/10 rounded bg-[var(--app-card)]/40">
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              <button className="p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[var(--app-border)]/10 rounded bg-[var(--app-card)]/40" onClick={resetCompetencies}>
+              <button
+                className="p-2 text-slate-400 hover:text-cyan-400 transition-colors border border-[var(--app-border)]/10 rounded bg-[var(--app-card)]/40"
+                onClick={resetCompetencies}
+                title="Reset competency sliders to the predicted profile"
+              >
                 <Settings className="w-4 h-4" />
               </button>
             </div>
@@ -468,7 +467,9 @@ export default function CareerGuidancePage() {
                 </div>
                 <div className="bg-[var(--app-bg)]/60 px-3 py-1 rounded border border-[var(--app-border)]/25 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                  <span className="text-[9px] text-slate-200 uppercase tracking-widest font-semibold font-headline">TRAJECTORY: STABLE</span>
+                  <span className="text-[9px] text-slate-200 uppercase tracking-widest font-semibold font-headline">
+                    TRAJECTORY: {careerEngineData.careerReadiness >= 70 ? "STABLE" : careerEngineData.careerReadiness >= 45 ? "DEVELOPING" : "EXPLORATORY"}
+                  </span>
                 </div>
               </div>
 
@@ -635,11 +636,13 @@ export default function CareerGuidancePage() {
                   </div>
 
                   <div className="space-y-2">
-                    {careerEngineData.gaps.slice(0, 3).map((g, idx) => (
+                    {(showAllGaps ? careerEngineData.gaps : careerEngineData.gaps.slice(0, 3)).map((g, idx) => (
                       <div key={idx} className="flex justify-between items-center bg-[var(--app-bg)]/40 p-2 rounded border border-[var(--app-border)]/10">
                         <span className="text-xs text-[var(--app-text)] font-medium">{g.name}</span>
                         <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                          g.status === "High" ? "bg-red-950/40 text-red-400 border border-red-800/30" : "bg-yellow-950/40 text-yellow-400 border border-yellow-800/30"
+                          g.status === "High" ? "bg-red-950/40 text-red-400 border border-red-800/30"
+                            : g.status === "Medium" ? "bg-yellow-950/40 text-yellow-400 border border-yellow-800/30"
+                            : "bg-teal-950/40 text-teal-400 border border-teal-800/30"
                         }`}>
                           {g.status}
                         </span>
@@ -647,8 +650,11 @@ export default function CareerGuidancePage() {
                     ))}
                   </div>
 
-                  <button className="w-full mt-2 py-2 bg-transparent hover:bg-[var(--app-card)] text-[9px] font-headline font-bold text-cyan-400 uppercase tracking-widest border border-[var(--app-border)]/20 hover:border-cyan-400 transition-colors rounded">
-                    VIEW ALL RECOMMENDATIONS
+                  <button
+                    onClick={() => setShowAllGaps((v) => !v)}
+                    className="w-full mt-2 py-2 bg-transparent hover:bg-[var(--app-card)] text-[9px] font-headline font-bold text-cyan-400 uppercase tracking-widest border border-[var(--app-border)]/20 hover:border-cyan-400 transition-colors rounded"
+                  >
+                    {showAllGaps ? "SHOW TOP GAPS ONLY" : "VIEW ALL RECOMMENDATIONS"}
                   </button>
                 </div>
               </div>
@@ -830,13 +836,12 @@ export default function CareerGuidancePage() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--app-border)]/10 pb-2 flex-1 font-headline">
                   RECOMMENDED CAREER PATHS
                 </h3>
-                <button className="text-[8px] font-headline text-cyan-400 uppercase tracking-widest hover:text-cyan-300 transition-colors pb-2">
-                  VIEW ALL
-                </button>
               </div>
 
               <div className="space-y-3">
-                {careerEngineData.careers.map((car, idx) => (
+                {careerEngineData.careers
+                  .filter((car) => !searchQuery.trim() || car.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+                  .map((car, idx) => (
                   <div 
                     key={idx} 
                     onClick={() => setSelectedCareer(car.name)}
@@ -863,6 +868,14 @@ export default function CareerGuidancePage() {
                     </div>
                   </div>
                 ))}
+                {searchQuery.trim() !== "" &&
+                  careerEngineData.careers.filter((car) =>
+                    car.name.toLowerCase().includes(searchQuery.trim().toLowerCase()),
+                  ).length === 0 && (
+                    <p className="text-[11px] text-slate-500 py-2">
+                      No recommended paths match &quot;{searchQuery.trim()}&quot;.
+                    </p>
+                  )}
               </div>
             </section>
 
@@ -928,7 +941,7 @@ export default function CareerGuidancePage() {
       <footer className="border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/50 py-4 px-6 text-[10px] text-slate-500 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
-          Predictive model calibrated daily against current labor market intelligence telemetry.
+          Predictions generated by the platform&apos;s CatBoost career model with SHAP factor attribution.
         </div>
         <div>
           MCP ORCHESTRA SYSTEM V1.0.4

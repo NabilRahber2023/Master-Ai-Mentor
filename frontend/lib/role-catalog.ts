@@ -19,7 +19,7 @@ export interface RoleSpec {
     accent: string; // tailwind ring/text accent
 }
 
-export const DEMO_ORG_SLUG = "oxford";
+export const DEMO_ORG_SLUG = "daffodil";
 export const DEMO_PASSWORD = "Demo@12345#";
 export const demoEmail = (key: string) => `rbac-${key}@demo.local`;
 

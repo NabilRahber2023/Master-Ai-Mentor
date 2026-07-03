@@ -34,15 +34,16 @@ interface RoleCard {
 
 // Each card maps to a REAL system account. Clicking opens the login modal, which
 // authenticates through the normal production flow — no bypass, no impersonation.
-// (Owner = the existing oxford account; the other 9 are seeded by
-// `seed-role-accounts.mjs` with their real platform + organization roles.)
+// Owner = the super-admin oxford account; Org Owner = the daffodil owner account;
+// the remaining roles are seeded by `seed-role-accounts.mjs` (password Demo@123)
+// with their real platform + organization roles in the "daffodil" org.
 const ROLE_CARDS: RoleCard[] = [
-    { key: "owner", name: "Owner", desc: "Full platform owner with complete access.", email: "oxford@gmail.com", password: "@oxford123#", Icon: Crown },
+    { key: "owner", name: "Owner", desc: "Full platform owner with complete access.", email: "oxford@gmail.com", password: "Admin@12345", Icon: Crown },
     { key: "super_admin", name: "Super Admin", desc: "Manage all organizations, modules & users.", email: "superadmin@system.com", password: "Demo@123", Icon: ShieldCheck },
     { key: "support", name: "Support", desc: "Read-only across orgs with impersonation.", email: "support@system.com", password: "Demo@123", Icon: LifeBuoy },
     { key: "user", name: "User", desc: "Standard end-user; rights come from org role.", email: "user@system.com", password: "Demo@123", Icon: UserIcon },
     { key: "guest", name: "Guest", desc: "Pending access — awaiting approval.", email: "guest@system.com", password: "Demo@123", Icon: UserMinus },
-    { key: "org_owner", name: "Org Owner", desc: "Owns the organization and its billing.", email: "orgowner@system.com", password: "Demo@123", Icon: Building2 },
+    { key: "org_owner", name: "Org Owner", desc: "Owns the organization and its billing.", email: "owner@daffodil.com", password: "Owner@12345", Icon: Building2 },
     { key: "org_admin", name: "Org Admin", desc: "Manages members, dataset & settings.", email: "orgadmin@system.com", password: "Demo@123", Icon: ShieldHalf },
     { key: "analyst", name: "Analyst", desc: "Runs all predictions, batch & uploads.", email: "analyst@system.com", password: "Demo@123", Icon: BarChart3 },
     { key: "mentor", name: "Mentor", desc: "Runs single predictions & the chatbot.", email: "mentor@system.com", password: "Demo@123", Icon: GraduationCap },

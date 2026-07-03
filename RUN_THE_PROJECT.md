@@ -1,7 +1,11 @@
 # Run The Project
 
-Goal: whole app live on localhost — backend `:8001` (+Swagger `/docs`), Postgres `:5433`, Ollama `:11434`, frontend `:3000`. Login `oxford@gmail.com` / `@oxford123#`.
-Rule: **check first; start what's stopped; install/build only what's missing.** All steps are idempotent — skip any whose check already passes. Windows Git Bash: keep `MSYS_NO_PATHCONV=1` where shown. Need: Docker Desktop (running), Node ≥20, npm (ships with Node), and **`backend/master_dataset.csv`** placed manually — it's gitignored (`*.csv`), so a fresh clone does not include it (see step 3).
+Goal: whole app live on localhost — backend `:8001` (+Swagger `/docs`), Postgres `:5433`, Ollama `:11434`, frontend `:3000`.
+
+> **See [RUN.md](RUN.md) for the concise, verified boot procedure and the full login table.**
+> Primary login: **Org Owner** `owner@daffodil.com` / `Owner@12345`. Platform super-admin: `oxford@gmail.com` / `Admin@12345`. Role-portal accounts: `*@system.com` / `Demo@123`.
+
+Rule: **check first; start what's stopped; install/build only what's missing.** All steps are idempotent — skip any whose check already passes. Windows Git Bash: keep `MSYS_NO_PATHCONV=1` where shown. Need: Docker Desktop (running), Node ≥20, **pnpm** (`npm i -g pnpm`; the frontend uses pnpm, not npm), and **`backend/master_dataset.csv`** placed manually — it's gitignored (`*.csv`), so a fresh clone does not include it (see step 3).
 
 ## 1. Preflight — run this, then do only the flagged steps
 ```bash
@@ -59,27 +63,36 @@ EOF
 
 ## 5. Auth tables
 ```bash
-cd frontend && npm install && npm run db:push
+cd frontend && pnpm install && pnpm db:generate && pnpm db:migrate
 ```
 
 ## 6. Seed login user + Daffodil org
 ```bash
-cd .. && npm install && node create-oxford-user.mjs
+cd .. && node create-oxford-user.mjs
+```
+> The `.mjs` seed scripts import `pg`/`better-auth` from `frontend/node_modules`, so run them after the frontend `pnpm install` in step 5.
+
+### 6a. Seed the Role Access Portal accounts (powers the `/login` page)
+Creates the 9 role accounts (`superadmin|support|user|guest|orgowner|orgadmin|analyst|mentor|viewer @system.com`,
+password `Demo@123`) as members of the **daffodil** org with their real platform + org roles.
+Clicking a card on `/login` auto-fills that account and signs in through the normal auth flow.
+```bash
+node seed-role-accounts.mjs
 ```
 
-### 6b. Seed RBAC demo roles (powers the "Role Based Login" page)
-Promotes `oxford@gmail.com` to **super_admin** and creates one demo user per role
-(`rbac-<role>@demo.local`, password `Demo@12345#`) as members of the oxford org.
-Idempotent. Required for the Super-Admin **Role Based Login** console
-(`/dashboard/admin/roles`), where one click impersonates any role and the banner /
-logout returns you to your own account.
+### 6b. (Optional) Seed RBAC impersonation users (powers `/dashboard/admin/roles`)
+A *separate* super-admin impersonation console. Creates one demo user per role
+(`rbac-<role>@demo.local`, password `Demo@12345#`) that a super-admin can one-click impersonate.
+> Note: `create-rbac-demo-users.mjs` currently targets an `oxford` org; on this deployment the org
+> is `daffodil`, so edit its `ORG_SLUG` to `daffodil` before running, or skip this step — the
+> `/login` portal (6a) is the primary way to sign in as each role.
 ```bash
 node create-rbac-demo-users.mjs
 ```
 
 ## 7. Frontend dev server
 ```bash
-cd frontend && npm run dev    # http://localhost:3000
+cd frontend && pnpm dev    # http://localhost:3000
 ```
 
 ## Done — confirm
@@ -93,4 +106,4 @@ Open http://localhost:3000, log in, open `/daffodil/modules/...` (each starts bl
 - ingest "CSV not found: C:/Users/..." → missing `MSYS_NO_PATHCONV=1` (step 3).
 - login 404 / fails → steps 5 then 6 not done.
 - 308 on `…/sgpa/` or `…/9box/` → normal trailing-slash redirect, browsers follow it.
-- restart later (already set up): `cd backend && docker compose up -d` then `cd frontend && npm run dev` (data persists in the `postgres_data` volume).
+- restart later (already set up): `cd backend && docker compose up -d postgres api` then `cd frontend && pnpm dev` (data persists in the `postgres_data` volume).

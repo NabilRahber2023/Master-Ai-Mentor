@@ -14,82 +14,52 @@ import { ModeSwitch } from "@/components/modules/csv-mode/mode-switch";
 import { CsvModePanel } from "@/components/modules/csv-mode/csv-mode-panel";
 import type { SubjectPredictionResponse } from "@/lib/api/predictions";
 import {
-  Search,
-  Bell,
-  Settings,
   Sliders,
   Cpu,
   Plus,
   Lock,
   Lightbulb,
-  RefreshCw,
   TrendingUp,
   ChevronRight
 } from "lucide-react";
 
 export default function SubjectPredictionPage() {
-  // Telemetry Sliders
-  const [cognitiveWeight, setCognitiveWeight] = useState(0.85);
-  const [workloadTolerance, setWorkloadTolerance] = useState(0.60);
-  const [marketTrendImpact, setMarketTrendImpact] = useState(0.42);
-
   // User additions to matrix
   const [matrixList, setMatrixList] = useState<string[]>([]);
-  const [isLocked, setIsLocked] = useState(false);
 
   // Input source: manual form vs. uploaded CSV.
   const [mode, setMode] = useState<"manual" | "csv">("manual");
   // Live ML evaluation result that drives the page when present.
   const [livePrediction, setLivePrediction] = useState<SubjectPredictionResponse | null>(null);
 
-  // Dynamic state simulation. When a live prediction is present every figure is
-  // derived from the actual model output (confidence + alternative probabilities
-  // + contributing factors); the sliders only drive the pre-prediction preview.
+  // Every displayed figure is derived from the actual model output (confidence
+  // + alternative probabilities + contributing factors). The dashboard only
+  // renders when a live prediction exists, so there is no simulated fallback.
   const simulatedValues = useMemo(() => {
     const conf01 = livePrediction?.confidence_score ?? 0;
     const alt0 = livePrediction?.alternative_options?.[0]?.probability ?? 0;
-    const alt1 = livePrediction?.alternative_options?.[1]?.probability ?? 0;
 
-    // Confidence: use the live model confidence when available, else slider sim.
-    const confidence = livePrediction
-      ? Math.round(conf01 * 100)
-      : Math.min(99, Math.max(70, Math.round(92 + (cognitiveWeight - 0.85) * 8 - (workloadTolerance - 0.6) * 5 + (marketTrendImpact - 0.42) * 6)));
+    const confidence = Math.round(conf01 * 100);
 
     // GPA impact scales with the model's confidence in the recommendation.
-    const gpaImpact = livePrediction
-      ? Number((0.2 + conf01 * 0.6).toFixed(2))
-      : Number((0.45 + (cognitiveWeight - 0.85) * 0.15 + (marketTrendImpact - 0.42) * 0.10).toFixed(2));
+    const gpaImpact = Number((0.2 + conf01 * 0.6).toFixed(2));
 
     // Alignment: how decisively the top pick beats the runner-up.
-    const alignment = livePrediction
-      ? Math.min(100, Math.max(55, Math.round(confidence - alt0 * 100 * 0.3 + 6)))
-      : Math.min(100, Math.max(60, Math.round(98 + (cognitiveWeight - 0.85) * 4 - (1 - workloadTolerance) * 10)));
+    const alignment = Math.min(100, Math.max(55, Math.round(confidence - alt0 * 100 * 0.3 + 6)));
 
     // Projected credit load (12–20) scales with confidence.
-    const credits = livePrediction ? Math.min(20, Math.max(12, Math.round(12 + conf01 * 8))) : 18;
+    const credits = Math.min(20, Math.max(12, Math.round(12 + conf01 * 8)));
     const readinessLevel = confidence >= 85 ? 5 : confidence >= 70 ? 4 : confidence >= 55 ? 3 : 2;
     const readinessLabel = confidence >= 85 ? "Peak Capacity" : confidence >= 70 ? "High Capacity" : confidence >= 55 ? "Moderate Capacity" : "Developing";
 
-    // Match rates — fall back to the alternative-path probabilities.
-    const cryptoMatch = livePrediction ? confidence : Math.min(99, Math.max(75, Math.round(94 + (cognitiveWeight - 0.85) * 6)));
-    const bioMatch = livePrediction ? Math.round(alt0 * 100) : Math.min(99, Math.max(70, Math.round(88 + (marketTrendImpact - 0.42) * 12)));
-    const structuresMatch = livePrediction ? Math.round(alt1 * 100) : Math.min(99, Math.max(65, Math.round(84 - (workloadTolerance - 0.6) * 10)));
-    const archMatch = livePrediction ? Math.round((livePrediction.alternative_options?.[2]?.probability ?? 0) * 100) : Math.min(99, Math.max(60, Math.round(79 + (cognitiveWeight - 0.85) * 8)));
-
     // Rationale — built from the actual recommendation.
-    let rationale = "Optimal configuration maintained. Performance vector and cognitive load parameters are balanced.";
+    let rationale = "Run a prediction to generate the model's rationale.";
     if (livePrediction) {
       const alt = livePrediction.alternative_options?.[0];
       const driver = livePrediction.contributing_factors?.[0]?.feature;
       rationale = `The model recommends ${livePrediction.recommended_department} at ${confidence}% confidence`
         + (alt ? `, ahead of ${alt.department} (${Math.round(alt.probability * 100)}%)` : "")
         + (driver ? `. The strongest driver of this fit is ${driver}.` : ".");
-    } else if (workloadTolerance < 0.50) {
-      rationale = "Lowering Workload Tolerance below 0.50 prioritizes stability-oriented tracks, despite a minor drop in GPA Delta projection.";
-    } else if (marketTrendImpact > 0.70) {
-      rationale = "High Market Trend Impact prioritizes cutting-edge vectors to capitalize on emerging technological shifts.";
-    } else if (cognitiveWeight > 0.90) {
-      rationale = "Peak Cognitive Aptitude Weight indicates high capacity for dense algorithm tracks, scaling the difficulty curve up for maximum GPA efficiency.";
     }
 
     return {
@@ -99,20 +69,16 @@ export default function SubjectPredictionPage() {
       credits,
       readinessLevel,
       readinessLabel,
-      cryptoMatch,
-      bioMatch,
-      structuresMatch,
-      archMatch,
       rationale,
     };
-  }, [cognitiveWeight, workloadTolerance, marketTrendImpact, livePrediction]);
+  }, [livePrediction]);
 
   // Radar coordinates — driven by the live prediction (confidence + alternative
-  // probabilities) when present, else by the preview sliders.
+  // probabilities).
   const getRadarPoints = () => {
-    const base = livePrediction ? livePrediction.confidence_score : cognitiveWeight;
-    const a0 = livePrediction ? (livePrediction.alternative_options?.[0]?.probability ?? 0) : workloadTolerance;
-    const a1 = livePrediction ? (livePrediction.alternative_options?.[1]?.probability ?? 0) : marketTrendImpact;
+    const base = livePrediction?.confidence_score ?? 0;
+    const a0 = livePrediction?.alternative_options?.[0]?.probability ?? 0;
+    const a1 = livePrediction?.alternative_options?.[1]?.probability ?? 0;
     // center is 100, 100. max radius is 80.
     // categories: Logic, Theory, Systems, Ethics, Data
     const logic = 40 + base * 40;
@@ -130,14 +96,26 @@ export default function SubjectPredictionPage() {
     return `${p1[0].toFixed(0)},${p1[1].toFixed(0)} ${p2[0].toFixed(0)},${p2[1].toFixed(0)} ${p3[0].toFixed(0)},${p3[1].toFixed(0)} ${p4[0].toFixed(0)},${p4[1].toFixed(0)} ${p5[0].toFixed(0)},${p5[1].toFixed(0)}`;
   };
 
-  const getSecondaryRadarPoints = () => {
-    // Current Profile coordinates
-    const p1 = [100, 50];
-    const p2 = [140, 75];
-    const p3 = [150, 120];
-    const p4 = [70, 130];
-    const p5 = [60, 70];
-    return `${p1[0]},${p1[1]} ${p2[0]},${p2[1]} ${p3[0]},${p3[1]} ${p4[0]},${p4[1]} ${p5[0]},${p5[1]}`;
+  // Download the live prediction (plus any shortlisted departments) as JSON.
+  const handleExportResult = () => {
+    if (!livePrediction) return;
+    const payload = {
+      recommended_department: livePrediction.recommended_department,
+      confidence_score: livePrediction.confidence_score,
+      alternative_options: livePrediction.alternative_options,
+      contributing_factors: livePrediction.contributing_factors,
+      shortlisted_departments: matrixList,
+      exported_at: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Subject_Prediction_${livePrediction.recommended_department.replace(/\s+/g, "_")}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const toggleMatrix = (code: string) => {
@@ -280,26 +258,6 @@ export default function SubjectPredictionPage() {
               </p>
             </div>
             
-            {/* Search & Actions inside matrix page top */}
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="flex items-center bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20 focus-within:border-cyan-400 transition-all w-full sm:w-60 group">
-                <Search className="text-slate-400 text-xs mr-2 group-focus-within:text-cyan-400 transition-colors w-3.5 h-3.5" />
-                <input 
-                  className="bg-transparent border-none outline-none text-[10px] text-[var(--app-text)] w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
-                  placeholder="QUERY SUBJECTS..." 
-                  type="text"
-                />
-              </div>
-              
-              <div className="flex items-center gap-2 shrink-0">
-                <button className="text-slate-400 hover:text-cyan-400 transition-colors">
-                  <Bell className="w-4 h-4" />
-                </button>
-                <button className="text-slate-400 hover:text-cyan-400 transition-colors">
-                  <Settings className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Primary Hero Panel */}
@@ -326,19 +284,12 @@ export default function SubjectPredictionPage() {
                 </p>
                 
                 <div className="flex gap-3 pt-2">
-                  <button 
-                    onClick={() => setIsLocked(!isLocked)}
-                    className={`px-5 py-2.5 rounded font-headline text-[10px] font-bold tracking-[0.15em] uppercase transition-all duration-300 flex items-center gap-2 ${
-                      isLocked 
-                        ? "bg-teal-600 text-[var(--app-text)]" 
-                        : "bg-cyan-400 text-[#101416] hover:bg-cyan-300 shadow-[0_0_15px_rgba(0,229,255,0.25)]"
-                    }`}
+                  <button
+                    onClick={handleExportResult}
+                    className="px-5 py-2.5 rounded font-headline text-[10px] font-bold tracking-[0.15em] uppercase transition-all duration-300 flex items-center gap-2 bg-cyan-400 text-[#101416] hover:bg-cyan-300 shadow-[0_0_15px_rgba(0,229,255,0.25)]"
                   >
                     <Lock className="w-3 h-3" />
-                    {isLocked ? "Lock Selection" : "Lock Selection"}
-                  </button>
-                  <button className="px-5 py-2.5 bg-transparent border border-[var(--app-border)]/30 text-cyan-400 rounded font-headline text-[10px] font-bold tracking-[0.15em] uppercase hover:bg-[var(--app-surface)]/30 transition-colors">
-                    View Syllabus
+                    Export Result
                   </button>
                 </div>
               </div>
@@ -453,9 +404,6 @@ export default function SubjectPredictionPage() {
                   <polygon points="100,40 152,70 152,130 100,160 48,130 48,70" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
                   <polygon points="100,60 135,80 135,120 100,140 65,120 65,80" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
 
-                  {/* Historical layout */}
-                  <polygon points={getSecondaryRadarPoints()} fill="rgba(68, 216, 241, 0.04)" stroke="#44d8f1" strokeDasharray="3 3" strokeWidth="1.2" />
-
                   {/* Dynamic projected state layout */}
                   <polygon points={getRadarPoints()} fill="rgba(0, 229, 255, 0.12)" stroke="#00e5ff" strokeWidth="2" />
                 </svg>
@@ -527,68 +475,75 @@ export default function SubjectPredictionPage() {
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-[var(--app-border)]/10 pb-2">
               <h3 className="text-xs text-[var(--app-text)] font-headline font-bold uppercase tracking-wider">Primary Target Modules</h3>
-              <button className="text-[9px] font-headline text-cyan-400 uppercase tracking-widest hover:text-cyan-300 transition-colors flex items-center gap-1">
-                View Matrix <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+              <span className="text-[9px] font-headline text-cyan-400 uppercase tracking-widest flex items-center gap-1">
+                {matrixList.length > 0 ? `${matrixList.length} in matrix` : "Matrix empty"}
+                <ChevronRight className="w-3.5 h-3.5" />
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              {/* Card 1: Quantum Cryptography */}
+              {/* Card 1: Top recommendation (live) */}
               <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[var(--app-card)]/80 transition-colors">
                 <div>
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[9px] text-cyan-400 font-mono tracking-wider">QCS-401</span>
+                    <span className="text-[9px] text-cyan-400 font-mono tracking-wider">RANK 01</span>
                     <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30 text-[9px] font-bold">
-                      {livePrediction ? simulatedValues.confidence : simulatedValues.cryptoMatch}% Match
+                      {simulatedValues.confidence}% Match
                     </span>
                   </div>
-                  <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.recommended_department ?? "Quantum Cryptography"}</h4>
+                  <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.recommended_department}</h4>
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
                     Top-ranked department for your profile — the model&apos;s primary recommendation.
                   </p>
                 </div>
-                
+
                 <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--app-border)]/10">
                   <div className="text-[9px] text-slate-400">
-                    DIFFICULTY VECTOR: <span className="text-[var(--app-text)] font-semibold">HIGH</span>
+                    MODEL CONFIDENCE: <span className="text-[var(--app-text)] font-semibold">{simulatedValues.confidence}%</span>
                   </div>
                   <div className="flex gap-0.5">
-                    <span className="w-1 h-3 bg-red-500 rounded-sm"></span>
-                    <span className="w-1 h-3 bg-red-500 rounded-sm"></span>
-                    <span className="w-1 h-3 bg-red-500 rounded-sm"></span>
-                    <span className="w-1 h-3 bg-red-500 rounded-sm"></span>
+                    {[1, 2, 3, 4].map((seg) => (
+                      <span
+                        key={seg}
+                        className={`w-1 h-3 rounded-sm ${simulatedValues.confidence >= seg * 25 ? "bg-cyan-400" : "bg-slate-800"}`}
+                      ></span>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Card 2: Synthetic Bio-Data */}
-              <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[var(--app-card)]/80 transition-colors">
-                <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-[9px] text-cyan-400 font-mono tracking-wider">SBD-308</span>
-                    <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30 text-[9px] font-bold">
-                      {livePrediction?.alternative_options[0] ? Math.round(livePrediction.alternative_options[0].probability * 100) : simulatedValues.bioMatch}% Match
-                    </span>
+              {/* Card 2: Closest alternative (live) */}
+              {livePrediction?.alternative_options[0] && (
+                <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] hover:bg-[var(--app-card)]/80 transition-colors">
+                  <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[9px] text-cyan-400 font-mono tracking-wider">RANK 02</span>
+                      <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30 text-[9px] font-bold">
+                        {Math.round(livePrediction.alternative_options[0].probability * 100)}% Match
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction.alternative_options[0].department}</h4>
+                    <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
+                      Closest alternative department to your top recommendation.
+                    </p>
                   </div>
-                  <h4 className="text-sm font-semibold text-[var(--app-text)] truncate mb-1">{livePrediction?.alternative_options[0]?.department ?? "Synthetic Bio-Data"}</h4>
-                  <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">
-                    Closest alternative department to your top recommendation.
-                  </p>
+
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--app-border)]/10">
+                    <div className="text-[9px] text-slate-400">
+                      MATCH PROBABILITY: <span className="text-[var(--app-text)] font-semibold">{Math.round(livePrediction.alternative_options[0].probability * 100)}%</span>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4].map((seg) => (
+                        <span
+                          key={seg}
+                          className={`w-1 h-3 rounded-sm ${Math.round(livePrediction.alternative_options[0].probability * 100) >= seg * 25 ? "bg-yellow-500" : "bg-slate-800"}`}
+                        ></span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--app-border)]/10">
-                  <div className="text-[9px] text-slate-400">
-                    DIFFICULTY VECTOR: <span className="text-[var(--app-text)] font-semibold">MEDIUM</span>
-                  </div>
-                  <div className="flex gap-0.5">
-                    <span className="w-1 h-3 bg-yellow-500 rounded-sm"></span>
-                    <span className="w-1 h-3 bg-yellow-500 rounded-sm"></span>
-                    <span className="w-1 h-3 bg-slate-800 rounded-sm"></span>
-                    <span className="w-1 h-3 bg-slate-800 rounded-sm"></span>
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Card 3: Mini Radar Diagram */}
               <div className="bg-[var(--app-card2)]/80 border border-[var(--app-border)]/15 rounded-xl p-5 flex flex-col justify-between min-h-[170px] relative overflow-hidden">
@@ -612,57 +567,40 @@ export default function SubjectPredictionPage() {
               Secondary Vectors
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              <div className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--app-surface)] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
-                    <Cpu className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm text-[var(--app-text)] group-hover:text-cyan-400 transition-colors">
-                      {livePrediction?.alternative_options[1]?.department ?? "Data Structures III"}
-                    </h4>
-                    <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
-                      Match: {livePrediction?.alternative_options[1] ? Math.round(livePrediction.alternative_options[1].probability * 100) : simulatedValues.structuresMatch}%
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleMatrix("DAT-303")}
-                  className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-1 ${
-                    matrixList.includes("DAT-303") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
-                  }`}
+              {(livePrediction?.alternative_options ?? []).slice(1, 3).map((alt) => (
+                <div
+                  key={alt.department}
+                  className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group"
                 >
-                  {matrixList.includes("DAT-303") ? "ADDED" : "ADD TO MATRIX"}
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-
-              <div className="bg-[var(--app-card2)]/60 border border-[var(--app-border)]/15 hover:border-cyan-500/20 p-4 rounded-xl flex items-center justify-between transition-colors group">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--app-surface)] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
-                    <Cpu className="h-5 w-5" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--app-surface)] flex items-center justify-center text-slate-400 group-hover:text-cyan-400 transition-colors">
+                      <Cpu className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm text-[var(--app-text)] group-hover:text-cyan-400 transition-colors">
+                        {alt.department}
+                      </h4>
+                      <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
+                        Match: {Math.round(alt.probability * 100)}%
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-sm text-[var(--app-text)] group-hover:text-cyan-400 transition-colors">
-                      {livePrediction?.alternative_options[2]?.department ?? "Hardware Architecture"}
-                    </h4>
-                    <span className="text-[10px] text-cyan-400 uppercase tracking-widest">
-                      Match: {livePrediction?.alternative_options[2] ? Math.round(livePrediction.alternative_options[2].probability * 100) : simulatedValues.archMatch}%
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => toggleMatrix(alt.department)}
+                    className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-1 ${
+                      matrixList.includes(alt.department) ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
+                    }`}
+                  >
+                    {matrixList.includes(alt.department) ? "ADDED" : "ADD TO MATRIX"}
+                    <Plus className="w-3 h-3" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => toggleMatrix("ARC-302")}
-                  className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-1 ${
-                    matrixList.includes("ARC-302") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
-                  }`}
-                >
-                  {matrixList.includes("ARC-302") ? "ADDED" : "ADD TO MATRIX"}
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-
+              ))}
+              {(livePrediction?.alternative_options?.length ?? 0) <= 1 && (
+                <p className="text-[11px] text-slate-500 md:col-span-2">
+                  No further alternative departments returned by the model for this profile.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -670,66 +608,48 @@ export default function SubjectPredictionPage() {
         {/* Right Panel (4 columns): Telemetry Tuning & Primary Recommendations */}
         <div className="lg:col-span-4 space-y-8">
           
-          {/* Telemetry Tuning Slider Control Box */}
+          {/* Prediction Drivers — real SHAP contributions from the subject model */}
           <section className="bg-[var(--app-card)]/40 rounded-xl p-6 border border-[var(--app-border)]/20 flex flex-col justify-between space-y-6">
             <div className="border-b border-[var(--app-border)]/10 pb-3">
               <h3 className="text-sm font-headline text-cyan-400 tracking-wider flex items-center gap-2">
                 <Sliders className="w-4 h-4" />
-                Telemetry Tuning
+                Prediction Drivers
               </h3>
               <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 leading-relaxed font-headline">
-                Adjust parameters to simulate alternative trajectory outcomes.
+                Variables with the strongest influence on this recommendation.
               </p>
             </div>
 
             <div className="space-y-5 flex-1">
-              <div>
-                <div className="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-slate-300">Cognitive Aptitude Weight</span>
-                  <span className="text-cyan-400 font-mono">{cognitiveWeight.toFixed(2)}</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0.1" 
-                  max="1.0" 
-                  step="0.05"
-                  className="w-full accent-cyan-400 bg-[var(--app-bg)] h-1 rounded-full appearance-none cursor-pointer"
-                  value={cognitiveWeight}
-                  onChange={(e) => setCognitiveWeight(parseFloat(e.target.value))}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-slate-300">Workload Tolerance</span>
-                  <span className="text-cyan-400 font-mono">{workloadTolerance.toFixed(2)}</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0.1" 
-                  max="1.0" 
-                  step="0.05"
-                  className="w-full accent-cyan-400 bg-[var(--app-bg)] h-1 rounded-full appearance-none cursor-pointer"
-                  value={workloadTolerance}
-                  onChange={(e) => setWorkloadTolerance(parseFloat(e.target.value))}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-slate-300">Market Trend Impact</span>
-                  <span className="text-cyan-400 font-mono">{marketTrendImpact.toFixed(2)}</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0.1" 
-                  max="1.0" 
-                  step="0.05"
-                  className="w-full accent-cyan-400 bg-[var(--app-bg)] h-1 rounded-full appearance-none cursor-pointer"
-                  value={marketTrendImpact}
-                  onChange={(e) => setMarketTrendImpact(parseFloat(e.target.value))}
-                />
-              </div>
+              {(livePrediction?.contributing_factors ?? []).slice(0, 5).map((f) => {
+                const maxImpact = Math.max(
+                  ...(livePrediction?.contributing_factors ?? []).map((x) => Math.abs(x.impact_score)),
+                  0.0001,
+                );
+                const pct = Math.min(100, Math.max(8, (Math.abs(f.impact_score) / maxImpact) * 100));
+                return (
+                  <div key={f.feature}>
+                    <div className="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-slate-300">{f.feature}</span>
+                      <span className="text-cyan-400 font-mono">
+                        {f.impact_score.toFixed(3)}
+                        <span className="ml-1 text-slate-500">({String(f.value)})</span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--app-bg)] h-1 rounded-full overflow-hidden">
+                      <div
+                        className="bg-cyan-400 h-full rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
+                        style={{ width: `${pct}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+              {(livePrediction?.contributing_factors?.length ?? 0) === 0 && (
+                <p className="text-[11px] text-slate-500">
+                  The model did not return factor attributions for this prediction.
+                </p>
+              )}
 
               {/* Rationale System Box */}
               <div className="bg-[var(--app-bg)]/50 rounded-lg p-4 border border-[var(--app-border)]/10 border-l-2 border-l-cyan-400 space-y-1">
@@ -742,18 +662,6 @@ export default function SubjectPredictionPage() {
                 </p>
               </div>
             </div>
-
-            <button 
-              onClick={() => {
-                setCognitiveWeight(0.85);
-                setWorkloadTolerance(0.60);
-                setMarketTrendImpact(0.42);
-              }}
-              className="w-full bg-transparent border border-[var(--app-border)]/30 text-slate-300 hover:border-cyan-400 hover:text-cyan-400 py-2.5 rounded font-headline text-[10px] font-bold tracking-widest uppercase transition-colors flex justify-center items-center gap-2"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Recalibrate
-            </button>
           </section>
 
           {/* PRIMARY RECOMMENDATIONS */}
@@ -768,8 +676,8 @@ export default function SubjectPredictionPage() {
               <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
-                    <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30">CORE</span>
-                    <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">QCS-401</span>
+                    <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30">TOP MATCH</span>
+                    <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">RANK 01</span>
                   </div>
                   <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
                     Alignment: {simulatedValues.alignment}%
@@ -782,98 +690,65 @@ export default function SubjectPredictionPage() {
                     {livePrediction?.contributing_factors?.[0] ? `, driven most by ${livePrediction.contributing_factors[0].feature}.` : "."}
                   </p>
                 </div>
-                
+
                 <div className="space-y-3 pt-2">
                   <div>
                     <div className="flex justify-between text-[9px] text-slate-400 uppercase tracking-widest mb-1.5">
-                      <span>Cognitive Load / Difficulty</span>
-                      <span className="text-[var(--app-text)] font-semibold">High (4.2/5)</span>
+                      <span>Model Confidence</span>
+                      <span className="text-[var(--app-text)] font-semibold">{simulatedValues.confidence}%</span>
                     </div>
                     <div className="h-1 w-full bg-[var(--app-surface)] rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-400 rounded-full w-[84%] shadow-[0_0_8px_rgba(0,229,255,0.4)]"></div>
+                      <div
+                        className="h-full bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,229,255,0.4)] transition-all duration-300"
+                        style={{ width: `${simulatedValues.confidence}%` }}
+                      ></div>
                     </div>
                   </div>
-                  
-                  <div className="flex justify-between text-[9px] text-slate-400 uppercase tracking-widest">
-                    <span>Prerequisite Strength</span>
-                    <span className="text-teal-400 font-semibold">Optimal</span>
-                  </div>
-                </div>
 
-                <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-[var(--app-surface)] flex items-center justify-center text-[8px] font-bold text-cyan-400 font-headline">AV</div>
-                    <span className="text-[10px] text-slate-400 font-headline">Prof. A. Vance</span>
-                  </div>
-                  <button className="text-[9px] text-cyan-400 font-headline uppercase font-semibold hover:text-cyan-300 transition-colors">
-                    View Syllabus
-                  </button>
+                  {livePrediction?.contributing_factors?.[0] && (
+                    <div className="flex justify-between text-[9px] text-slate-400 uppercase tracking-widest">
+                      <span>Strongest Driver</span>
+                      <span className="text-teal-400 font-semibold">{livePrediction.contributing_factors[0].feature}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Rec Card 2 */}
-              <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
-                    <span className="px-2 py-0.5 rounded bg-yellow-950/40 text-yellow-400 border border-yellow-800/30">ELECTIVE</span>
-                    <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">ETH-210</span>
+              {/* Alternative recommendation cards — one per model-returned option */}
+              {(livePrediction?.alternative_options ?? []).slice(0, 2).map((alt, i) => (
+                <div key={alt.department} className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
+                      <span className="px-2 py-0.5 rounded bg-yellow-950/40 text-yellow-400 border border-yellow-800/30">ALTERNATIVE</span>
+                      <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">RANK 0{i + 2}</span>
+                    </div>
+                    <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
+                      {Math.round(alt.probability * 100)}%
+                    </span>
                   </div>
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
-                    {livePrediction?.alternative_options?.[0] ? Math.round(livePrediction.alternative_options[0].probability * 100) : simulatedValues.bioMatch}%
-                  </span>
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">{livePrediction?.alternative_options?.[0]?.department ?? "Alternative Path"}</h4>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    A strong secondary fit for your profile, ranked just below the top recommendation.
-                  </p>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
-                  <div className="text-[9px] text-slate-400">
-                    DIFFICULTY: <span className="text-green-400">Low (2.1/5)</span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">{alt.department}</h4>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      {i === 0
+                        ? "A strong secondary fit for your profile, ranked just below the top recommendation."
+                        : "A viable third option worth considering alongside your top two matches."}
+                    </p>
                   </div>
-                  <button 
-                    onClick={() => toggleMatrix("ETH-210")}
-                    className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors ${
-                      matrixList.includes("ETH-210") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
-                    }`}
-                  >
-                    {matrixList.includes("ETH-210") ? "ADDED" : "ADD TO MATRIX"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Rec Card 3 */}
-              <div className="bg-[var(--app-card)]/60 rounded-xl p-5 border border-[var(--app-border)]/20 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex gap-2 text-[9px] font-bold tracking-widest uppercase">
-                    <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/30">CORE</span>
-                    <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">DAT-305</span>
+                  <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
+                    <div className="text-[9px] text-slate-400">
+                      MATCH PROBABILITY: <span className="text-cyan-400">{Math.round(alt.probability * 100)}%</span>
+                    </div>
+                    <button
+                      onClick={() => toggleMatrix(alt.department)}
+                      className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors ${
+                        matrixList.includes(alt.department) ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
+                      }`}
+                    >
+                      {matrixList.includes(alt.department) ? "ADDED" : "ADD TO MATRIX"}
+                    </button>
                   </div>
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
-                    {livePrediction?.alternative_options?.[1] ? Math.round(livePrediction.alternative_options[1].probability * 100) : simulatedValues.structuresMatch}%
-                  </span>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-[var(--app-text)] mb-1.5">{livePrediction?.alternative_options?.[1]?.department ?? "Alternative Path"}</h4>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    A viable third option worth considering alongside your top two matches.
-                  </p>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t border-[var(--app-border)]/10">
-                  <div className="text-[9px] text-slate-400">
-                    DIFFICULTY: <span className="text-yellow-500">Med-High (3.8/5)</span>
-                  </div>
-                  <button 
-                    onClick={() => toggleMatrix("DAT-305")}
-                    className={`text-[9px] font-headline font-bold uppercase tracking-widest transition-colors ${
-                      matrixList.includes("DAT-305") ? "text-teal-400" : "text-slate-400 hover:text-[var(--app-text)]"
-                    }`}
-                  >
-                    {matrixList.includes("DAT-305") ? "ADDED" : "ADD TO MATRIX"}
-                  </button>
-                </div>
-              </div>
+              ))}
 
             </div>
           </section>

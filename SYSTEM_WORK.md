@@ -327,7 +327,7 @@ reads the forwarded `better-auth.session_token` cookie against the shared `sessi
 ## Folder Structure
 
 ```text
-AI-updates-mentor/
+Master-Ai-Mentor/
 ├── frontend/                      # Next.js app (App Router)
 │   ├── app/
 │   │   ├── (tenant-app)/[slug]/   # Per-org tenant UI (modules live here)

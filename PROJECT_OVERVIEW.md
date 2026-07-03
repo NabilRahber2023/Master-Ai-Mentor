@@ -1,4 +1,4 @@
-# PROJECT OVERVIEW — AI Mentor (AI-updates-mentor)
+# PROJECT OVERVIEW — AI Mentor (Master-Ai-Mentor)
 
 > **Authoritative reference document.** Every statement below is derived from verified source code in this repository. This file is designed to function as the project's complete technical DNA — a standalone reference that allows a developer or another AI to understand, operate, and extend the system without reading the source.
 
@@ -50,11 +50,11 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Project Name** | AI Mentor (repository: `AI-updates-mentor`) |
+| **Project Name** | AI Mentor (repository: `Master-Ai-Mentor`) |
 | **Backend API** | `AI Mentor SaaS Unified API` **v2.1.0** (FastAPI `title`/`version`) |
 | **Product Branding** | "AI Mentor" / "Intellector" (production domain `intellector.daffodilglobal.ai`) |
 | **Type** | Multi-tenant SaaS platform for AI-driven student academic & career intelligence |
-| **Primary Working Directory** | `c:\AIMENTOR\AI-updates-mentor` |
+| **Primary Working Directory** | `c:\AIMENTOR\Master-Ai-Mentor` |
 | **Architecture Style** | Decoupled frontend (Next.js) + backend (FastAPI) + local LLM (Ollama) |
 | **Tenancy Model** | Path-based multi-tenancy (`/{org-slug}/...`) on a single shared domain |
 | **Primary Domain Focus** | Predictive academic analytics (SGPA, career, talent grid, subject choice) + conversational AI |
@@ -63,7 +63,7 @@
 ### Repository structure (top level)
 
 ```
-AI-updates-mentor/
+Master-Ai-Mentor/
 ├── backend/          # FastAPI application + ML engines + chatbot
 ├── frontend/         # Next.js 16 application (App Router)
 ├── RBAC.md           # RBAC design document
@@ -131,7 +131,7 @@ The billing schema (`package-schema.ts`) defines a **tiered subscription** model
 ## 4. Folder Structure
 
 ```
-AI-updates-mentor/
+Master-Ai-Mentor/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                      # FastAPI entry; loads 4 ML engines at startup

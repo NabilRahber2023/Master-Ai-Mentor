@@ -7,7 +7,7 @@ This document summaries the exact state of the project, modifications made, and 
 ## 1. Credentials & Database State
 * **User Login Credentials**:
   * **Email**: `oxford@gmail.com`
-  * **Password**: `@oxford123#`
+  * **Password**: `Admin@12345`
 * **Account Type**: Created successfully using the native Better Auth sign-up API (ensuring the correct cryptographic password hashing scheme is used).
 * **Organization & Memberships**:
   * The user `oxford@gmail.com` has been linked in the database to **Daffodil University** (`org-platinum-1` organization) with the role of `admin`.
@@ -100,7 +100,7 @@ Every prediction page now starts **blank** and only populates from its evaluate 
 
 * Frontend typecheck: `cd frontend && npx tsc --noEmit` → **0 errors**.
 * Backend health: `curl http://localhost:8001/health` and `curl http://localhost:8001/api/v1/chat/health`.
-* Login: `oxford@gmail.com` / `@oxford123#` → open each module under `/daffodil/modules/...`; click the evaluate/predict button to populate the dashboard.
+* Login: `owner@daffodil.com` / `Owner@12345` (or super-admin `oxford@gmail.com` / `Admin@12345`) → open each module under `/daffodil/modules/...`; click the evaluate/predict button to populate the dashboard.
 * See `ROADMAP.md` for the full phased roadmap and remaining work (real Google OAuth, auth on ML endpoints, CI/deploy).
 
 ---

@@ -68,7 +68,7 @@ npm run dev                       # http://localhost:3000
 - OpenAPI spec: http://localhost:8001/openapi.json
 - Health: http://localhost:8001/health
 
-**Demo login** (seeded): `oxford@gmail.com` / `@oxford123#` → redirects to `/daffodil/home`.
+**Demo login** (seeded): Org Owner `owner@daffodil.com` / `Owner@12345`, or platform super-admin `oxford@gmail.com` / `Admin@12345` → redirects to `/daffodil/home`. Full login table in [RUN.md](RUN.md).
 A "Fill demo credentials" button was added to the login form for convenience (`frontend/components/auth/email-login-form.tsx`).
 
 ---

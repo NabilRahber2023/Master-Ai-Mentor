@@ -237,7 +237,17 @@ These are consumed by `docker-compose.prod.yml`, not the app code.
 ## 7. Notes on the dev stack & helper scripts
 
 - **`backend/docker-compose.yml` (dev)** hardcodes `DATABASE_URL`, `OLLAMA_BASE_URL`, and `OLLAMA_MODEL` with dev defaults (`postgres/postgres`, `phi3:mini`). It does **not** require a `.env`. Do not use it in production.
-- **Root/`frontend` helper scripts** (`create-*.mjs`, `seed-*.mjs`, `frontend/scripts/*`) read `DATABASE_URL` and fall back to a **local dev** connection string (`postgresql://postgres:postgres@localhost:5433/ai_mentor`). Run them only against a dev database, or set `DATABASE_URL` explicitly.
+- **Frontend local config — `frontend/.env.local`** (gitignored) is what `pnpm dev` reads. For a local run against the Dockerised Postgres on port **5433**:
+  ```bash
+  DATABASE_URL=postgresql://postgres:postgres@localhost:5433/ai_mentor
+  BACKEND_URL=http://localhost:8001
+  BETTER_AUTH_URL=http://localhost:3000
+  BETTER_AUTH_SECRET=local-dev-secret-please-change-...
+  NODE_ENV=development
+  ```
+  (Note the **`postgresql://`** scheme for the frontend vs **`postgresql+asyncpg://`** for the backend — same DB, different driver.)
+- **`backend/docker-compose.override.yml`** (gitignored) is auto-loaded by `docker compose` locally. Use it to point the API at a **host-installed Ollama** instead of the bundled container (avoids a port-11434 clash) by setting `OLLAMA_BASE_URL: http://host.docker.internal:11434`. Delete it to use the bundled `ollama` container. See [RUN.md](../RUN.md).
+- **Root/`frontend` helper scripts** (`create-*.mjs`, `seed-*.mjs`, `frontend/scripts/*`) read `DATABASE_URL` and fall back to a **local dev** connection string (`postgresql://postgres:postgres@localhost:5433/ai_mentor`). They import `pg`/`better-auth` from `frontend/node_modules`, so run them after `pnpm install`.
 
 ---
 

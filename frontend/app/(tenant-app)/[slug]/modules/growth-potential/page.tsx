@@ -102,8 +102,6 @@ function deriveRetentionRisk(category: NineBoxCategory): "Low" | "Medium" | "Hig
 
 export default function GrowthPotentialPage() {
   const [mode, setMode] = useState<"manual" | "csv">("manual");
-  const [selectedDept, setSelectedDept] = useState<string>("Engineering");
-  const [selectedCohort, setSelectedCohort] = useState<string>("Q3 2023");
   const [selectedCategory, setSelectedCategory] = useState<NineBoxCategory>("Star");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [showExportOptions, setShowExportOptions] = useState<boolean>(false);
@@ -120,10 +118,6 @@ export default function GrowthPotentialPage() {
 
   // Editing inputs starts fresh.
   const handleLiveReset = () => setLivePrediction(null);
-
-  // Departments & Cohorts
-  const departments = ["Engineering", "Product", "Sales", "Marketing", "All"];
-  const cohorts = ["Q3 2023", "Q4 2023", "Q1 2024"];
 
   // The dashboard starts fresh: no demo employees are shown. It is driven entirely
   // by the live 9-Box evaluation result.
@@ -375,42 +369,8 @@ export default function GrowthPotentialPage() {
             </p>
           </div>
 
-          {/* Filtering and Export Tools */}
+          {/* Export Tools */}
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            {/* Department Dropdown */}
-            <div className="flex items-center gap-2 bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20">
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-headline">Department</span>
-              <select 
-                value={selectedDept}
-                onChange={(e) => {
-                  setSelectedDept(e.target.value);
-                  setSelectedEmployeeId(null);
-                }}
-                className="bg-transparent border-none outline-none text-xs font-semibold text-[var(--app-text)] cursor-pointer pr-4 font-headline uppercase tracking-wider"
-              >
-                {departments.map(dept => (
-                  <option key={dept} value={dept} className="bg-[var(--app-card)] text-[var(--app-text)]">{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Cohort Dropdown */}
-            <div className="flex items-center gap-2 bg-[var(--app-card)] rounded px-3 py-1.5 border border-[var(--app-border)]/20">
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-headline">Cohort</span>
-              <select 
-                value={selectedCohort}
-                onChange={(e) => {
-                  setSelectedCohort(e.target.value);
-                  setSelectedEmployeeId(null);
-                }}
-                className="bg-transparent border-none outline-none text-xs font-semibold text-[var(--app-text)] cursor-pointer pr-4 font-headline uppercase tracking-wider"
-              >
-                {cohorts.map(cohort => (
-                  <option key={cohort} value={cohort} className="bg-[var(--app-card)] text-[var(--app-text)]">{cohort}</option>
-                ))}
-              </select>
-            </div>
-
             {/* Export dropdown */}
             <div className="relative">
               <button 

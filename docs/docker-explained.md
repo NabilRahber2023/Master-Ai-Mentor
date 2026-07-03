@@ -351,6 +351,10 @@ Step by step:
 6. Because of **`-d` (detached)**, everything runs in the **background**. You get your terminal back.
 7. You can now reach: API at `localhost:8001`, Postgres at `localhost:5433`, Ollama at `localhost:11434`.
 
+> **Local tips (see [RUN.md](../RUN.md)):**
+> - **Already run Ollama on the host?** Don't start the bundled `ollama` container (it would clash on 11434). Instead start only the services you need — `docker compose up -d postgres api` — and add a gitignored **`backend/docker-compose.override.yml`** that sets `OLLAMA_BASE_URL: http://host.docker.internal:11434` so the API uses your host Ollama.
+> - Predictions don't need Ollama at all — only the chatbot does, and it degrades gracefully if Ollama is unreachable.
+
 What you'd typically do next:
 ```bash
 docker compose ps          # see status + health

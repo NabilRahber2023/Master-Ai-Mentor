@@ -17,6 +17,8 @@ import {
     TrendingUp,
     Users,
     Activity,
+    Layers,
+    Brain,
 } from "lucide-react";
 import Link from "next/link";
 import { CsvUploadCard } from "@/components/dashboard/csv-upload-card";
@@ -43,7 +45,8 @@ const getQuickStats = (tenant: NonNullable<ReturnType<typeof useTenant>>) => [
     },
 ];
 
-// Module definitions (href built dynamically using slug)
+// Module definitions — one card per platform module. `path` is the route
+// segment under /{slug} (subject-prediction lives outside /modules).
 const MODULE_DEFS = [
     {
         id: "grade-prediction",
@@ -51,6 +54,15 @@ const MODULE_DEFS = [
         description: "AI-powered academic performance prediction",
         icon: GraduationCap,
         color: "bg-blue-500/10 text-blue-500",
+        path: "modules/grade-prediction",
+    },
+    {
+        id: "batch-prediction",
+        title: "Batch Prediction",
+        description: "Cohort-level predictions, prescriptions & forecast",
+        icon: Layers,
+        color: "bg-cyan-500/10 text-cyan-500",
+        path: "modules/batch-prediction",
     },
     {
         id: "career-guidance",
@@ -58,6 +70,15 @@ const MODULE_DEFS = [
         description: "Personalized career path recommendations",
         icon: Compass,
         color: "bg-purple-500/10 text-purple-500",
+        path: "modules/career-guidance",
+    },
+    {
+        id: "subject-prediction",
+        title: "Subject Prediction",
+        description: "Best-fit department recommendations",
+        icon: Brain,
+        color: "bg-pink-500/10 text-pink-500",
+        path: "subject-prediction",
     },
     {
         id: "ai-chatbot",
@@ -65,6 +86,7 @@ const MODULE_DEFS = [
         description: "24/7 intelligent student assistant",
         icon: Bot,
         color: "bg-green-500/10 text-green-500",
+        path: "modules/ai-chatbot",
     },
     {
         id: "growth-potential",
@@ -72,6 +94,7 @@ const MODULE_DEFS = [
         description: "Student development analysis",
         icon: TrendingUp,
         color: "bg-orange-500/10 text-orange-500",
+        path: "modules/growth-potential",
     },
 ];
 
@@ -137,11 +160,11 @@ export default function TenantDashboard() {
                 {/* Module Cards */}
                 <div>
                     <h2 className="text-xl font-semibold mb-4">AI Modules</h2>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {MODULE_DEFS.map((module) => {
                             const isEnabled = tenant.enabledModules.includes(module.id);
                             const Icon = module.icon;
-                            const moduleHref = `/${tenant.slug}/modules/${module.id}`;
+                            const moduleHref = `/${tenant.slug}/${module.path}`;
 
                             return (
                                 <Card

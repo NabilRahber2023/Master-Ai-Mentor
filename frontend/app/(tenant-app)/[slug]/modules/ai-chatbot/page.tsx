@@ -9,38 +9,19 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { 
-  Send, 
-  Terminal, 
-  Download, 
-  Share, 
-  Bot, 
-  Paperclip, 
-  Link, 
-  Mic, 
-  Database, 
-  Code, 
-  LineChart, 
-  Sparkles, 
-  CheckCircle2, 
-  FileSpreadsheet, 
-  Clock, 
-  RefreshCw, 
+import {
+  Send,
+  Terminal,
+  Download,
+  Bot,
+  Code,
+  LineChart,
+  FileSpreadsheet,
+  RefreshCw,
   Copy,
   ChevronRight,
-  TrendingDown,
   AlertTriangle,
-  Play
 } from "lucide-react";
-import { 
-  LineChart as RechartsLine, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
-} from "recharts";
 
 // Interfaces
 interface Message {
@@ -53,7 +34,6 @@ interface Message {
   resultData?: {
     title?: string;
     metrics?: { label: string; value: string; desc: string; isNegative?: boolean }[];
-    chartData?: any[];
     sources?: { name: string; type: string }[];
     actions?: { label: string; action: string }[];
   };
@@ -62,7 +42,7 @@ interface Message {
 interface Source {
   name: string;
   type: string;
-  relevance: string;
+  detail: string;
   active: boolean;
 }
 
@@ -72,6 +52,20 @@ interface MemoryItem {
   time: string;
 }
 
+/** Shapes echoed by the backend chat endpoint (see backend ChatResponse). */
+interface StudentFound {
+  student_id: string;
+  name: string;
+  preferred_department?: string | null;
+  current_sgpa?: number | null;
+}
+
+interface FactorLike {
+  feature: string;
+  value: number | string;
+  impact_score?: number;
+}
+
 export default function AiChatbotPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
@@ -79,7 +73,7 @@ export default function AiChatbotPage() {
       id: "welcome-msg",
       sender: "system",
       text: "Aetheris Ready for Inquiry",
-      timestamp: "09:42",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: "welcome"
     }
   ]);
@@ -87,25 +81,18 @@ export default function AiChatbotPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingText, setTypingText] = useState("");
 
-  // Context sidebar states
-  const [recentInquiries, setRecentInquiries] = useState<MemoryItem[]>([
-    { query: "Q2 Retention Metrics", type: "Financial Data", time: "2 hours ago" },
-    { query: "Grade Predictor V2 Launch", type: "Deployment", time: "Yesterday" }
-  ]);
-  
-  const [activeSources, setActiveSources] = useState<Source[]>([
-    { name: "Jira Enterprise", type: "Dataset", relevance: "98% relevance", active: true },
-    { name: "GitHub Repos", type: "Codebase", relevance: "84% relevance", active: true },
-    { name: "Confluence Docs", type: "Wiki", relevance: "42% relevance", active: false }
-  ]);
+  // Context sidebar — populated from the real backend (chat health + dataset),
+  // never from placeholder entries.
+  const [activeSources, setActiveSources] = useState<Source[]>([]);
+  const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
 
-  const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([
-    { query: "Compare Q2 vs Q3 server costs after the AWS migration.", type: "FINANCIAL DATA", time: "2H AGO" },
-    { query: "List all open high-priority bugs in the authentication service.", type: "ISSUE TRACKER", time: "5H AGO" }
-  ]);
-
-  const [utilization, setUtilization] = useState({ compute: 42, context: 89 });
-  const [systemStatus, setSystemStatus] = useState("All systems operational");
+  // Real session telemetry: measured round-trip latency of the last request and
+  // the number of conversation turns held in the session's memory.
+  const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
+  const [systemStatus, setSystemStatus] = useState<{ label: string; healthy: boolean }>({
+    label: "Checking system status…",
+    healthy: true,
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +100,73 @@ export default function AiChatbotPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // Load real system status + data sources on mount.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // Chatbot component health (LLM + dispatcher).
+      let llmHealthy = false;
+      let llmModel = "LLM";
+      try {
+        const res = await fetch("/api/v1/chat/health");
+        if (res.ok) {
+          const h = await res.json();
+          llmHealthy = h?.llm?.status === "healthy";
+          llmModel = h?.llm?.model || llmModel;
+          if (!cancelled) {
+            setSystemStatus(
+              llmHealthy
+                ? { label: "All systems operational", healthy: true }
+                : { label: "LLM unavailable — fallback mode active", healthy: false },
+            );
+          }
+        } else if (!cancelled) {
+          setSystemStatus({ label: "Chat service degraded", healthy: false });
+        }
+      } catch {
+        if (!cancelled) setSystemStatus({ label: "Backend unreachable", healthy: false });
+      }
+
+      // Tenant dataset presence (drives the "Students Dataset" source chip).
+      let studentTotal: number | null = null;
+      try {
+        const res = await fetch("/api/v1/prediction/csv/students?search=&limit=1");
+        if (res.ok) {
+          const d = await res.json();
+          studentTotal = typeof d?.total === "number" ? d.total : null;
+        }
+      } catch {
+        /* dataset source will show as unavailable */
+      }
+
+      if (!cancelled) {
+        setActiveSources([
+          {
+            name: "Students Dataset",
+            type: "Dataset",
+            detail: studentTotal === null ? "unavailable" : `${studentTotal} records`,
+            active: studentTotal !== null && studentTotal > 0,
+          },
+          {
+            name: "ML Prediction Engines",
+            type: "Models",
+            detail: "SGPA · Career · 9-Box · Subject",
+            active: true,
+          },
+          {
+            name: `Ollama (${llmModel})`,
+            type: "LLM",
+            detail: llmHealthy ? "healthy" : "fallback mode",
+            active: llmHealthy,
+          },
+        ]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Handle command tags clicked
   const handleCommandClick = (cmd: string) => {
@@ -184,12 +238,8 @@ export default function AiChatbotPage() {
 
     // Show processing state
     setIsTyping(true);
-    
-    // Simulate updating Model Utilization
-    setUtilization((prev) => ({
-      compute: Math.min(99, Math.round(prev.compute + (Math.random() * 10 - 2))),
-      context: Math.min(99, Math.round(prev.context + 1))
-    }));
+
+    const startedAt = performance.now();
 
     try {
       // API call to backend chatbot
@@ -202,6 +252,8 @@ export default function AiChatbotPage() {
         })
       });
 
+      setLastLatencyMs(Math.round(performance.now() - startedAt));
+
       if (!res.ok) {
         throw new Error("Chat api failed");
       }
@@ -213,14 +265,14 @@ export default function AiChatbotPage() {
 
       const aiTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // Update sidebar dynamically based on detected intent
+      // Update session memory sidebar from the real detected intent
       if (data.intent) {
-        setRecentInquiries((prev) => [
-          { query: textToSend, type: data.intent.toUpperCase(), time: "Just now" },
-          ...prev.slice(0, 3)
-        ]);
         setMemoryItems((prev) => [
-          { query: textToSend, type: data.intent.toUpperCase(), time: "JUST NOW" },
+          {
+            query: textToSend,
+            type: data.intent.toUpperCase(),
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
           ...prev.slice(0, 3)
         ]);
       }
@@ -233,7 +285,7 @@ export default function AiChatbotPage() {
           text: data.message,
           timestamp: aiTime,
           type: "disambiguation",
-          choices: data.students_found.map((s: any) => ({
+          choices: data.students_found.map((s: StudentFound) => ({
             name: s.name,
             subtitle: `${s.preferred_department || "General"} • SGPA: ${s.current_sgpa || "N/A"}`,
             payload: `Select student: ${s.name} (ID: ${s.student_id})`
@@ -255,7 +307,7 @@ export default function AiChatbotPage() {
               { label: "Predicted SGPA", value: r.predicted_sgpa?.toFixed(2) ?? "—", desc: `Risk: ${r.risk_level ?? "—"}` },
               ...(factors[0] ? [{ label: "Top Factor", value: factors[0].feature, desc: `Impact ${factors[0].impact_score?.toFixed(3)}` }] : []),
             ],
-            sources: factors.map((f: any) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
+            sources: factors.map((f: FactorLike) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
           };
         } else if (data.intent === "career") {
           const alts = r.alternative_paths || [];
@@ -265,7 +317,7 @@ export default function AiChatbotPage() {
               { label: "Top Career", value: r.predicted_career ?? "—", desc: `Confidence ${Math.round((r.confidence_score ?? 0) * 100)}%` },
               ...(alts[0] ? [{ label: "Alternative", value: alts[0].career, desc: `${Math.round(alts[0].probability * 100)}% match` }] : []),
             ],
-            sources: (r.contributing_factors || []).slice(0, 4).map((f: any) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
+            sources: (r.contributing_factors || []).slice(0, 4).map((f: FactorLike) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
           };
         } else if (data.intent === "subject") {
           const alts = r.alternative_options || [];
@@ -275,7 +327,7 @@ export default function AiChatbotPage() {
               { label: "Recommended", value: r.recommended_department ?? "—", desc: `Confidence ${Math.round((r.confidence_score ?? 0) * 100)}%` },
               ...(alts[0] ? [{ label: "Alternative", value: alts[0].department, desc: `${Math.round(alts[0].probability * 100)}% match` }] : []),
             ],
-            sources: (r.contributing_factors || []).slice(0, 4).map((f: any) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
+            sources: (r.contributing_factors || []).slice(0, 4).map((f: FactorLike) => ({ name: `${f.feature}: ${f.value}`, type: "factor" })),
           };
         } else {
           // 9box
@@ -457,22 +509,6 @@ export default function AiChatbotPage() {
                             </div>
                           )}
 
-                          {/* Render Charts if present */}
-                          {msg.resultData.chartData && (
-                            <div className="h-44 w-full bg-[var(--app-bg)]/50 p-2 rounded border border-[var(--app-border)]/20">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <RechartsLine data={msg.resultData.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                  <CartesianGrid stroke="#3b494c" strokeOpacity={0.1} />
-                                  <XAxis dataKey="week" stroke="#849396" fontSize={8} />
-                                  <YAxis stroke="#849396" fontSize={8} />
-                                  <Tooltip contentStyle={{ background: "#101416", borderColor: "#3b494c", fontSize: 10 }} />
-                                  <Line type="monotone" dataKey="Velocity" stroke="#00e5ff" strokeWidth={2} dot={{ r: 2 }} />
-                                  <Line type="monotone" dataKey="Defects" stroke="#ffb4ab" strokeWidth={1.5} strokeDasharray="3 3" dot={{ r: 1 }} />
-                                </RechartsLine>
-                              </ResponsiveContainer>
-                            </div>
-                          )}
-
                           {/* Source Chips */}
                           {msg.resultData.sources && (
                             <div className="flex gap-2 flex-wrap">
@@ -597,19 +633,11 @@ export default function AiChatbotPage() {
 
                 {/* Control elements */}
                 <div className="w-full flex justify-between items-center px-4 py-2 border-t border-[var(--app-border)]/10 bg-[var(--app-bg)]/20">
-                  <div className="flex gap-2 text-slate-500">
-                    <button className="p-1.5 hover:text-cyan-400 transition-colors" title="Attach dataset">
-                      <Paperclip className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1.5 hover:text-cyan-400 transition-colors" title="Add source link">
-                      <Link className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1.5 hover:text-cyan-400 transition-colors" title="Audio transcription">
-                      <Mic className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <span className="text-[9px] text-slate-500 font-headline uppercase tracking-widest">
+                    Enter to send • Shift+Enter for newline
+                  </span>
 
-                  <button 
+                  <button
                     onClick={() => handleSendMessage()}
                     className="p-2 bg-gradient-to-r from-cyan-400 to-[#44d8f1] hover:from-cyan-300 hover:to-cyan-400 text-[#101416] rounded-md transition-all shadow-[0_0_12px_rgba(0,229,255,0.2)]"
                   >
@@ -637,20 +665,18 @@ export default function AiChatbotPage() {
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             
-            {/* Active Sources */}
+            {/* Active Sources — real backend components + live status */}
             <div>
               <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em] mb-4">Active Sources</h4>
               <div className="space-y-3">
+                {activeSources.length === 0 && (
+                  <p className="text-[10px] text-slate-500">Loading sources…</p>
+                )}
                 {activeSources.map((src, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => {
-                      const updated = [...activeSources];
-                      updated[idx].active = !updated[idx].active;
-                      setActiveSources(updated);
-                    }}
-                    className={`flex items-center justify-between p-2.5 rounded border border-[var(--app-border)]/10 bg-[var(--app-card)]/40 cursor-pointer hover:border-cyan-400/30 transition-all ${
-                      src.active ? "opacity-100" : "opacity-40"
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between p-2.5 rounded border border-[var(--app-border)]/10 bg-[var(--app-card)]/40 transition-all ${
+                      src.active ? "opacity-100" : "opacity-50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -662,18 +688,28 @@ export default function AiChatbotPage() {
                         <span className="text-[8px] text-slate-400 uppercase tracking-widest">{src.type}</span>
                       </div>
                     </div>
-                    <span className="text-[8px] text-cyan-400 font-headline">{src.relevance}</span>
+                    <span className={`text-[8px] font-headline ${src.active ? "text-cyan-400" : "text-red-400"}`}>{src.detail}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Recent Memory */}
+            {/* Recent Memory — this session's real queries + detected intents */}
             <div>
               <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em] mb-4">Recent Memory</h4>
               <div className="space-y-2">
+                {memoryItems.length === 0 && (
+                  <p className="text-[10px] text-slate-500">
+                    No inquiries yet — your session history will appear here.
+                  </p>
+                )}
                 {memoryItems.map((mem, idx) => (
-                  <div key={idx} className="p-3 bg-[var(--app-card)]/60 rounded border border-[var(--app-border)]/10 hover:border-cyan-400/20 cursor-pointer transition-all">
+                  <div
+                    key={idx}
+                    onClick={() => setInputVal(mem.query)}
+                    className="p-3 bg-[var(--app-card)]/60 rounded border border-[var(--app-border)]/10 hover:border-cyan-400/20 cursor-pointer transition-all"
+                    title="Click to reuse this query"
+                  >
                     <p className="text-xs text-slate-300 leading-normal line-clamp-2 mb-2">{mem.query}</p>
                     <span className="text-[8px] text-[#00daf3] font-headline uppercase tracking-wider font-semibold">
                       {mem.type} • {mem.time}
@@ -683,39 +719,49 @@ export default function AiChatbotPage() {
               </div>
             </div>
 
-            {/* Model Utilization */}
+            {/* Session Telemetry — real measured values */}
             <div className="bg-[var(--app-card)]/40 p-4 rounded-lg border border-[var(--app-border)]/10 space-y-4">
-              <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em]">Model Utilization</h4>
-              
+              <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em]">Session Telemetry</h4>
+
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-[9px] font-headline uppercase mb-1">
-                    <span className="text-slate-300">Compute</span>
-                    <span className="text-cyan-400 font-mono">{utilization.compute}%</span>
+                    <span className="text-slate-300">Last Response</span>
+                    <span className="text-cyan-400 font-mono">
+                      {lastLatencyMs === null ? "—" : lastLatencyMs < 1000 ? `${lastLatencyMs}ms` : `${(lastLatencyMs / 1000).toFixed(1)}s`}
+                    </span>
                   </div>
                   <div className="w-full bg-[var(--app-bg)] h-1 rounded-full overflow-hidden">
-                    <div className="bg-cyan-400 h-full transition-all duration-300" style={{ width: `${utilization.compute}%` }}></div>
+                    <div
+                      className="bg-cyan-400 h-full transition-all duration-300"
+                      style={{ width: `${lastLatencyMs === null ? 0 : Math.min(100, (lastLatencyMs / 10000) * 100)}%` }}
+                    ></div>
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-[9px] font-headline uppercase mb-1">
-                    <span className="text-slate-300">Context Window</span>
-                    <span className="text-[#00daf3] font-mono">{utilization.context}%</span>
+                    <span className="text-slate-300">Conversation Turns</span>
+                    <span className="text-[#00daf3] font-mono">
+                      {messages.filter((m) => m.sender === "user").length}
+                    </span>
                   </div>
                   <div className="w-full bg-[var(--app-bg)] h-1 rounded-full overflow-hidden">
-                    <div className="bg-[#00daf3] h-full transition-all duration-300" style={{ width: `${utilization.context}%` }}></div>
+                    <div
+                      className="bg-[#00daf3] h-full transition-all duration-300"
+                      style={{ width: `${Math.min(100, messages.filter((m) => m.sender === "user").length * 5)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* System Status */}
+            {/* System Status — from /api/v1/chat/health */}
             <div className="pt-2">
               <h4 className="text-[9px] text-slate-400 font-headline uppercase tracking-[0.2em] mb-3">System Status</h4>
               <div className="flex items-center gap-2 text-[10px] text-slate-300">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                {systemStatus}
+                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${systemStatus.healthy ? "bg-green-400" : "bg-red-400"}`}></span>
+                {systemStatus.label}
               </div>
             </div>
 

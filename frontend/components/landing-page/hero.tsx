@@ -1,4 +1,5 @@
 "use client"
+import Link from "next/link";
 import LightRays from "@/components/LightRays";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Button } from "@/components/ui/button";
@@ -38,10 +39,14 @@ export default function Hero() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                            <RainbowButton size="lg">GET STARTED</RainbowButton>
-                            <Button variant="outline" size="hero">
-                                Book a call
-                            </Button>
+                            <Link href="/register">
+                                <RainbowButton size="lg">GET STARTED</RainbowButton>
+                            </Link>
+                            <Link href="/pricing">
+                                <Button variant="outline" size="hero">
+                                    View Pricing
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                     <ServicesCircle />

@@ -1,60 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Mentor — Multi-Tenant Student Intelligence Platform
 
-## Getting Started
+AI Mentor ("Intellector") is a multi-tenant SaaS that helps mentors understand and guide students using machine learning. It combines four CatBoost prediction models (grade/SGPA, career path, 9-box growth potential, and subject/department fit) with a conversational AI assistant, wrapped in a role-based, per-organization workspace.
 
-First, run the development server:
+- **Frontend:** Next.js 16 (App Router, React 19), Better Auth, Drizzle ORM, Tailwind 4 — `frontend/`
+- **Backend:** FastAPI (Python 3.11), SQLAlchemy async, CatBoost + SHAP, LangChain — `backend/`
+- **Data:** PostgreSQL 15 + pgvector, one database per organization
+- **Chatbot LLM:** Ollama (`phi3:mini`), running locally — no third-party AI API
+
+The browser only talks to the frontend, which proxies `/api/v1/*` to the backend. Auth is validated against a shared Better Auth session table; every request is gated by a two-plane RBAC (platform role + org role) plus per-organization module entitlements.
+
+---
+
+## Quick start (local)
+
+See **[RUN.md](RUN.md)** for the full, verified boot procedure. In short:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. Backend stack (Postgres :5433 + FastAPI :8001)
+cd backend && docker compose up -d --build postgres api
+
+# 2. Frontend
+cd ../frontend && pnpm install && pnpm dev   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open **http://localhost:3000/login** and click a role card to sign in.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Primary login:** Org Owner — `owner@daffodil.com` / `Owner@12345`.
+Full login table (all roles) is in [RUN.md](RUN.md).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+| Doc | What it covers |
+|-----|----------------|
+| [RUN.md](RUN.md) | Run locally — step-by-step, credentials, troubleshooting |
+| [RUN_THE_PROJECT.md](RUN_THE_PROJECT.md) | Detailed run guide incl. dataset ingestion + CSV mode |
+| [docs/architecture.md](docs/architecture.md) | System architecture with Mermaid diagrams |
+| [docs/request-flow.md](docs/request-flow.md) | End-to-end request lifecycle (browser → response) |
+| [docs/docker-explained.md](docs/docker-explained.md) | Every Dockerfile & compose file, build/startup order |
+| [docs/environment.md](docs/environment.md) | Every environment variable, required/optional |
+| [docs/deployment-audit.md](docs/deployment-audit.md) | Production deployment, risks & remediations |
+| [RBAC.md](RBAC.md) | Role & permission model |
+| [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) | Full project overview |
+| [DATASET_SPEC.md](DATASET_SPEC.md) | Student dataset schema (63 columns) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Production deployment
 
-## Deploy on Vercel
+Use **[docs/deployment-audit.md](docs/deployment-audit.md)** and the production compose stack:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cp .env.prod.example .env      # fill in real secrets + your domain
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This runs Postgres (pgvector), Ollama, the FastAPI backend, the Next.js frontend, and Caddy (automatic HTTPS) — with only Caddy exposed to the internet. Notes:
 
-## Deployment
-
-Recommended approaches to deploy the project:
-
-- Docker Compose (server)
-	- From the `backend/` folder run:
-		```bash
-		docker compose up -d --build
-		```
-	- This brings up Postgres (with pgvector), Ollama and the FastAPI backend. The backend Dockerfile is in `backend/Dockerfile`.
-
-- Deploying the frontend with Coolify
-	- In Coolify set the build context to `frontend/` and use the provided `frontend/Dockerfile` (it builds with `pnpm` and runs `pnpm start`).
-	- Add required environment variables in Coolify or via `.env`:
-		- `NEXT_PUBLIC_API_URL` (e.g. `http://<backend-host>:8001`)
-		- `BETTER_AUTH_URL` (if used)
-
-		- Important: `next.config.ts` uses `process.env.BACKEND_URL` at build time to configure rewrites. Make sure to set the `BACKEND_URL` build environment variable in Coolify (or pass it as a build-arg) so API calls to `/api/v1/*` are rewritten to your backend host.
-			Example in Coolify build settings: `BACKEND_URL=http://your-backend:8001`
-
-Notes
-- Ensure backend `DATABASE_URL` uses secure credentials and points to the Postgres service (`postgres:5432` when using compose).
-- For TLS, use a reverse proxy (nginx) or the platform-managed certificates provided by Coolify.
+- `BACKEND_URL` is baked into the frontend at **build time** for the `/api/v1/*` rewrites — pass it as a build arg. A production build fails loudly if it is unset.
+- Set a strong `INTERNAL_API_TOKEN`; secure `DATABASE_URL` credentials; terminate TLS at the reverse proxy.

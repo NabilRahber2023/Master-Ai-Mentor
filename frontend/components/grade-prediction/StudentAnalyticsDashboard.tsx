@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  Search,
-  Bell,
-  Settings as SettingsIcon,
   TrendingUp,
   TrendingDown,
   Play,
@@ -110,32 +107,6 @@ export function StudentAnalyticsDashboard({ prediction, input }: StudentAnalytic
   return (
     <div className="w-full bg-[var(--app-bg)] text-[var(--app-text)] min-h-screen font-body selection:bg-cyan-500/30 selection:text-cyan-200 space-y-8 pb-24">
       
-      {/* Top Bar Navigation Mockup matching layout */}
-      <header className="flex justify-between items-center w-full pb-4 border-b border-[var(--app-border)]/10">
-        {/* Search */}
-        <div className="flex items-center bg-[var(--app-card)] rounded px-4 py-2 w-64 border border-[var(--app-border)]/20 focus-within:border-cyan-400 transition-all group">
-          <Search className="text-slate-400 text-sm mr-2 group-focus-within:text-cyan-400 transition-colors w-4 h-4" />
-          <input 
-            className="bg-transparent border-none outline-none text-xs text-[var(--app-text)] w-full placeholder:text-slate-500 font-headline uppercase tracking-wider" 
-            placeholder="QUERY ORCHESTRA..." 
-            type="text"
-          />
-        </div>
-        {/* Trailing Actions */}
-        <div className="flex items-center gap-4">
-          <button className="text-slate-400 hover:text-cyan-400 transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
-          </button>
-          <button className="text-slate-400 hover:text-cyan-400 transition-colors">
-            <SettingsIcon className="w-5 h-5" />
-          </button>
-          <div className="h-8 w-8 rounded-full bg-[var(--app-surface)] border border-[var(--app-border)]/30 overflow-hidden cursor-pointer opacity-80 hover:opacity-100 hover:scale-95 transition-all flex items-center justify-center">
-            <span className="text-[10px] text-cyan-400 font-headline font-bold">OP</span>
-          </div>
-        </div>
-      </header>
-
       {/* Main Top Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
         <div>
@@ -184,7 +155,9 @@ export function StudentAnalyticsDashboard({ prediction, input }: StudentAnalytic
             </div>
           </div>
 
-          {/* Dynamic SVG trajectory representation */}
+          {/* Dynamic SVG trajectory — plotted from the student's real academic
+              history (SSC → HSC → previous SGPA) into the simulated projection.
+              SSC/HSC are on a 0–5 scale; SGPA on 0–4, so history is normalized. */}
           <div className="relative z-10 flex-1 flex items-end mt-4">
             <div className="w-full h-44 relative">
               <div className="absolute inset-0 flex flex-col justify-between opacity-10">
@@ -194,44 +167,53 @@ export function StudentAnalyticsDashboard({ prediction, input }: StudentAnalytic
                 <div className="w-full h-px bg-white"></div>
               </div>
 
-              <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                <path 
-                  d="M0,80 L25,75 L50,60 L65,52" 
-                  fill="none" 
-                  stroke="rgba(68, 216, 241, 0.4)" 
-                  strokeWidth="2" 
-                  vectorEffect="non-scaling-stroke"
-                />
-                <path 
-                  d={`M65,52 L80,${70 - (simulatedValues.predicted - 3.0) * 40} L100,${60 - (simulatedValues.predicted - 3.0) * 50}`}
-                  fill="none" 
-                  stroke="#00e5ff" 
-                  strokeDasharray="4,4" 
-                  strokeWidth="2.5" 
-                  vectorEffect="non-scaling-stroke"
-                />
-                <path 
-                  d={`M65,52 L80,${70 - (simulatedValues.predicted - 3.0) * 40} L100,${60 - (simulatedValues.predicted - 3.0) * 50}`}
-                  fill="none" 
-                  filter="blur(4px)" 
-                  opacity="0.25" 
-                  stroke="#00e5ff" 
-                  strokeWidth="8" 
-                  vectorEffect="non-scaling-stroke"
-                />
-                <circle cx="65" cy="52" fill="#101416" r="3" stroke="#44d8f1" strokeWidth="1.5" vectorEffect="non-scaling-stroke"></circle>
-                <circle cx="100" cy={`${60 - (simulatedValues.predicted - 3.0) * 50}`} fill="#00e5ff" r="3.5" vectorEffect="non-scaling-stroke"></circle>
-                <circle className="animate-pulse" cx="100" cy={`${60 - (simulatedValues.predicted - 3.0) * 50}`} fill="#00e5ff" opacity="0.2" r="10" vectorEffect="non-scaling-stroke"></circle>
-              </svg>
+              {(() => {
+                // y-mapping: SGPA 0–4 → svg y 90–26 (higher grade = higher point)
+                const y = (v: number) => Math.min(95, Math.max(5, 90 - v * 16));
+                const sscY = y(sscGpa * 0.8);            // 0–5 scale → 0–4
+                const hscY = y(hscGpa * 0.8);            // 0–5 scale → 0–4
+                const prevY = y(prevSemesterSgpa);
+                const predY = y(simulatedValues.predicted);
+                return (
+                  <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                    <path
+                      d={`M0,${sscY} L33,${hscY} L65,${prevY}`}
+                      fill="none"
+                      stroke="rgba(68, 216, 241, 0.4)"
+                      strokeWidth="2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <path
+                      d={`M65,${prevY} L100,${predY}`}
+                      fill="none"
+                      stroke="#00e5ff"
+                      strokeDasharray="4,4"
+                      strokeWidth="2.5"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <path
+                      d={`M65,${prevY} L100,${predY}`}
+                      fill="none"
+                      filter="blur(4px)"
+                      opacity="0.25"
+                      stroke="#00e5ff"
+                      strokeWidth="8"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <circle cx="65" cy={prevY} fill="#101416" r="3" stroke="#44d8f1" strokeWidth="1.5" vectorEffect="non-scaling-stroke"></circle>
+                    <circle cx="100" cy={predY} fill="#00e5ff" r="3.5" vectorEffect="non-scaling-stroke"></circle>
+                    <circle className="animate-pulse" cx="100" cy={predY} fill="#00e5ff" opacity="0.2" r="10" vectorEffect="non-scaling-stroke"></circle>
+                  </svg>
+                );
+              })()}
             </div>
           </div>
 
           <div className="flex justify-between items-center mt-4 text-[9px] text-slate-400 font-headline uppercase tracking-widest relative z-10 pt-2 border-t border-[var(--app-border)]/10">
-            <span>Q1</span>
-            <span>Q2</span>
+            <span>SSC</span>
+            <span>HSC</span>
             <span className="text-[#44d8f1]">Current</span>
-            <span>Q3</span>
-            <span>Q4 (Proj)</span>
+            <span className="text-cyan-400">Projected</span>
           </div>
         </div>
 

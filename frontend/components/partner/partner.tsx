@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import partnersLogoImg from "@/public/images/partners_logo.png";
 
@@ -9,10 +10,11 @@ interface PartnershipCardProps {
     title: string;
     benefits: string[];
     buttonText: string;
+    href: string;
     className?: string;
 }
 
-const PartnershipCard: React.FC<PartnershipCardProps> = ({ title, benefits, buttonText, className }) => {
+const PartnershipCard: React.FC<PartnershipCardProps> = ({ title, benefits, buttonText, href, className }) => {
     return (
         <div
             className={cn(
@@ -48,11 +50,13 @@ const PartnershipCard: React.FC<PartnershipCardProps> = ({ title, benefits, butt
                 </div>
 
                 {/* Button */}
-                <button className="group/btn w-full px-6 py-3.5 rounded-full border-2 border-cyan-500/30 bg-transparent hover:bg-cyan-500/10 transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-                    <span className="text-cyan-100 font-semibold text-base md:text-lg group-hover/btn:text-cyan-50 transition-colors">
-                        {buttonText}
-                    </span>
-                </button>
+                <Link href={href} className="block">
+                    <button className="group/btn w-full px-6 py-3.5 rounded-full border-2 border-cyan-500/30 bg-transparent hover:bg-cyan-500/10 transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+                        <span className="text-cyan-100 font-semibold text-base md:text-lg group-hover/btn:text-cyan-50 transition-colors">
+                            {buttonText}
+                        </span>
+                    </button>
+                </Link>
             </div>
 
             {/* Bottom Glow */}
@@ -71,7 +75,8 @@ export default function Partner() {
                 "Infrastructure sponsorship",
                 "Technology transfer"
             ],
-            buttonText: "Become a Partner"
+            buttonText: "Become a Partner",
+            href: "/register"
         },
         {
             title: "Individual Donations",
@@ -81,7 +86,8 @@ export default function Partner() {
                 "Infrastructure development",
                 "Endowment opportunities"
             ],
-            buttonText: "Make a Donation"
+            buttonText: "Make a Donation",
+            href: "/register"
         },
         {
             title: "Institutional Collaboration",
@@ -91,7 +97,8 @@ export default function Partner() {
                 "Capacity building",
                 "Policy research"
             ],
-            buttonText: "Collaborate"
+            buttonText: "Collaborate",
+            href: "/register"
         }
     ];
 

@@ -19,10 +19,10 @@ interface EmailLoginFormProps {
     onSuccess?: () => void;
 }
 
-// Default demo account seeded in the local database (see "We have done.md").
+// Default demo account seeded in the local database (super-admin owner).
 const DEMO_CREDENTIALS = {
     email: "oxford@gmail.com",
-    password: "@oxford123#",
+    password: "Admin@12345",
 };
 
 export default function EmailLoginForm({
