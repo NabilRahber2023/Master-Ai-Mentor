@@ -37,4 +37,7 @@ ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@9 --activate
 COPY --from=builder /app .
 EXPOSE 3000
-CMD ["pnpm","start","--","-p","3000"]
+# next start honors PORT; avoids the `--`/`-p` arg-forwarding that Next 16 parses
+# as a positional [directory] (e.g. /app/-p).
+ENV PORT=3000
+CMD ["pnpm","start"]
