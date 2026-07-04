@@ -65,6 +65,7 @@ temp/
 
 # data exports / local assets
 *.csv
+!master_dataset.csv
 *.sqlite
 *.db
 *.backup
@@ -87,3 +88,5 @@ frontend/.env.local
 # Backend virtualenv
 backend/.venv/
 backend/.env
+
+master_dataset.csv

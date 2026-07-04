@@ -17,6 +17,8 @@ class BatchFilters(BaseModel):
     gender: str = "All"            # All | Male | Female | Other
     min_study_hours: int = 0       # per-day threshold (0 = Any)
     min_attendance: int = 0        # percent threshold (0 = >0%)
+    offset: int = 0                # student-table pagination (predict only)
+    search: str = ""               # student-table id/name search (predict only)
 
 
 # ──────────────────────────── Overview ────────────────────────────
@@ -58,7 +60,7 @@ class StudentRow(BaseModel):
     study_hrs: int                 # per-day
     attendance: int                # percent
     predicted: float
-    status: str                    # On track | At risk
+    status: str                    # On track | Medium | At risk
 
 
 class ScatterPoint(BaseModel):
@@ -70,6 +72,7 @@ class ScatterPoint(BaseModel):
 class PredictKpis(BaseModel):
     filtered: int
     on_track: int
+    medium: int
     at_risk: int
     avg_predicted: float
     pass_rate: int                 # percent
@@ -90,12 +93,14 @@ class PrescriptionRequest(BaseModel):
     filters: BatchFilters = Field(default_factory=BatchFilters)
     target: str = "At risk"        # At risk | Mid | On track
     search: str = ""
+    offset: int = 0                # card pagination
 
 
 class PrescriptionCard(BaseModel):
     id: str
     name: str
     dept: str
+    prev_sgpa: float
     predicted: float
     status: str
     recommendations: List[str]
@@ -103,7 +108,8 @@ class PrescriptionCard(BaseModel):
 
 class PrescriptionResponse(BaseModel):
     target: str
-    count: int
+    count: int                     # total students in the target band (matches KPIs)
+    showing: int                   # cards returned in this page
     cards: List[PrescriptionCard]
 
 

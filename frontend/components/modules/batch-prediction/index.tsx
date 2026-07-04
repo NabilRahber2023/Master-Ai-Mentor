@@ -46,6 +46,7 @@ import { ApiError } from "@/lib/api/client";
 
 const CYAN = "#00e5ff";
 const MID = "#49d8ea";
+const AMBER = "#fbbf24";
 const ERR = "#ffb4ab";
 
 const STUDY_OPTIONS = [
@@ -61,8 +62,14 @@ const ATT_OPTIONS = [0, 50, 60, 70, 80, 90];
 
 function catColor(category: string) {
     if (category === "High") return "text-cyan-300 border-cyan-400/30 bg-cyan-400/5";
-    if (category === "Mid") return "text-sky-300 border-sky-300/30 bg-sky-300/5";
+    if (category === "Mid") return "text-amber-300 border-amber-300/30 bg-amber-300/5";
     return "text-red-300 border-red-300/30 bg-red-300/5";
+}
+
+function statusColor(status: string) {
+    if (status === "At risk") return "text-red-300";
+    if (status === "Medium") return "text-amber-300";
+    return "text-cyan-300";
 }
 
 /* ════════════════════════════ Root ════════════════════════════ */
@@ -80,6 +87,8 @@ export function BatchPredictionDashboard() {
     const [predict, setPredict] = useState<PredictResponse | null>(null);
     const [predicting, setPredicting] = useState(false);
     const [predictError, setPredictError] = useState<string | null>(null);
+    const [pageOffset, setPageOffset] = useState(0);
+    const [tableSearch, setTableSearch] = useState("");
 
     const [forecast, setForecast] = useState<ForecastResponse | null>(null);
     const [forecasting, setForecasting] = useState(false);
@@ -90,6 +99,7 @@ export function BatchPredictionDashboard() {
     const [rxSearch, setRxSearch] = useState("");
     const [rx, setRx] = useState<PrescriptionResponse | null>(null);
     const [rxLoading, setRxLoading] = useState(false);
+    const [rxLoadingMore, setRxLoadingMore] = useState(false);
 
     useEffect(() => {
         fetchOverview()
@@ -97,11 +107,13 @@ export function BatchPredictionDashboard() {
             .catch((e) => setOverviewError(e instanceof Error ? e.message : "Failed to load overview"));
     }, []);
 
-    const doPredict = useCallback(async (f: BatchFilters) => {
+    const doPredict = useCallback(async (f: BatchFilters, offset = 0, search = "") => {
         setPredicting(true);
         setPredictError(null);
         try {
-            setPredict(await runBatchPrediction(f));
+            setPredict(await runBatchPrediction(f, offset, search));
+            setPageOffset(offset);
+            setTableSearch(search);
         } catch (e) {
             setPredictError(e instanceof ApiError ? e.message : "Prediction failed");
         } finally {
@@ -129,6 +141,18 @@ export function BatchPredictionDashboard() {
         },
         [],
     );
+
+    // Append the next page of cards for the current target band.
+    const loadMoreRx = useCallback(async () => {
+        if (!rx || rx.cards.length >= rx.count) return;
+        setRxLoadingMore(true);
+        try {
+            const next = await fetchPrescriptions(filters, rxTarget, rxSearch, rx.cards.length);
+            setRx({ ...next, cards: [...rx.cards, ...next.cards] });
+        } finally {
+            setRxLoadingMore(false);
+        }
+    }, [rx, filters, rxTarget, rxSearch]);
 
     /* ── Top action buttons ── */
     const onPrediction = () => {
@@ -216,7 +240,14 @@ export function BatchPredictionDashboard() {
                             {predictError}
                         </div>
                     )}
-                    <PredictionResults data={predict} loading={predicting} onOpenRx={openRx} />
+                    <PredictionResults
+                        data={predict}
+                        loading={predicting}
+                        onOpenRx={openRx}
+                        offset={pageOffset}
+                        onPage={(o) => doPredict(filters, o, tableSearch)}
+                        onSearch={(term) => doPredict(filters, 0, term)}
+                    />
                 </section>
             )}
 
@@ -226,10 +257,12 @@ export function BatchPredictionDashboard() {
                     <PrescriptionEngine
                         data={rx}
                         loading={rxLoading}
+                        loadingMore={rxLoadingMore}
                         target={rxTarget}
                         search={rxSearch}
                         setSearch={setRxSearch}
                         onSearch={() => doPrescriptions(filters, rxTarget, rxSearch)}
+                        onLoadMore={loadMoreRx}
                         onClose={() => setRxOpen(false)}
                     />
                 </section>
@@ -304,7 +337,7 @@ function DatasetOverview({
             <div className="grid grid-cols-2 gap-4 md:grid-cols-7">
                 <Kpi label="Total students" value={o.total_students.toLocaleString()} />
                 <Kpi label="High (≥3.5)" value={String(o.high)} accent="text-cyan-300" />
-                <Kpi label="Mid (2.5–3.49)" value={String(o.mid)} accent="text-sky-300" />
+                <Kpi label="Mid (2.5–3.49)" value={String(o.mid)} accent="text-amber-300" />
                 <Kpi label="Low (<2.5)" value={String(o.low)} accent="text-red-300" />
                 <Kpi label="Avg SGPA" value={o.avg_sgpa.toFixed(2)} accent="text-cyan-200" />
                 <Kpi label="Avg study hrs" value={`${o.avg_study_hours}h`} />
@@ -318,12 +351,12 @@ function DatasetOverview({
                 </h3>
                 <div className="mb-4 flex h-3 w-full overflow-hidden rounded-full bg-white/5">
                     <div className="h-full bg-cyan-400" style={{ width: `${o.high_pct}%` }} />
-                    <div className="h-full bg-sky-300" style={{ width: `${o.mid_pct}%` }} />
+                    <div className="h-full bg-amber-400" style={{ width: `${o.mid_pct}%` }} />
                     <div className="h-full bg-red-300" style={{ width: `${o.low_pct}%` }} />
                 </div>
                 <div className="flex flex-wrap gap-6 text-sm">
                     <Legend2 color="bg-cyan-400" label={`High — ${o.high_pct}%`} />
-                    <Legend2 color="bg-sky-300" label={`Mid — ${o.mid_pct}%`} />
+                    <Legend2 color="bg-amber-400" label={`Mid — ${o.mid_pct}%`} />
                     <Legend2 color="bg-red-300" label={`Low — ${o.low_pct}%`} />
                 </div>
             </div>
@@ -562,12 +595,29 @@ function PredictionResults({
     data,
     loading,
     onOpenRx,
+    offset,
+    onPage,
+    onSearch,
 }: {
     data: PredictResponse | null;
     loading: boolean;
     onOpenRx: (t: "At risk" | "Mid" | "On track") => void;
+    offset: number;
+    onPage: (offset: number) => void;
+    onSearch: (term: string) => void;
 }) {
+    const PAGE = 100;
     const [menuOpen, setMenuOpen] = useState(false);
+    const [rowSearch, setRowSearch] = useState("");
+    const [rowHighlight, setRowHighlight] = useState("");
+
+    // Searches the entire dataset (backend), not just the visible page;
+    // returned rows land on page 1 and matches are highlighted green.
+    const runRowSearch = () => {
+        const term = rowSearch.trim().toLowerCase();
+        setRowHighlight(term);
+        onSearch(term);
+    };
     if (loading && !data) {
         return (
             <div className="flex h-40 items-center justify-center">
@@ -578,8 +628,9 @@ function PredictionResults({
     if (!data) return null;
     const k = data.kpis;
     const barData = data.distribution_bins.map((b, i) => ({ bin: b, count: data.distribution_counts[i] }));
-    const atRisk = data.scatter.filter((s) => s.status === "At risk").map((s) => ({ x: s.prev_sgpa, y: 1.5 }));
-    const onTrack = data.scatter.filter((s) => s.status === "On track").map((s) => ({ x: s.prev_sgpa, y: 3.5 }));
+    const atRisk = data.scatter.filter((s) => s.status === "At risk").map((s) => ({ x: s.prev_sgpa, y: 1 }));
+    const medium = data.scatter.filter((s) => s.status === "Medium").map((s) => ({ x: s.prev_sgpa, y: 2.5 }));
+    const onTrack = data.scatter.filter((s) => s.status === "On track").map((s) => ({ x: s.prev_sgpa, y: 4 }));
 
     return (
         <div className="space-y-6">
@@ -590,9 +641,10 @@ function PredictionResults({
                 </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
                 <KpiCard label="Filtered" value={k.filtered.toLocaleString()} border="border-l-slate-500" />
                 <KpiCard label="On-track" value={k.on_track.toLocaleString()} border="border-l-sky-400" accent="text-sky-300" />
+                <KpiCard label="Medium" value={k.medium.toLocaleString()} border="border-l-amber-400" accent="text-amber-300" />
                 <KpiCard label="At-risk" value={k.at_risk.toLocaleString()} border="border-l-red-400" accent="text-red-300" />
                 <KpiCard label="Avg predicted" value={k.avg_predicted.toFixed(2)} border="border-l-cyan-400" />
                 <KpiCard label="Pass rate" value={`${k.pass_rate}%`} border="border-l-cyan-200" />
@@ -612,7 +664,7 @@ function PredictionResults({
                             />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                                 {barData.map((_, i) => (
-                                    <Cell key={i} fill={i < 3 ? ERR : i < 5 ? MID : CYAN} />
+                                    <Cell key={i} fill={i < 3 ? ERR : i < 5 ? AMBER : CYAN} />
                                 ))}
                             </Bar>
                         </BarChart>
@@ -634,8 +686,8 @@ function PredictionResults({
                                 type="number"
                                 dataKey="y"
                                 domain={[0, 5]}
-                                ticks={[1.5, 3.5]}
-                                tickFormatter={(v) => (v === 1.5 ? "AT RISK" : v === 3.5 ? "ON TRACK" : "")}
+                                ticks={[1, 2.5, 4]}
+                                tickFormatter={(v) => (v === 1 ? "AT RISK" : v === 2.5 ? "MEDIUM" : v === 4 ? "ON TRACK" : "")}
                                 tick={{ fill: "#fff", fontSize: 11, fontWeight: 700 }}
                                 width={70}
                             />
@@ -646,6 +698,7 @@ function PredictionResults({
                             />
                             <Legend />
                             <Scatter name="At risk" data={atRisk} fill={ERR} />
+                            <Scatter name="Medium" data={medium} fill={AMBER} />
                             <Scatter name="On track" data={onTrack} fill={CYAN} />
                         </ScatterChart>
                     </ResponsiveContainer>
@@ -656,10 +709,25 @@ function PredictionResults({
             <div className="overflow-hidden rounded-xl border border-cyan-400/15 bg-[#151d1e]/60">
                 <div className="flex items-center justify-between border-b border-white/10 bg-[#080f11]/60 px-6 py-4">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-200">Student Data Stream</h3>
-                    <div className="flex gap-6 text-xs">
+                    <div className="flex items-center gap-6 text-xs">
                         <Legend2 color="bg-cyan-400" label="High" />
-                        <Legend2 color="bg-sky-300" label="Mid" />
+                        <Legend2 color="bg-amber-400" label="Mid" />
                         <Legend2 color="bg-red-300" label="Low" />
+                        <div className="flex items-center gap-2">
+                            <input
+                                value={rowSearch}
+                                onChange={(e) => setRowSearch(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && runRowSearch()}
+                                placeholder="ID or Name..."
+                                className="h-8 w-40 rounded-lg border border-white/10 bg-[#080f11]/80 px-3 text-xs text-slate-200 outline-none focus:border-cyan-400"
+                            />
+                            <button
+                                onClick={runRowSearch}
+                                className="h-8 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-3 text-[10px] font-bold uppercase tracking-wider text-emerald-300 transition-colors hover:bg-emerald-400/20"
+                            >
+                                Search
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div className="max-h-[420px] overflow-y-auto">
@@ -678,8 +746,20 @@ function PredictionResults({
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {data.students.map((s) => (
-                                <tr key={s.id} className="group transition-colors hover:bg-cyan-400/5">
+                            {data.students.map((s) => {
+                                const matched =
+                                    rowHighlight !== "" &&
+                                    (s.id.toLowerCase().includes(rowHighlight) ||
+                                        s.name.toLowerCase().includes(rowHighlight));
+                                return (
+                                <tr
+                                    key={s.id}
+                                    className={`group transition-colors ${
+                                        matched
+                                            ? "bg-emerald-400/15 hover:bg-emerald-400/25"
+                                            : "hover:bg-cyan-400/5"
+                                    }`}
+                                >
                                     <td className="px-6 py-3 font-mono text-[13px] text-slate-400">{s.id}</td>
                                     <td className="px-6 py-3 font-bold text-[var(--app-text)] group-hover:text-cyan-300">{s.name}</td>
                                     <td className="px-6 py-3 text-slate-300">{s.dept}</td>
@@ -695,21 +775,37 @@ function PredictionResults({
                                         {s.predicted.toFixed(2)}
                                     </td>
                                     <td
-                                        className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${
-                                            s.status === "At risk" ? "text-red-300" : "text-sky-300"
-                                        }`}
+                                        className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${statusColor(s.status)}`}
                                     >
                                         {s.status}
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/10 bg-[#080f11]/60 px-6 py-4">
-                    <p className="text-xs text-slate-400">
-                        Showing {data.showing} of {data.total.toLocaleString()} rows
-                    </p>
+                    <div className="flex items-center gap-3">
+                        <p className="text-xs text-slate-400">
+                            Showing {data.showing > 0 ? `${(offset + 1).toLocaleString()}–${(offset + data.showing).toLocaleString()}` : 0} of{" "}
+                            {data.total.toLocaleString()} rows
+                        </p>
+                        <button
+                            onClick={() => onPage(Math.max(0, offset - PAGE))}
+                            disabled={loading || offset === 0}
+                            className="h-7 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 text-[10px] font-bold uppercase tracking-wider text-cyan-200 transition-colors hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => onPage(offset + PAGE)}
+                            disabled={loading || data.showing < PAGE || offset + PAGE >= data.total}
+                            className="h-7 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 text-[10px] font-bold uppercase tracking-wider text-cyan-200 transition-colors hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            Next
+                        </button>
+                    </div>
                     <div className="relative">
                         <button
                             onClick={() => setMenuOpen((v) => !v)}
@@ -779,18 +875,22 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 function PrescriptionEngine({
     data,
     loading,
+    loadingMore,
     target,
     search,
     setSearch,
     onSearch,
+    onLoadMore,
     onClose,
 }: {
     data: PrescriptionResponse | null;
     loading: boolean;
+    loadingMore: boolean;
     target: string;
     search: string;
     setSearch: (s: string) => void;
     onSearch: () => void;
+    onLoadMore: () => void;
     onClose: () => void;
 }) {
     return (
@@ -801,7 +901,7 @@ function PrescriptionEngine({
                         <Radar className="h-4 w-4" /> AI Prescription Engine — {target} Students
                     </h2>
                     <span className="rounded bg-white/5 px-2 py-0.5 text-xs font-bold text-slate-300">
-                        {data?.count ?? 0} Students
+                        {(data?.count ?? 0).toLocaleString()} Students
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -837,6 +937,14 @@ function PrescriptionEngine({
                 {!loading &&
                     data?.cards.map((c) => {
                         const isRisk = c.status === "At risk";
+                        const isMedium = c.status === "Medium";
+                        const tone = isRisk ? "text-red-300" : isMedium ? "text-amber-300" : "text-cyan-300";
+                        const barTone = isRisk ? "border-l-red-300" : isMedium ? "border-l-amber-400" : "border-l-cyan-400";
+                        // Comparison coloring: the higher of previous vs predicted is green, the lower red.
+                        const prevColor =
+                            c.prev_sgpa > c.predicted ? "text-emerald-300" : c.prev_sgpa < c.predicted ? "text-red-300" : "text-cyan-300";
+                        const predColor =
+                            c.predicted > c.prev_sgpa ? "text-emerald-300" : c.predicted < c.prev_sgpa ? "text-red-300" : "text-cyan-300";
                         return (
                             <div
                                 key={c.id}
@@ -849,24 +957,32 @@ function PrescriptionEngine({
                                             {c.id} // {c.dept}
                                         </p>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="mb-1 block text-xs font-bold uppercase tracking-tighter text-slate-400">
-                                            Probability Score
-                                        </span>
-                                        <span className={`text-2xl font-black ${isRisk ? "text-red-300" : "text-cyan-300"}`}>
-                                            {c.predicted.toFixed(2)}
-                                        </span>
+                                    <div className="flex items-start gap-6">
+                                        <div className="text-right">
+                                            <span className="mb-1 block text-xs font-bold uppercase tracking-tighter text-slate-400">
+                                                Previous SGPA
+                                            </span>
+                                            <span className={`text-2xl font-black ${prevColor}`}>
+                                                {c.prev_sgpa.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="mb-1 block text-xs font-bold uppercase tracking-tighter text-slate-400">
+                                                Predicted Sgpa
+                                            </span>
+                                            <span className={`text-2xl font-black ${predColor}`}>
+                                                {c.predicted.toFixed(2)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-3">
                                     {c.recommendations.map((r, i) => (
                                         <div
                                             key={i}
-                                            className={`flex items-start gap-3 rounded-lg border-l-2 bg-black/40 p-3 ${
-                                                isRisk ? "border-l-red-300" : "border-l-cyan-400"
-                                            }`}
+                                            className={`flex items-start gap-3 rounded-lg border-l-2 bg-black/40 p-3 ${barTone}`}
                                         >
-                                            <Radar className={`mt-0.5 h-4 w-4 shrink-0 ${isRisk ? "text-red-300" : "text-cyan-300"}`} />
+                                            <Radar className={`mt-0.5 h-4 w-4 shrink-0 ${tone}`} />
                                             <p className="text-sm leading-relaxed text-slate-300">{r}</p>
                                         </div>
                                     ))}
@@ -874,6 +990,21 @@ function PrescriptionEngine({
                             </div>
                         );
                     })}
+                {!loading && data && data.cards.length < data.count && (
+                    <div className="col-span-full flex flex-col items-center gap-3 py-4">
+                        <p className="text-xs text-slate-400">
+                            Showing {data.cards.length.toLocaleString()} of {data.count.toLocaleString()} students
+                        </p>
+                        <button
+                            onClick={onLoadMore}
+                            disabled={loadingMore}
+                            className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-8 py-2 text-xs font-bold uppercase tracking-wider text-cyan-200 transition-colors hover:bg-cyan-400/20 disabled:opacity-60"
+                        >
+                            {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                            Load more
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

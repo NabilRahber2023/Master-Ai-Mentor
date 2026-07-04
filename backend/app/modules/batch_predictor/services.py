@@ -50,6 +50,14 @@ def _category(sgpa: float) -> str:
     return "Low"
 
 
+def _status(predicted: float) -> str:
+    if predicted >= 3.5:
+        return "On track"
+    if predicted >= 2.5:
+        return "Medium"
+    return "At risk"
+
+
 def _build_where(filters: BatchFilters) -> Tuple[str, Dict]:
     """Build a parameterised WHERE clause from the filter set."""
     clauses: List[str] = []
@@ -145,7 +153,8 @@ async def run_prediction(filters: BatchFilters, limit: int = 100) -> PredictResp
         kpis = (await session.execute(text(f"""
             SELECT
                 count(*) AS filtered,
-                count(*) FILTER (WHERE {PRED} >= 2.5) AS on_track,
+                count(*) FILTER (WHERE {PRED} >= 3.5) AS on_track,
+                count(*) FILTER (WHERE {PRED} >= 2.5 AND {PRED} < 3.5) AS medium,
                 count(*) FILTER (WHERE {PRED} < 2.5) AS at_risk,
                 COALESCE(round(avg({PRED})::numeric, 2), 0) AS avg_pred
             FROM students{where}
@@ -169,21 +178,32 @@ async def run_prediction(filters: BatchFilters, limit: int = 100) -> PredictResp
             LIMIT 500
         """), params)).mappings().all()
 
+        # Table search spans the whole filtered dataset, not just the current
+        # page — it narrows only the student table, never the KPIs/charts.
+        search = (filters.search or "").strip().lower()
+        s_where, s_params = where, dict(params)
+        if search:
+            s_where = (f"{where} AND " if where else " WHERE ") + \
+                "(LOWER(name) LIKE :search OR LOWER(student_id) LIKE :search)"
+            s_params["search"] = f"%{search}%"
+
         student_rows = (await session.execute(text(f"""
             SELECT student_id AS id, name, preferred_department AS dept,
                    COALESCE(current_sgpa, 0) AS prev_sgpa,
                    {STUDY_DAY} AS study_day,
                    COALESCE(attendance_rate, 0) AS attendance,
                    {PRED} AS predicted
-            FROM students{where}
+            FROM students{s_where}
             ORDER BY student_id
-            LIMIT :limit
-        """), {**params, "limit": limit})).mappings().all()
+            LIMIT :limit OFFSET :offset
+        """), {**s_params, "limit": limit, "offset": max(0, filters.offset)})).mappings().all()
 
     filtered = int(kpis["filtered"])
     on_track = int(kpis["on_track"])
+    medium = int(kpis["medium"])
     at_risk = int(kpis["at_risk"])
-    pass_rate = round(on_track / filtered * 100) if filtered else 0
+    # Pass = predicted >= 2.5 (on-track + medium tiers).
+    pass_rate = round((on_track + medium) / filtered * 100) if filtered else 0
 
     bins = ["1.0-1.4", "1.5-1.9", "2.0-2.4", "2.5-2.9", "3.0-3.4", "3.5-4.0"]
     counts = [int(dist[f"b{i}"]) for i in range(6)]
@@ -192,7 +212,7 @@ async def run_prediction(filters: BatchFilters, limit: int = 100) -> PredictResp
         ScatterPoint(
             prev_sgpa=round(float(r["prev"] or 0), 2),
             predicted=round(float(r["predicted"]), 2),
-            status="On track" if float(r["predicted"]) >= 2.5 else "At risk",
+            status=_status(float(r["predicted"])),
         )
         for r in scatter_rows
     ]
@@ -207,7 +227,7 @@ async def run_prediction(filters: BatchFilters, limit: int = 100) -> PredictResp
             study_hrs=round(float(r["study_day"])),
             attendance=round(float(r["attendance"])),
             predicted=round(float(r["predicted"]), 2),
-            status="On track" if float(r["predicted"]) >= 2.5 else "At risk",
+            status=_status(float(r["predicted"])),
         )
         for r in student_rows
     ]
@@ -216,6 +236,7 @@ async def run_prediction(filters: BatchFilters, limit: int = 100) -> PredictResp
         kpis=PredictKpis(
             filtered=filtered,
             on_track=on_track,
+            medium=medium,
             at_risk=at_risk,
             avg_predicted=float(kpis["avg_pred"]),
             pass_rate=pass_rate,
@@ -264,9 +285,9 @@ async def get_prescriptions(req: PrescriptionRequest, limit: int = 60) -> Prescr
     if req.target == "At risk":
         clauses.append(f"{PRED} < 2.5")
     elif req.target == "Mid":
-        clauses.append("current_sgpa >= 2.5 AND current_sgpa < 3.5")
+        clauses.append(f"{PRED} >= 2.5 AND {PRED} < 3.5")
     elif req.target == "On track":
-        clauses.append(f"{PRED} >= 2.5")
+        clauses.append(f"{PRED} >= 3.5")
 
     if req.search.strip():
         clauses.append("(LOWER(name) LIKE :search OR LOWER(student_id) LIKE :search)")
@@ -275,6 +296,12 @@ async def get_prescriptions(req: PrescriptionRequest, limit: int = 60) -> Prescr
     where_sql = (" WHERE " + " AND ".join(c for c in clauses if c)) if clauses else ""
 
     async with async_session_maker() as session:
+        # True band total — computed with the same WHERE as the cards so it
+        # always matches the prediction KPIs (on_track / medium / at_risk).
+        total = int((await session.execute(text(f"""
+            SELECT count(*) AS total FROM students{where_sql}
+        """), params)).mappings().one()["total"])
+
         rows = (await session.execute(text(f"""
             SELECT student_id AS id, name, preferred_department AS dept,
                    COALESCE(current_sgpa, 0) AS prev_sgpa,
@@ -282,9 +309,9 @@ async def get_prescriptions(req: PrescriptionRequest, limit: int = 60) -> Prescr
                    COALESCE(attendance_rate, 0) AS attendance,
                    {PRED} AS predicted
             FROM students{where_sql}
-            ORDER BY {PRED} ASC
-            LIMIT :limit
-        """), {**params, "limit": limit})).mappings().all()
+            ORDER BY {PRED} ASC, student_id
+            LIMIT :limit OFFSET :offset
+        """), {**params, "limit": limit, "offset": max(0, req.offset)})).mappings().all()
 
     cards = []
     for r in rows:
@@ -292,17 +319,18 @@ async def get_prescriptions(req: PrescriptionRequest, limit: int = 60) -> Prescr
         attendance = round(float(r["attendance"]))
         study_hrs = round(float(r["study_day"]))
         sgpa = float(r["prev_sgpa"])
-        status = "On track" if predicted >= 2.5 else "At risk"
+        status = _status(predicted)
         cards.append(PrescriptionCard(
             id=str(r["id"]),
             name=r["name"] or "Unknown",
             dept=r["dept"] or "—",
+            prev_sgpa=round(sgpa, 2),
             predicted=predicted,
             status=status,
             recommendations=_recommendations(attendance, study_hrs, predicted, sgpa),
         ))
 
-    return PrescriptionResponse(target=req.target, count=len(cards), cards=cards)
+    return PrescriptionResponse(target=req.target, count=total, showing=len(cards), cards=cards)
 
 
 # ──────────────────────────── Forecast ────────────────────────────

@@ -78,6 +78,7 @@ export interface ScatterPoint {
 export interface PredictKpis {
     filtered: number;
     on_track: number;
+    medium: number;
     at_risk: number;
     avg_predicted: number;
     pass_rate: number;
@@ -92,8 +93,8 @@ export interface PredictResponse {
     total: number;
 }
 
-export function runBatchPrediction(filters: BatchFilters) {
-    return apiPost<PredictResponse>("/api/v1/prediction/batch/predict", filters);
+export function runBatchPrediction(filters: BatchFilters, offset = 0, search = "") {
+    return apiPost<PredictResponse>("/api/v1/prediction/batch/predict", { ...filters, offset, search });
 }
 
 /* ──────────────── Prescriptions ──────────────── */
@@ -101,21 +102,24 @@ export interface PrescriptionCard {
     id: string;
     name: string;
     dept: string;
+    prev_sgpa: number;
     predicted: number;
     status: string;
     recommendations: string[];
 }
 export interface PrescriptionResponse {
     target: string;
-    count: number;
+    count: number;         // total students in the target band (matches KPIs)
+    showing: number;       // cards in this page
     cards: PrescriptionCard[];
 }
 
-export function fetchPrescriptions(filters: BatchFilters, target: string, search: string) {
+export function fetchPrescriptions(filters: BatchFilters, target: string, search: string, offset = 0) {
     return apiPost<PrescriptionResponse>("/api/v1/prediction/batch/prescriptions", {
         filters,
         target,
         search,
+        offset,
     });
 }
 
