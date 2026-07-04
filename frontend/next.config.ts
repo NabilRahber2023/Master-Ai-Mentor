@@ -18,6 +18,9 @@ export default function nextConfigFactory(phase: string): NextConfig {
 
   return {
     reactCompiler: true,
+    // Type checking runs locally in VS Code during development; the 1GB
+    // production server OOMs during `next build`'s TS check, so skip it there.
+    typescript: { ignoreBuildErrors: true },
     // Keep the trailing slash on /api/v1/* so it is proxied straight to FastAPI
     // (which expects the slash) without a 308→307 redirect chain that can drop the
     // session cookie in the browser. Fixes intermittent "Authentication required".
